@@ -1,6 +1,6 @@
 import Foundation
 
-/// A one-dimensional waveform data structure representing time-series data.
+/// A one-dimensional waveform data structure representing time-series data.  Based upon [Labview 1d Waveform](https://www.ni.com/docs/en-US/bundle/labview-nxg-data-types/page/waveforms.html)
 ///
 /// `Waveform1D` stores uniformly sampled data points with their temporal characteristics,
 /// making it suitable for signal processing, scientific measurements, and time-series analysis.
