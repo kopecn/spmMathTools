@@ -10,9 +10,16 @@ let package = Package(
             name: "spmMathTools",
             targets: ["spmMathTools"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/keyvariable/kvSIMD.swift.git", from: "1.1.0"),
+        .package(url: "https://github.com/daikimat/depermaid.git", from: "1.1.0"),
+    ],
     targets: [
         .target(
             name: "spmMathTools",
+            dependencies: [
+                .product(name: "kvSIMD", package: "kvSIMD.swift"),
+            ],
             path: "spm/Sources/spmMathTools"
         ),
         .testTarget(
