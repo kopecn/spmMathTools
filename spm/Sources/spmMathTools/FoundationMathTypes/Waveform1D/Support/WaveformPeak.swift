@@ -13,5 +13,3 @@ public struct WaveformPeak<T> {
     /// Time offset from waveform start in seconds
     public let timeOffset: TimeInterval
 }
-
-

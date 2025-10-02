@@ -1,4 +1,3 @@
-
 /// Correlation computation modes
 public enum WaveformCorrelationMode {
     /// Full correlation: output size = len(x) + len(y) - 1

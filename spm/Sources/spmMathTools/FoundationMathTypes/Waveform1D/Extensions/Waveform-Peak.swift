@@ -203,61 +203,61 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
 
     private func findLeftBase(from peakIndex: Int, peakValue: T) -> T {
         var minValue = peakValue
-        
+
         for i in stride(from: peakIndex - 1, through: 0, by: -1) {
             if values[i] < minValue {
                 minValue = values[i]
             }
             if values[i] > peakValue {
-                break // Found a higher peak, stop here
+                break  // Found a higher peak, stop here
             }
         }
-        
+
         return minValue
     }
-    
+
     private func findRightBase(from peakIndex: Int, peakValue: T) -> T {
         var minValue = peakValue
-        
+
         for i in (peakIndex + 1)..<values.count {
             if values[i] < minValue {
                 minValue = values[i]
             }
             if values[i] > peakValue {
-                break // Found a higher peak, stop here
+                break  // Found a higher peak, stop here
             }
         }
-        
+
         return minValue
     }
-    
+
     private func findLeftValleyBase(from valleyIndex: Int, valleyValue: T) -> T {
         var maxValue = valleyValue
-        
+
         for i in stride(from: valleyIndex - 1, through: 0, by: -1) {
             if values[i] > maxValue {
                 maxValue = values[i]
             }
             if values[i] < valleyValue {
-                break // Found a lower valley, stop here
+                break  // Found a lower valley, stop here
             }
         }
-        
+
         return maxValue
     }
-    
+
     private func findRightValleyBase(from valleyIndex: Int, valleyValue: T) -> T {
         var maxValue = valleyValue
-        
+
         for i in (valleyIndex + 1)..<values.count {
             if values[i] > maxValue {
                 maxValue = values[i]
             }
             if values[i] < valleyValue {
-                break // Found a lower valley, stop here
+                break  // Found a lower valley, stop here
             }
         }
-        
+
         return maxValue
     }
 }

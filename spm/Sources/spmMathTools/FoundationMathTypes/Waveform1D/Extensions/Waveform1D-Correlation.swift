@@ -194,4 +194,3 @@ extension Waveform1D where T: BinaryFloatingPoint {
         return (actualLag, lagTime, maxCorrelation)
     }
 }
-

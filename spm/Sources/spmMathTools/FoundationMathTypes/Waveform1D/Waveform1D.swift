@@ -51,7 +51,7 @@ public struct Waveform1D<T: Numeric> {
     }
 
     // MARK: - Computed Properties (Available to all numeric types)
-    
+
     /// Get the total duration of the waveform
     public var duration: TimeInterval {
         guard values.count > 1 else { return 0 }
@@ -67,13 +67,13 @@ public struct Waveform1D<T: Numeric> {
     public var nyquistFrequency: Double {
         return samplingFrequency / 2.0
     }
-    
+
     /// Get the end time of the waveform
     public var endTime: Date? {
         guard let t0 = t0 else { return nil }
         return t0.addingTimeInterval(duration)
     }
-    
+
     /// Get the number of samples
     public var sampleCount: Int {
         return values.count
@@ -82,7 +82,7 @@ public struct Waveform1D<T: Numeric> {
 
 // MARK: - Computed Properties for Comparable Types
 extension Waveform1D where T: Comparable {
-    
+
     /// Calculate the peak-to-peak amplitude
     public var peakToPeak: T? {
         guard !values.isEmpty else { return nil }
@@ -90,12 +90,12 @@ extension Waveform1D where T: Comparable {
         let max = values.max()!
         return max - min
     }
-    
+
     /// Get the minimum value
     public var minimum: T? {
         return values.min()
     }
-    
+
     /// Get the maximum value
     public var maximum: T? {
         return values.max()
@@ -104,31 +104,32 @@ extension Waveform1D where T: Comparable {
 
 // MARK: - Computed Properties for Floating Point Types
 extension Waveform1D where T: BinaryFloatingPoint {
-    
+
     /// Calculate the mean value
     public var mean: T {
         guard !values.isEmpty else { return T.zero }
         return values.reduce(T.zero, +) / T(values.count)
     }
-    
+
     /// Calculate the root mean square (RMS) value
     public var rms: T {
         guard !values.isEmpty else { return T.zero }
         let sumSquares = values.reduce(T.zero) { $0 + $1 * $1 }
         return (sumSquares / T(values.count)).squareRoot()
     }
-    
+
     /// Calculate the standard deviation
     public var standardDeviation: T {
         guard values.count > 1 else { return T.zero }
         let meanValue = mean
-        let variance = values.reduce(T.zero) { sum, value in
-            let deviation = value - meanValue
-            return sum + deviation * deviation
-        } / T(values.count - 1)
+        let variance =
+            values.reduce(T.zero) { sum, value in
+                let deviation = value - meanValue
+                return sum + deviation * deviation
+            } / T(values.count - 1)
         return variance.squareRoot()
     }
-    
+
     /// Calculate the variance
     public var variance: T {
         guard values.count > 1 else { return T.zero }
@@ -142,13 +143,13 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
 // MARK: - Computed Properties for Integer Types
 extension Waveform1D where T: BinaryInteger {
-    
+
     /// Calculate the mean value (integer division)
     public var mean: T {
         guard !values.isEmpty else { return T.zero }
         return values.reduce(T.zero, +) / T(values.count)
     }
-    
+
     /// Calculate the sum of all values
     public var sum: T {
         return values.reduce(T.zero, +)
@@ -157,7 +158,7 @@ extension Waveform1D where T: BinaryInteger {
 
 // MARK: - Computed Properties for Signed Integer Types
 extension Waveform1D where T: SignedInteger {
-    
+
     /// Calculate the absolute sum of all values
     public var absoluteSum: T {
         return values.reduce(T.zero) { $0 + abs($1) }
