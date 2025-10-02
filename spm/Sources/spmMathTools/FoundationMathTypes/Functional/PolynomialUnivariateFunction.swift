@@ -46,10 +46,6 @@ public enum PolynomialUnivariateOrder: Equatable, Sendable {
         decic
     case higher(Int)
 
-    public static func == (lhs: PolynomialUnivariateOrder, rhs: PolynomialUnivariateOrder) -> Bool {
-        lhs.degree == rhs.degree
-    }
-
     public init(fromIndex: Int) {
         switch fromIndex {
         case ...0: self = .zeroth
@@ -89,17 +85,17 @@ public enum PolynomialUnivariateOrder: Equatable, Sendable {
     public var degree: Int {
         switch self {
         case .zeroth: return 0
-        case .constant: return 1
-        case .linear: return 2
-        case .quadratic: return 3
-        case .cubic: return 4
-        case .quartic: return 5
-        case .quintic: return 6
-        case .sextic: return 7
-        case .septic: return 8
-        case .octic: return 9
-        case .nonic: return 10
-        case .decic: return 11
+        case .constant: return 0
+        case .linear: return 1
+        case .quadratic: return 2
+        case .cubic: return 3
+        case .quartic: return 4
+        case .quintic: return 5
+        case .sextic: return 6
+        case .septic: return 7
+        case .octic: return 8
+        case .nonic: return 9
+        case .decic: return 10
         case .higher(let degree): return degree
         }
     }
@@ -205,7 +201,7 @@ public class PolynomialUnivariateFunction: CustomStringConvertible {
         //           4         3        2       1      0
         //           a x³   +  b x²   +  cx¹ +  dx⁰ +  0  --> Cubic
         // ax⁴/4  +  bx³/3  +  cx²/2  +  dx¹  + ex⁰ +  0  --> Quartic
-        return PolynomialUnivariateOrder(fromIndex: self.coefficients.count + 1)
+        return PolynomialUnivariateOrder(fromIndex: coeffs.count)
             .construct(coefficients: coeffs)
     }
 
