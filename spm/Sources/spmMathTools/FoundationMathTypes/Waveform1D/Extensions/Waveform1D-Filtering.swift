@@ -430,7 +430,6 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func whittakerHendersonFilter(lambda: Double, order: Int = 2) -> Waveform1D<T> {
         guard order > 0 && lambda > 0 && values.count > order else { return self }
 
-        let n = values.count
         let smoothed = solveWhittakerSystem(
             values: values.map { Double($0) },
             lambda: lambda,
@@ -746,9 +745,6 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
     private func createDifferenceMatrix(size: Int, order: Int) -> [[Double]] {
         guard order > 0 && size > order else { return [] }
-
-        let rows = size - order
-        var D: [[Double]] = Array(repeating: Array(repeating: 0.0, count: size), count: rows)
 
         // Start with first-order differences
         var currentD: [[Double]] = Array(repeating: Array(repeating: 0.0, count: size), count: size - 1)

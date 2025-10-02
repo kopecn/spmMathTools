@@ -28,7 +28,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
 
             if i == 0 {
                 // First element - only check right neighbor
-                isLocalMaximum = values[i] > values[i + 1]
+                isLocalMaximum = i + 1 < values.count && values[i] > values[i + 1]
             } else if i == values.count - 1 {
                 // Last element - only check left neighbor
                 isLocalMaximum = values[i] > values[i - 1]
@@ -89,7 +89,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
 
             if i == 0 {
                 // First element - only check right neighbor
-                isLocalMinimum = values[i] < values[i + 1]
+                isLocalMinimum = i + 1 < values.count && values[i] < values[i + 1]
             } else if i == values.count - 1 {
                 // Last element - only check left neighbor
                 isLocalMinimum = values[i] < values[i - 1]
@@ -282,7 +282,7 @@ extension Waveform1D where T: BinaryInteger & Comparable {
             let isLocalMaximum: Bool
 
             if i == 0 {
-                isLocalMaximum = values[i] > values[i + 1]
+                isLocalMaximum = i + 1 < values.count && values[i] > values[i + 1]
             } else if i == values.count - 1 {
                 isLocalMaximum = values[i] > values[i - 1]
             } else {

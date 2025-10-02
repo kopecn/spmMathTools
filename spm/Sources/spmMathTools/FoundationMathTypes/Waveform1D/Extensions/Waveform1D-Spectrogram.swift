@@ -274,7 +274,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         case .powerSpectralDensity:
             return magnitude * magnitude
         case .decibel:
-            return magnitude > T.zero ? T(20.0 * log10(Double(magnitude))) : T(-Double.infinity)
+            return magnitude > T.zero ? T(20.0 * Foundation.log10(Double(magnitude))) : T(-Double.infinity)
         case .complex:
             // For complex scaling, we'd typically store both magnitude and phase
             // This is a simplified representation
@@ -328,7 +328,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     }
 
     private func hzToMel(_ hz: Double) -> Double {
-        return 2595.0 * log10(1.0 + hz / 700.0)
+        return 2595.0 * Foundation.log10(1.0 + hz / 700.0)
     }
 
     private func melToHz(_ mel: Double) -> Double {
