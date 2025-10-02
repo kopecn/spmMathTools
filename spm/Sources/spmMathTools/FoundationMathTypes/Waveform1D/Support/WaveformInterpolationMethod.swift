@@ -1,9 +1,9 @@
-/// Interpolation methods for envelope construction
+/// Interpolation methods for resampling operations
 public enum WaveformInterpolationMethod {
-    /// Linear interpolation
+    /// Linear interpolation between points
     case linear
-    /// Cubic spline interpolation
+    /// Cubic interpolation (Hermite)
     case cubic
-    /// Nearest neighbor
+    /// Nearest neighbor (no interpolation)
     case nearestNeighbor
 }
