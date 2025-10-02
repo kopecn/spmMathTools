@@ -217,6 +217,47 @@ struct ValleyDetectionTests {
         #expect(valleys.contains { $0.index == 3 && $0.value == 0.5 })
     }
 
+    /// VALIDATED
+    @Test("Large valley detection")
+    func largeValleyDetection() {
+        let waveform1 = Waveform1D<Double>.sine(
+            frequency: 100,
+            amplitude: 1.0,
+            phase: 0.0,
+            duration: 3,
+            samplingRate: 10000
+        )
+        
+        let valleys1 = waveform1.detectValleys()
+
+        #expect(valleys1.count == 300)
+
+        let waveform2 = Waveform1D<Double>.sine(
+            frequency: 100,
+            amplitude: 1.0,
+            phase: 0.0,
+            duration: 3,
+            samplingRate: 1000
+        )
+        
+        let valleys2 = waveform2.detectValleys()
+
+        #expect(valleys2.count == 300)
+
+        /// Push hard against the nyquist frequency.
+        let waveform3 = Waveform1D<Double>.sine(
+            frequency: 100,
+            amplitude: 1.0,
+            phase: 0.0,
+            duration: 3,
+            samplingRate: 250
+        )
+        
+        let valleys3 = waveform3.detectValleys()
+
+        #expect(valleys3.count == 300)
+    }
+
     @Test("Valley detection with threshold")
     func valleyDetectionWithThreshold() {
         let values = [3.0, 1.0, 4.0, 0.5, 3.0, 2.0, 5.0]
