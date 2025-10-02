@@ -7,6 +7,7 @@ import Testing
 @Suite("Basic Peak Detection")
 struct BasicPeakDetectionTests {
 
+    /// VALIDATED
     @Test("Simple peak detection")
     func simplePeakDetection() {
         let values = [1.0, 3.0, 2.0, 5.0, 1.0, 4.0, 0.5]
@@ -22,6 +23,47 @@ struct BasicPeakDetectionTests {
         #expect(peaks[1].value == 5.0)
         #expect(peaks[2].index == 5)
         #expect(peaks[2].value == 4.0)
+    }
+
+    /// VALIDATED
+    @Test("Large peak detection")
+    func largePeakDetection() {
+        let waveform1 = Waveform1D<Double>.sine(
+            frequency: 100,
+            amplitude: 1.0,
+            phase: 0.0,
+            duration: 3,
+            samplingRate: 10000
+        )
+        
+        let peaks1 = waveform1.detectPeaks()
+
+        #expect(peaks1.count == 300)
+
+        let waveform2 = Waveform1D<Double>.sine(
+            frequency: 100,
+            amplitude: 1.0,
+            phase: 0.0,
+            duration: 3,
+            samplingRate: 1000
+        )
+        
+        let peaks2 = waveform2.detectPeaks()
+
+        #expect(peaks2.count == 300)
+
+        /// Push hard against the nyquist frequency.
+        let waveform3 = Waveform1D<Double>.sine(
+            frequency: 100,
+            amplitude: 1.0,
+            phase: 0.0,
+            duration: 3,
+            samplingRate: 210
+        )
+        
+        let peaks3 = waveform3.detectPeaks()
+
+        #expect(peaks3.count == 300)
     }
 
     @Test("Peak detection with threshold")

@@ -28,13 +28,18 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
 
             if i == 0 {
                 // First element - only check right neighbor
-                isLocalMaximum = i + 1 < values.count && values[i] > values[i + 1]
+                isLocalMaximum = edgePeaks && i + 1 < values.count && values[i] > values[i + 1]
             } else if i == values.count - 1 {
                 // Last element - only check left neighbor
-                isLocalMaximum = values[i] > values[i - 1]
+                isLocalMaximum = edgePeaks && values[i] > values[i - 1]
             } else {
-                // Interior element - check both neighbors
-                isLocalMaximum = values[i] > values[i - 1] && values[i] > values[i + 1]
+                // Interior element - check both neighbors with plateau handling
+                let leftCondition = values[i] >= values[i - 1]  // >= instead of >
+                let rightCondition = values[i] > values[i + 1]  // > instead of >
+                
+                // Must be at least as high as both neighbors, and strictly higher than at least one
+                isLocalMaximum = leftCondition && rightCondition && 
+                               (values[i] > values[i - 1] || values[i] > values[i + 1])
             }
 
             if isLocalMaximum {

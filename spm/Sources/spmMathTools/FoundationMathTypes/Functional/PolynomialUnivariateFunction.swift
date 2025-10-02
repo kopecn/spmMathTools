@@ -9,7 +9,7 @@ import Foundation
 /// if the number is within this range round it to zero
 ///    - e.g. `if polyUniThresh ~= val { return 0 }`
 private let polyUniThresh: Double = 1e-9
-private let polyUniThreshRange: Range = -polyUniThresh..<polyUniThresh
+private let polyUniThreshRange: Range<Double> = -polyUniThresh..<polyUniThresh
 private let eps16: Double = 16 * .ulpOfOne
 
 extension Array where Element == Double {
