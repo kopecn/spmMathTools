@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 
 // MARK: - FFT Helpers for Spectrogram (if not available from main FFT extension)
 extension Waveform1D where T: BinaryFloatingPoint {

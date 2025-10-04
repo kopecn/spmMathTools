@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 
 // MARK: - Peak Detection
 extension Waveform1D where T: BinaryFloatingPoint & Comparable {
@@ -28,23 +29,23 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
 
             if i == 0 {
                 // First element - only check right neighbor
-                isLocalMaximum = edgePeaks && i + 1 < values.count && values[i] > values[i + 1]
+                isLocalMaximum = edgePeaks && i + 1 < values.count && values[i] > values[i + 1]  // > not <
             } else if i == values.count - 1 {
                 // Last element - only check left neighbor
-                isLocalMaximum = edgePeaks && values[i] > values[i - 1]
+                isLocalMaximum = edgePeaks && values[i] > values[i - 1]  // > not <
             } else {
                 // Interior element - check both neighbors with plateau handling
-                let leftCondition = values[i] < values[i - 1]   // < (strict, mirroring peak's >)
-                let rightCondition = values[i] <= values[i + 1] // <= (inclusive, mirroring peak's >=)
-                
-                // Must be at least as low as both neighbors, and strictly lower than at least one
-                isLocalMaximum = leftCondition && rightCondition && 
-                               (values[i] < values[i - 1] || values[i] < values[i + 1])
+                let leftCondition = values[i] >= values[i - 1]  // >= to find peaks
+                let rightCondition = values[i] > values[i + 1]   // > to find peaks
+
+                // Must be at least as high as both neighbors, and strictly higher than at least one
+                isLocalMaximum =
+                    leftCondition && rightCondition && (values[i] > values[i - 1] || values[i] > values[i + 1])
             }
 
             if isLocalMaximum {
                 // Apply threshold filter
-                if let threshold = threshold, values[i] < threshold {
+                if let threshold = threshold, values[i] < threshold {  // Should be < for peaks
                     continue
                 }
 

@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 
 // MARK: - Time Alignment and Synchronization
 extension Waveform1D where T: BinaryFloatingPoint {

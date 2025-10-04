@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 
 // MARK: - Correlation Operations
 extension Waveform1D where T: BinaryFloatingPoint {
@@ -24,7 +25,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
                 let deviation = value - signalMean
                 return sum + deviation * deviation
             }
-            normalizationFactor = variance > T.zero ? variance : T(1.0)
+            normalizationFactor = variance > T.zero ? variance : T.zero  // Use T.zero instead of T(1.0)
         } else {
             normalizationFactor = T(1.0)
         }
@@ -34,14 +35,28 @@ extension Waveform1D where T: BinaryFloatingPoint {
             var correlation = T.zero
             let validSamples = values.count - lag
 
-            for i in 0..<validSamples {
-                let val1 = values[i] - signalMean
-                let val2 = values[i + lag] - signalMean
-                correlation += val1 * val2
-            }
+            if validSamples <= 0 { break }  // Add this check
 
-            if normalized {
-                correlation = correlation / normalizationFactor
+            if normalized && normalizationFactor == T.zero {
+                // Check if it's a zero signal vs non-zero constant signal
+                if signalMean == T.zero {
+                    // Zero signal - correlation is 0.0 at all lags
+                    correlation = T.zero
+                } else {
+                    // Non-zero constant signal - correlation is 1.0 at all lags
+                    correlation = T(1.0)
+                }
+            } else {
+                // Normal calculation
+                for i in 0..<validSamples {
+                    let adjustedValue1 = values[i] - signalMean
+                    let adjustedValue2 = values[i + lag] - signalMean
+                    correlation += adjustedValue1 * adjustedValue2
+                }
+
+                if normalized && normalizationFactor > T.zero {
+                    correlation = correlation / normalizationFactor
+                }
             }
 
             correlations.append(correlation)

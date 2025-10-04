@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 
 extension Waveform1D where T: BinaryFloatingPoint {
 

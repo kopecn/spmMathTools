@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 
 // MARK: - Zero-Crossing Detection
 extension Waveform1D where T: BinaryFloatingPoint & Comparable {

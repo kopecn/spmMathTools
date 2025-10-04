@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 
 // MARK: - Waveform Generators
 extension Waveform1D where T: BinaryFloatingPoint {

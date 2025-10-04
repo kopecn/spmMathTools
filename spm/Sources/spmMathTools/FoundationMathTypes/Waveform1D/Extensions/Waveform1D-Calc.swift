@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 
 // Note: kvSIMD can be imported when available for performance optimization
 

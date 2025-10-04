@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 
 // MARK: - Phase Analysis and Unwrapping
 extension Waveform1D where T: BinaryFloatingPoint {

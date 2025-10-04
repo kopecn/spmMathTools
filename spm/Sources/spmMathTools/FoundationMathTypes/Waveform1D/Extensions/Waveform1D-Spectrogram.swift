@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 
 // MARK: - Spectrogram and Time-Frequency Analysis
 extension Waveform1D where T: BinaryFloatingPoint {

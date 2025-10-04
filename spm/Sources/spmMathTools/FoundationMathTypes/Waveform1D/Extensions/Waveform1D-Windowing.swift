@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 
 // MARK: - Window Functions
 extension Waveform1D where T: BinaryFloatingPoint {

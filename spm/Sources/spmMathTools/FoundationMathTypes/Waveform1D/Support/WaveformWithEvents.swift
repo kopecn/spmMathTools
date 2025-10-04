@@ -1,7 +1,8 @@
 import Foundation
+import FoundationTypes
 
 /// Waveform with event markers
-public struct WaveformWithEvents<T: Numeric> {
+public struct WaveformWithEvents<T: Numeric & Sendable> {
     /// The original waveform
     public let waveform: Waveform1D<T>
 

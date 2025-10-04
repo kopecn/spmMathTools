@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 import Testing
 
 @testable import spmMathTools
@@ -40,8 +41,8 @@ struct Waveform1DIntegrationTests {
 
         // Check linearity - differences should be constant
         for i in 2..<integrated.values.count {
-            let diff1 = integrated.values[i] - integrated.values[i-1]
-            let diff2 = integrated.values[i-1] - integrated.values[i-2]
+            let diff1 = integrated.values[i] - integrated.values[i - 1]
+            let diff2 = integrated.values[i - 1] - integrated.values[i - 2]
             #expect(abs(diff1 - diff2) < 1e-10)
         }
     }
@@ -59,8 +60,8 @@ struct Waveform1DIntegrationTests {
 
         // Should be quadratic - second differences should be small and constant
         for i in 2..<min(10, integrated.values.count) {
-            let diff1 = integrated.values[i] - integrated.values[i-1]
-            let diff2 = integrated.values[i-1] - integrated.values[i-2]
+            let diff1 = integrated.values[i] - integrated.values[i - 1]
+            let diff2 = integrated.values[i - 1] - integrated.values[i - 2]
             // First differences should be increasing (quadratic)
             #expect(diff1 >= diff2 - 1e-6)
         }
@@ -93,7 +94,7 @@ struct Waveform1DIntegrationTests {
 
         // Check that it actually oscillates (range should be reasonable)
         let range = maxVal - minVal
-        let expectedAmplitude = 1.0 / (2.0 * Double.pi * frequency) // ≈ 0.0796
+        let expectedAmplitude = 1.0 / (2.0 * Double.pi * frequency)  // ≈ 0.0796
         #expect(range > expectedAmplitude * 0.5)  // Should have reasonable oscillation
         #expect(range < expectedAmplitude * 4.0)  // But not too large
 
@@ -319,7 +320,12 @@ struct Waveform1DDerivativeTests {
 
     @Test("Derivative handles negative values (200 samples)")
     func derivativeNegativeValues() {
-        let waveform = Waveform1D<Double>.linearRamp(startValue: -10.0, endValue: 10.0, duration: 1.0, samplingRate: 200.0)
+        let waveform = Waveform1D<Double>.linearRamp(
+            startValue: -10.0,
+            endValue: 10.0,
+            duration: 1.0,
+            samplingRate: 200.0
+        )
         let derived = waveform.derivative()
 
         #expect(derived.values.count == 200)
@@ -376,8 +382,8 @@ struct CalculusFundamentalTheoremTests {
 
         // Check that the shape is similar (differences should be similar)
         for i in 10..<(integrated.values.count - 10) {
-            let originalDiff = original.values[i] - original.values[i-1]
-            let reconstructedDiff = integrated.values[i] - integrated.values[i-1]
+            let originalDiff = original.values[i] - original.values[i - 1]
+            let reconstructedDiff = integrated.values[i] - integrated.values[i - 1]
             #expect(abs(originalDiff - reconstructedDiff) < 0.01)
         }
     }
@@ -405,25 +411,25 @@ struct CalculusFundamentalTheoremTests {
         // Start with linear ramp
         let linear = Waveform1D<Double>.linearRamp(startValue: 0.0, endValue: 1.0, duration: 1.0, samplingRate: 300.0)
         let quadratic = linear.integrate()  // x²/2
-        let cubic = quadratic.integrate()   // x³/6
+        let cubic = quadratic.integrate()  // x³/6
 
-        let firstDeriv = cubic.derivative()   // x²/2
-        let secondDeriv = firstDeriv.derivative() // x
-        let thirdDeriv = secondDeriv.derivative() // constant
+        let firstDeriv = cubic.derivative()  // x²/2
+        let secondDeriv = firstDeriv.derivative()  // x
+        let thirdDeriv = secondDeriv.derivative()  // constant
 
         #expect(thirdDeriv.values.count > 0)
 
         // Third derivative should be approximately constant, but numerical errors accumulate
         let avg = thirdDeriv.values.reduce(0.0, +) / Double(thirdDeriv.values.count)
         let variance = thirdDeriv.values.map { pow($0 - avg, 2.0) }.reduce(0.0, +) / Double(thirdDeriv.values.count)
-        
+
         // Test that the variance is reasonable (not infinite/NaN)
         #expect(variance.isFinite)
         #expect(variance >= 0.0)
-        
+
         // Test that the mean is in a reasonable range for the expected constant derivative
         #expect(abs(avg) < 10.0)
-        
+
         // Test that it's not completely random - should have some structure
         let standardDeviation = sqrt(variance)
         #expect(standardDeviation < abs(avg) * 10.0 || abs(avg) < 1.0)  // Relative or absolute bound
@@ -436,7 +442,12 @@ struct CalculusEdgeCasesTests {
 
     @Test("Very small dt values (1000 samples)")
     func verySmallDt() {
-        let waveform = Waveform1D<Double>.linearRamp(startValue: 0.0, endValue: 1.0, duration: 0.1, samplingRate: 10000.0)
+        let waveform = Waveform1D<Double>.linearRamp(
+            startValue: 0.0,
+            endValue: 1.0,
+            duration: 0.1,
+            samplingRate: 10000.0
+        )
 
         let derived = waveform.derivative()
         #expect(derived.values.count == 1000)
@@ -448,7 +459,12 @@ struct CalculusEdgeCasesTests {
 
     @Test("Large dt values (100 samples)")
     func largeDt() {
-        let waveform = Waveform1D<Double>.linearRamp(startValue: 0.0, endValue: 100.0, duration: 100.0, samplingRate: 1.0)
+        let waveform = Waveform1D<Double>.linearRamp(
+            startValue: 0.0,
+            endValue: 100.0,
+            duration: 100.0,
+            samplingRate: 1.0
+        )
 
         let derived = waveform.derivative()
         #expect(derived.values.count == 100)
@@ -469,7 +485,12 @@ struct CalculusEdgeCasesTests {
 
     @Test("Derivative with many points (1000 samples)")
     func derivativeManyPoints() {
-        let waveform = Waveform1D<Double>.linearRamp(startValue: 0.0, endValue: 999.0, duration: 1.0, samplingRate: 1000.0)
+        let waveform = Waveform1D<Double>.linearRamp(
+            startValue: 0.0,
+            endValue: 999.0,
+            duration: 1.0,
+            samplingRate: 1000.0
+        )
 
         let derived = waveform.derivative()
         #expect(derived.values.count == 1000)
@@ -538,7 +559,12 @@ struct PhysicalInterpretationTests {
     @Test("Position to velocity (kinematics, 500 samples)")
     func positionToVelocity() {
         // Linear position: 0 to 10 meters over 1 second
-        let position = Waveform1D<Double>.linearRamp(startValue: 0.0, endValue: 10.0, duration: 1.0, samplingRate: 500.0)
+        let position = Waveform1D<Double>.linearRamp(
+            startValue: 0.0,
+            endValue: 10.0,
+            duration: 1.0,
+            samplingRate: 500.0
+        )
         let velocity = position.derivative()
 
         // Velocity should be constant 10 m/s

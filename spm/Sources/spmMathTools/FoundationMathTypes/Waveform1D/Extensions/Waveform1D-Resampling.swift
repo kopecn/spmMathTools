@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 
 // MARK: - Decimation and Interpolation
 extension Waveform1D where T: BinaryFloatingPoint {

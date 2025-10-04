@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 
 // MARK: - Envelope Detection
 extension Waveform1D where T: BinaryFloatingPoint & Comparable {

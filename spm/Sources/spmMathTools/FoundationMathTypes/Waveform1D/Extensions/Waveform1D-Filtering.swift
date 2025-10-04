@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 
 // MARK: - Digital Filtering
 extension Waveform1D where T: BinaryFloatingPoint {

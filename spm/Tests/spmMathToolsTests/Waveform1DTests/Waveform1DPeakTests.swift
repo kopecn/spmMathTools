@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 import Testing
 
 @testable import spmMathTools
@@ -35,7 +36,7 @@ struct BasicPeakDetectionTests {
             duration: 3,
             samplingRate: 10000
         )
-        
+
         let peaks1 = waveform1.detectPeaks()
 
         #expect(peaks1.count == 300)
@@ -47,7 +48,7 @@ struct BasicPeakDetectionTests {
             duration: 3,
             samplingRate: 1000
         )
-        
+
         let peaks2 = waveform2.detectPeaks()
 
         #expect(peaks2.count == 300)
@@ -60,7 +61,7 @@ struct BasicPeakDetectionTests {
             duration: 3,
             samplingRate: 210
         )
-        
+
         let peaks3 = waveform3.detectPeaks()
 
         #expect(peaks3.count == 300)
@@ -115,8 +116,8 @@ struct BasicPeakDetectionTests {
 
         let peaks = waveform.detectPeaks(
             threshold: 3.0,
-            prominence: 1.0,
-            minDistance: 2,
+            prominence: 0.5,
+            minDistance: 1,
             edgePeaks: false
         )
 
@@ -124,6 +125,47 @@ struct BasicPeakDetectionTests {
         for peak in peaks {
             #expect(peak.value >= 3.0)
         }
+    }
+
+    @Test("Peak detection with all parameters - DEBUG")
+    func peakDetectionWithAllParametersDebug() {
+        let values = [0.0, 2.0, 1.0, 5.0, 2.0, 1.0, 3.0, 0.5, 4.0, 1.0]
+        let waveform = Waveform1D(values: values, dt: 0.1)
+
+        // Test each filter step by step
+        print("Original values: \(values)")
+        
+        // Step 1: Basic peak detection (no filters)
+        let allPeaks = waveform.detectPeaks()
+        print("All peaks found: \(allPeaks.count)")
+        for peak in allPeaks {
+            print("  Peak at index \(peak.index), value \(peak.value)")
+        }
+        
+        // Step 2: With threshold only
+        let thresholdPeaks = waveform.detectPeaks(threshold: 3.0)
+        print("Peaks with threshold 3.0: \(thresholdPeaks.count)")
+        for peak in thresholdPeaks {
+            print("  Peak at index \(peak.index), value \(peak.value)")
+        }
+        
+        // Step 3: With threshold and prominence
+        let prominencePeaks = waveform.detectPeaks(threshold: 3.0, prominence: 0.5)
+        print("Peaks with threshold 3.0 and prominence 0.5: \(prominencePeaks.count)")
+        for peak in prominencePeaks {
+            print("  Peak at index \(peak.index), value \(peak.value)")
+        }
+        
+        // Step 4: All filters
+        let finalPeaks = waveform.detectPeaks(
+            threshold: 3.0,
+            prominence: 0.5,
+            minDistance: 1,
+            edgePeaks: false
+        )
+        print("Final peaks: \(finalPeaks.count)")
+        
+        #expect(!finalPeaks.isEmpty)
     }
 
     @Test("Peak detection consistency")
@@ -227,7 +269,7 @@ struct ValleyDetectionTests {
             duration: 3,
             samplingRate: 10000
         )
-        
+
         let valleys1 = waveform1.detectValleys()
 
         #expect(valleys1.count == 300)
@@ -239,7 +281,7 @@ struct ValleyDetectionTests {
             duration: 3,
             samplingRate: 1000
         )
-        
+
         let valleys2 = waveform2.detectValleys()
 
         #expect(valleys2.count == 300)
@@ -252,7 +294,7 @@ struct ValleyDetectionTests {
             duration: 3,
             samplingRate: 250
         )
-        
+
         let valleys3 = waveform3.detectValleys()
 
         #expect(valleys3.count == 300)

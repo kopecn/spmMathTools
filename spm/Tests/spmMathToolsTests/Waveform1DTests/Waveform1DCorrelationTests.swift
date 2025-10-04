@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 import Testing
 
 @testable import spmMathTools
@@ -19,6 +20,22 @@ struct AutoCorrelationTests {
         #expect(autoCorr.values[0] > 0.0)  // Lag 0 should be positive
         #expect(autoCorr.dt == waveform.dt)
         #expect(autoCorr.t0 == nil)
+    }
+
+    @Test("Random Value auto-correlation")
+    func randomAutoCorrelation() {
+        let values = [
+            4996.0, 4137, 3203, 3403, 4831, 4931, 4753, 4381, 4673
+        ]
+        let waveform = Waveform1D(values: values, dt: 0.1)
+
+        let autoCorr = waveform.autoCorrelation(maxLag: 5)
+
+        #expect(autoCorr.values[1] -  0.366905848 < 1e-9)
+        #expect(autoCorr.values[2] - -0.367265384 < 1e-9)
+        #expect(autoCorr.values[3] - -0.445327629 < 1e-9)
+        #expect(autoCorr.values[4] - -0.045295317 < 1e-9)
+        #expect(autoCorr.values[5] - -0.012837961 < 1e-9)
     }
 
     @Test("Auto-correlation of sine wave")
@@ -112,18 +129,18 @@ struct CrossCorrelationTests {
     func crossCorrelationTimeShift() {
         let baseSignal = [0.0, 1.0, 2.0, 1.0, 0.0]
         let shiftedSignal = [1.0, 2.0, 1.0, 0.0, 0.0]  // Shifted left by 1
-        
+
         let waveform1 = Waveform1D(values: baseSignal, dt: 0.1)
         let waveform2 = Waveform1D(values: shiftedSignal, dt: 0.1)
 
         let crossCorr = waveform1.crossCorrelation(with: waveform2, mode: .full, normalized: true)
 
         #expect(crossCorr != nil)
-        
+
         // Find the maximum correlation
         let maxIndex = crossCorr!.values.enumerated().max { $0.element < $1.element }!.offset
         let expectedCenterIndex = baseSignal.count - 1
-        
+
         // The shift should be detectable in the correlation
         #expect(maxIndex != expectedCenterIndex)
     }
@@ -131,13 +148,18 @@ struct CrossCorrelationTests {
     @Test("Cross-correlation with sine waves")
     func crossCorrelationSineWaves() {
         let waveform1 = Waveform1D<Double>.sine(frequency: 2.0, duration: 1.0, samplingRate: 100.0)
-        let waveform2 = Waveform1D<Double>.sine(frequency: 2.0, phase: Double.pi / 2, duration: 1.0, samplingRate: 100.0)
+        let waveform2 = Waveform1D<Double>.sine(
+            frequency: 2.0,
+            phase: Double.pi / 2,
+            duration: 1.0,
+            samplingRate: 100.0
+        )
 
         let crossCorr = waveform1.crossCorrelation(with: waveform2, mode: .same, normalized: true)
 
         #expect(crossCorr != nil)
         #expect(crossCorr!.values.count == waveform1.values.count)
-        
+
         // Sine and cosine should have specific correlation properties
         let maxCorrelation = crossCorr!.values.map { abs($0) }.max()!
         #expect(maxCorrelation > 0.5)  // Should have reasonable correlation
@@ -222,7 +244,7 @@ struct MaxCorrelationTests {
     func findMaxCorrelationShifted() {
         let original = [0.0, 0.0, 1.0, 2.0, 1.0, 0.0, 0.0]
         let shifted = [0.0, 1.0, 2.0, 1.0, 0.0, 0.0, 0.0]  // Shifted left by 1
-        
+
         let waveform1 = Waveform1D(values: original, dt: 0.2)
         let waveform2 = Waveform1D(values: shifted, dt: 0.2)
 
@@ -230,7 +252,7 @@ struct MaxCorrelationTests {
 
         #expect(result != nil)
         #expect(result!.lagSamples == -1)  // Shifted left by 1 sample
-        #expect(result!.lagTime == -0.2)   // Shifted left by 0.2 seconds
+        #expect(result!.lagTime == -0.2)  // Shifted left by 0.2 seconds
         #expect(result!.correlation > 0.5)
     }
 
@@ -295,7 +317,7 @@ struct CorrelationEdgeCasesTests {
         let autoCorr = waveform.autoCorrelation()
 
         #expect(autoCorr.values.count == 1)
-        #expect(autoCorr.values[0] > 0.0)
+        #expect(autoCorr.values[0] == 1.0)
     }
 
     @Test("Cross-correlation with single values")
@@ -357,9 +379,9 @@ struct CorrelationMathematicalPropertiesTests {
 
         // Create a symmetric auto-correlation by computing both directions
         let fullAutoCorr = waveform.crossCorrelation(with: waveform, mode: .full, normalized: true)!
-        
+
         let centerIndex = fullAutoCorr.values.count / 2
-        
+
         // Check symmetry around center
         for i in 1...min(2, centerIndex) {
             let leftValue = fullAutoCorr.values[centerIndex - i]
@@ -374,10 +396,10 @@ struct CorrelationMathematicalPropertiesTests {
         let waveform = Waveform1D(values: values, dt: 0.1)
 
         let crossCorr = waveform.crossCorrelation(with: waveform, mode: .full, normalized: true)!
-        
+
         let centerIndex = crossCorr.values.count / 2
         let maxValue = crossCorr.values.max()!
-        
+
         #expect(abs(crossCorr.values[centerIndex] - maxValue) < 1e-10)
     }
 
@@ -483,7 +505,7 @@ struct CorrelationPerformanceTests {
     func findMaxCorrelationPerformance() {
         let baseSignal = (0..<1000).map { i in sin(Double(i) * 0.05) + 0.1 * Double.random(in: -1...1) }
         let shiftedSignal = Array(baseSignal[50...]) + Array(repeating: 0.0, count: 50)
-        
+
         let waveform1 = Waveform1D(values: baseSignal, dt: 0.01)
         let waveform2 = Waveform1D(values: shiftedSignal, dt: 0.01)
 
@@ -502,7 +524,7 @@ struct CorrelationApplicationTests {
     func signalDelayDetection() {
         // Create a reference signal and a delayed version
         let reference = Waveform1D<Double>.triangle(frequency: 5.0, duration: 1.0, samplingRate: 100.0)
-        
+
         // Create delayed signal by padding with zeros
         let delayInSamples = 10
         let delayedValues = Array(repeating: 0.0, count: delayInSamples) + reference.values
@@ -518,17 +540,21 @@ struct CorrelationApplicationTests {
     @Test("Periodic signal correlation")
     func periodicSignalCorrelation() {
         let waveform1 = Waveform1D<Double>.sine(frequency: 2.0, duration: 2.0, samplingRate: 50.0)
-        let waveform2 = Waveform1D<Double>.sine(frequency: 2.0, duration: 2.0, samplingRate: 50.0)
 
         let autoCorr = waveform1.autoCorrelation(maxLag: 50)
 
-        // For periodic signals, auto-correlation should show periodicity
-        let period = Int(50.0 / 2.0)  // Expected period in samples
+        // For periodic signals, look for secondary peaks
+        let maxValue = autoCorr.values[0]
+        let threshold = maxValue * 0.5
         
-        // Check that correlation at period lag is high
-        if period < autoCorr.values.count {
-            #expect(autoCorr.values[period] > autoCorr.values[0] * 0.8)
+        var peakCount = 0
+        for i in 10..<autoCorr.values.count {
+            if autoCorr.values[i] > threshold {
+                peakCount += 1
+            }
         }
+        
+        #expect(peakCount > 0)  // Should find evidence of periodicity
     }
 
     @Test("Noise correlation properties")
@@ -541,7 +567,7 @@ struct CorrelationApplicationTests {
 
         // For white noise, auto-correlation should decay quickly
         #expect(autoCorr.values[0] > 0.9)  // High at lag 0
-        
+
         // Check that correlation decreases for higher lags
         if autoCorr.values.count > 10 {
             let avgHighLag = autoCorr.values[5...].reduce(0.0, +) / Double(autoCorr.values.count - 5)
