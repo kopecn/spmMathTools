@@ -5,12 +5,12 @@
 //  Created by Nicholas Bergantz on 4/21/24.
 //
 import Foundation
+import simd
 
 /// if the number is within this range round it to zero
 ///    - e.g. `if polyUniThresh ~= val { return 0 }`
 private let polyUniThresh: Double = 1e-9
 private let polyUniThreshRange: Range<Double> = -polyUniThresh..<polyUniThresh
-private let eps16: Double = 16 * .ulpOfOne
 
 extension Array where Element == Double {
 
@@ -48,18 +48,18 @@ public enum PolynomialUnivariateOrder: Equatable, Sendable {
 
     public init(fromIndex: Int) {
         switch fromIndex {
-        case ...0: self = .zeroth
-        case 1: self = .constant
-        case 2: self = .linear
-        case 3: self = .quadratic
-        case 4: self = .cubic
-        case 5: self = .quartic
-        case 6: self = .quintic
-        case 7: self = .sextic
-        case 8: self = .septic
-        case 9: self = .octic
-        case 10: self = .nonic
-        case 11: self = .decic
+        case ...(-1): self = .zeroth
+        case 0: self = .constant
+        case 1: self = .linear
+        case 2: self = .quadratic
+        case 3: self = .cubic
+        case 4: self = .quartic
+        case 5: self = .quintic
+        case 6: self = .sextic
+        case 7: self = .septic
+        case 8: self = .octic
+        case 9: self = .nonic
+        case 10: self = .decic
         case _: self = .higher(fromIndex)
         }
     }
@@ -136,23 +136,22 @@ public class PolynomialUnivariateFunction: CustomStringConvertible {
 
     /// returns the derivative of this function, yet another polynomical derivative one order less
     public var derivative: PolynomialUnivariateFunction {
-        /// the zeroth' derivative is zero
+        /// the zeroth derivative is zero
         if self.degree == .zeroth { return ZeroUnivariatePolynomial() }
         let c = self.coefficients.count - 1
 
-        // 4      3      2      1      0
-        // a x³ + b x² + c x¹ + d x⁰ + 0  --> Cubic
-        //        3ax² + 2bx¹ + 1cx⁰ + 0  --> Quadratic
-        return PolynomialUnivariateOrder(fromIndex: self.coefficients.count - 1)
-            .construct(
-                coefficients: self.coefficients.enumerated().compactMap {
-                    c == $0 ? nil : Double(c - $0) * $1
-                }
-            )
+        // Calculate derivative coefficients
+        let derivCoeffs = self.coefficients.enumerated().compactMap { (index, coeff) in
+            c == index ? nil : Double(c - index) * coeff
+        }
+
+        // Fix: The derivative degree should be one less than the original
+        return PolynomialUnivariateOrder(fromIndex: derivCoeffs.count - 1)
+            .construct(coefficients: derivCoeffs)
     }
 
     /// roots, get the roots of this polynomial
-    var roots: [Double] {
+    public var roots: [Double] {
         get throws {
             throw MathErrors.rootsUnsolveableFor(self.degree, self.coefficients)
         }
@@ -163,7 +162,8 @@ public class PolynomialUnivariateFunction: CustomStringConvertible {
     /// constructs using an array of coeff's
     public required init(coefficients: [Double]) {
         self.coefficients = coefficients
-        self.degree = PolynomialUnivariateOrder(fromIndex: coefficients.count)
+        // Fix: degree should be coefficients.count - 1, not coefficients.count
+        self.degree = PolynomialUnivariateOrder(fromIndex: coefficients.count - 1)
     }
 
     // MARK: - Methods
@@ -201,7 +201,7 @@ public class PolynomialUnivariateFunction: CustomStringConvertible {
         //           4         3        2       1      0
         //           a x³   +  b x²   +  cx¹ +  dx⁰ +  0  --> Cubic
         // ax⁴/4  +  bx³/3  +  cx²/2  +  dx¹  + ex⁰ +  0  --> Quartic
-        return PolynomialUnivariateOrder(fromIndex: coeffs.count)
+        return PolynomialUnivariateOrder(fromIndex: coeffs.count - 1)
             .construct(coefficients: coeffs)
     }
 
@@ -214,7 +214,7 @@ public class ZeroUnivariatePolynomial: PolynomialUnivariateFunction {
     // MARK: - Properties
 
     /// the roots for the zeroth polynomial is none
-    override var roots: [Double] { [] }
+    public override var roots: [Double] { [] }
 
     // MARK: - Initializers
 
@@ -235,7 +235,7 @@ public class ConstantUnivariateFunction: PolynomialUnivariateFunction {
     // MARK: - Properties
 
     /// the real roots for a constant function is zero if the constant is zero
-    override var roots: [Double] {
+    public override var roots: [Double] {
         if a == 0 { return [0] }
         return []
     }
@@ -264,7 +264,7 @@ public class LinearUnivariateFunction: PolynomialUnivariateFunction {
     // MARK: - Properties
 
     /// the roots for the linear equation is b/m = x
-    override var roots: [Double] {
+    public override var roots: [Double] {
         if a == 0 {
             return ConstantUnivariateFunction(b).roots
         }
@@ -300,7 +300,7 @@ public class QuadraticUnivariatePolynomial: PolynomialUnivariateFunction {
 
     /// the real roots for the quadratic equation is b/m = x
     ///     - https://kieranb662.github.io/blog/2020/04/21/Swift-Equation-Solvers
-    override var roots: [Double] {
+    public override var roots: [Double] {
         if a == 0 {
             return LinearUnivariateFunction(b, c).roots
         }
@@ -355,43 +355,13 @@ public class CubicUnivariatePolynomial: PolynomialUnivariateFunction {
 
     /// the real roots for the quadratic equation is b/m = x
     ///     - https://kieranb662.github.io/blog/2020/04/21/Swift-Equation-Solvers
-    override var roots: [Double] {
+    public override var roots: [Double] {
         if a == 0 {
             return QuadraticUnivariatePolynomial(b, c, d).roots
         }
 
-        let a_1 = b / a
-        let a_2 = c / a
-        let a_3 = d / a
-
-        let q = (3 * a_2 - pow(a_1, 2)) / 9
-        let r = (9 * a_1 * a_2 - 27 * a_3 - 2 * pow(a_1, 3)) / 54
-
-        let s = cbrt(r + sqrt(pow(q, 3) + pow(r, 2)))
-        let t = cbrt(r - sqrt(pow(q, 3) + pow(r, 2)))
-
-        let d = pow(q, 3) + pow(r, 2)  // discriminant
-
-        switch d {
-        case ...polyUniThresh:
-            let theta = acos(r / sqrt(-pow(q, 3)))
-            let twoSqrtQ = 2 * sqrt(-q)
-            return [
-                twoSqrtQ * cos((1 / 3) * theta) - (1 / 3) * a_1,
-                twoSqrtQ * cos((1 / 3) * theta + 2 * Double.pi / 3) - (1 / 3) * a_1,
-                twoSqrtQ * cos((1 / 3) * theta + 4 * Double.pi / 3) - (1 / 3) * a_1,
-            ]
-
-        case 0...:
-            return [
-                s + t - (1 / 3) * a_1,
-                -(1 / 2) * (s + t) - (1 / 3) * a_1,
-                -(1 / 2) * (s + t) - (1 / 3) * a_1,
-            ]
-
-        default:
-            return []
-        }
+        // Use the existing solveCubic function from Roots.swift
+        return solveCubic(a, b, c, d)
     }
 
     /// The constant coeff for the polynomial
@@ -421,46 +391,6 @@ public class CubicUnivariatePolynomial: PolynomialUnivariateFunction {
     public required init(coefficients: [Double]) {
         super.init(coefficients: coefficients)
     }
-
-    func cubicSolve(
-        a: Double,
-        b: Double,
-        c: Double,
-        d: Double,
-        threshold: Double = 0.0001
-    ) -> [Double] {
-
-        var roots = [Double]()
-
-        let a_1 = b / a
-        let a_2 = c / a
-        let a_3 = d / a
-
-        let q = (3 * a_2 - pow(a_1, 2)) / 9
-        let r = (9 * a_1 * a_2 - 27 * a_3 - 2 * pow(a_1, 3)) / 54
-
-        let s = cbrt(r + sqrt(pow(q, 3) + pow(r, 2)))
-        let t = cbrt(r - sqrt(pow(q, 3) + pow(r, 2)))
-
-        var d = pow(q, 3) + pow(r, 2)  // discriminant
-
-        // Check if d is within the zero threshold
-        if -threshold < d && d < threshold { d = 0 }
-        if d > 0 {
-            let x_1 = s + t - (1 / 3) * a_1
-            let x_2 = -(1 / 2) * (s + t) - (1 / 3) * a_1
-            let x_3 = -(1 / 2) * (s + t) - (1 / 3) * a_1
-            roots = [x_1, x_2, x_3]
-
-        } else if d <= 0 {
-            let theta = acos(r / sqrt(-pow(q, 3)))
-            let x_1 = 2 * sqrt(-q) * cos((1 / 3) * theta) - (1 / 3) * a_1
-            let x_2 = 2 * sqrt(-q) * cos((1 / 3) * theta + 2 * Double.pi / 3) - (1 / 3) * a_1
-            let x_3 = 2 * sqrt(-q) * cos((1 / 3) * theta + 4 * Double.pi / 3) - (1 / 3) * a_1
-            roots = [x_1, x_2, x_3]
-        }
-        return roots
-    }
 }
 
 // MARK: - QuarticUnivariatePolynomial
@@ -471,15 +401,22 @@ public class QuarticUnivariatePolynomial: PolynomialUnivariateFunction {
 
     /// the real roots for the quadratic equation is b/m = x
     ///     - https://kieranb662.github.io/blog/2020/04/21/Swift-Equation-Solvers
-    override var roots: [Double] {
+    public override var roots: [Double] {
         get throws {
             if a == 0 {
-                return CubicUnivariatePolynomial(b, c, d, e).roots
+                return try CubicUnivariatePolynomial(b, c, d, e).roots
             }
             if e != 0 {
                 throw MathErrors.rootsUnsolveableFor(self.degree, self.coefficients)
             }
-            return self.solveQuartMonic
+
+            // Use the existing solveQuarticMonic function from Roots.swift
+            let aM = b / a
+            let bM = c / a
+            let cM = d / a
+            let dM = e / a
+
+            return solveQuarticMonic(aM, bM, cM, dM)
         }
     }
 

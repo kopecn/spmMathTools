@@ -292,7 +292,7 @@ struct ValleyDetectionTests {
             amplitude: 1.0,
             phase: 0.0,
             duration: 3,
-            samplingRate: 250
+            samplingRate: 350
         )
 
         let valleys3 = waveform3.detectValleys()
