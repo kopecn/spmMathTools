@@ -5,25 +5,6 @@
 //  Created by Nicholas Bergantz on 4/21/24.
 //
 import Foundation
-import simd
-
-/// if the number is within this range round it to zero
-///    - e.g. `if polyUniThresh ~= val { return 0 }`
-private let polyUniThresh: Double = 1e-9
-private let polyUniThreshRange: Range<Double> = -polyUniThresh..<polyUniThresh
-
-extension Array where Element == Double {
-
-    /// Gate allowing only positive values to be appended.
-    ///
-    /// - Parameters:
-    ///        - val: Double, If true, elements will be joined with higher precision formatting.
-    fileprivate mutating func insertIfPositive(_ val: Double) {
-        if val >= 0 {
-            self.append(val)
-        }
-    }
-}
 
 // MARK: - PolynomialUnivariateOrder
 
@@ -123,8 +104,6 @@ public enum PolynomialUnivariateOrder: Equatable, Sendable {
 
 public class PolynomialUnivariateFunction: CustomStringConvertible {
 
-    static let tolerance = 1e-14
-
     // MARK: - Properties
     let coefficients: [Double]
 
@@ -168,9 +147,12 @@ public class PolynomialUnivariateFunction: CustomStringConvertible {
 
     // MARK: - Methods
 
-    /// returns the coefficient for said degree,
+    /// Returns the coefficient for the specified degree with bounds checking
+    /// - Parameter deg: The degree index (0 = constant term, 1 = linear, etc.)
+    /// - Returns: The coefficient at the specified degree, or 0 if out of bounds
     public func coeffAt(_ deg: Int) -> Double {
-        self.coefficients[deg]
+        guard deg >= 0 && deg < coefficients.count else { return 0 }
+        return coefficients[deg]
     }
 
     /// This will evaluate the result of the polynomial function for f(x) ...
@@ -308,7 +290,7 @@ public class QuadraticUnivariatePolynomial: PolynomialUnivariateFunction {
         let d = pow(b, 2) - 4 * a * c
 
         switch d {
-        case ...polyUniThresh:
+        case ...polynomialZeroThreshold:
             return [-b / (2 * a)]
 
         case 0...:
@@ -399,25 +381,20 @@ public class CubicUnivariatePolynomial: PolynomialUnivariateFunction {
 public class QuarticUnivariatePolynomial: PolynomialUnivariateFunction {
     // MARK: - Properties
 
-    /// the real roots for the quadratic equation is b/m = x
+    /// the real roots for the quartic equation
     ///     - https://kieranb662.github.io/blog/2020/04/21/Swift-Equation-Solvers
     public override var roots: [Double] {
-        get throws {
-            if a == 0 {
-                return try CubicUnivariatePolynomial(b, c, d, e).roots
-            }
-            if e != 0 {
-                throw MathErrors.rootsUnsolveableFor(self.degree, self.coefficients)
-            }
-
-            // Use the existing solveQuarticMonic function from Roots.swift
-            let aM = b / a
-            let bM = c / a
-            let cM = d / a
-            let dM = e / a
-
-            return solveQuarticMonic(aM, bM, cM, dM)
+        if a == 0 {
+            return CubicUnivariatePolynomial(b, c, d, e).roots
         }
+
+        // Use the existing solveQuarticMonic function from Roots.swift
+        let aM = b / a
+        let bM = c / a
+        let cM = d / a
+        let dM = e / a
+
+        return solveQuarticMonic(aM, bM, cM, dM)
     }
 
     /// The constant coeff for the polynomial
@@ -450,173 +427,6 @@ public class QuarticUnivariatePolynomial: PolynomialUnivariateFunction {
 
     public required init(coefficients: [Double]) {
         super.init(coefficients: coefficients)
-    }
-
-    /// Solves a (quartic polynomial)[https://en.wikipedia.org/wiki/Quartic_function] with real coefficients for its real roots.
-    ///
-    /// Calculate all roots of the [monic quartic equation](https://en.wikipedia.org/wiki/Quartic_equation): x^4 + a*x^3 + b*x^2 + c*x + d = 0
-    ///
-    /// - Parameters:
-    ///     - aS: Coefficient of x^3 term in original quartic polynomial.
-    ///     - bS: Coefficient of x^2 term in original quartic polynomial.
-    ///     - cS: Coefficient of x term in original quartic polynomial.
-    ///     - dS: Constant term in original quartic polynomial.
-    /// - Returns: Array containing all real roots of the original quartic polynomial.
-    ///
-    private var solveQuartMonic: [Double] {
-
-        let aM = b / a
-        let bM = c / a
-        let cM = d / a
-        let dM = e / a
-
-        var roots: [Double] = []
-
-        if abs(dM) < .ulpOfOne {
-            if abs(cM) < .ulpOfOne {
-                roots.insertIfPositive(0.0)
-
-                let D = aM * aM - 4 * bM
-                if abs(D) < .ulpOfOne {
-                    roots.insertIfPositive(-aM / 2)
-                } else if D > 0.0 {
-                    let sqrtD = sqrt(D)
-                    roots.insertIfPositive((-aM - sqrtD) / 2)
-                    roots.insertIfPositive((-aM + sqrtD) / 2)
-                }
-                return roots
-            }
-
-            if abs(aM) < .ulpOfOne && abs(bM) < .ulpOfOne {
-                roots.insertIfPositive(0.0)
-                roots.insertIfPositive(-cbrt(cM))
-                return roots
-            }
-        }
-
-        let a3 = -bM
-        let b3 = aM * cM - 4 * dM
-        let c3 = -aM * aM * dM - cM * cM + 4 * bM * dM
-
-        var x3: [Double] = [0, 0, 0]
-        let number_zeroes = solveResolventQuartic(&x3, a3, b3, c3)
-
-        var y = x3[0]
-        // Choosing Y with maximal absolute value.
-        if number_zeroes != 1 {
-            if abs(x3[1]) > abs(y) {
-                y = x3[1]
-            }
-            if abs(x3[2]) > abs(y) {
-                y = x3[2]
-            }
-        }
-
-        var q1: Double
-        var q2: Double
-        var p1: Double
-        var p2: Double
-
-        var D = y * y - 4 * dM
-        if abs(D) < .ulpOfOne {
-            q1 = y / 2
-            q2 = q1
-            D = aM * aM - 4 * (bM - y)
-            if abs(D) < .ulpOfOne {
-                p1 = aM / 2
-                p2 = p1
-            } else {
-                let sqrtD = sqrt(D)
-                p1 = (aM + sqrtD) / 2
-                p2 = (aM - sqrtD) / 2
-            }
-        } else {
-            let sqrtD = sqrt(D)
-            q1 = (y + sqrtD) / 2
-            q2 = (y - sqrtD) / 2
-            p1 = (aM * q1 - cM) / (q1 - q2)
-            p2 = (cM - aM * q2) / (q1 - q2)
-        }
-
-        D = p1 * p1 - 4 * q1
-        if abs(D) < eps16 {
-            roots.insertIfPositive(-p1 / 2)
-        } else if D > 0.0 {
-            let sqrtD = sqrt(D)
-            roots.insertIfPositive((-p1 - sqrtD) / 2)
-            roots.insertIfPositive((-p1 + sqrtD) / 2)
-        }
-
-        D = p2 * p2 - 4 * q2
-        if abs(D) < eps16 {
-            roots.insertIfPositive(-p2 / 2)
-        } else if D > 0.0 {
-            let sqrtD = sqrt(D)
-            roots.insertIfPositive((-p2 - sqrtD) / 2)
-            roots.insertIfPositive((-p2 + sqrtD) / 2)
-        }
-
-        return roots
-    }
-
-    /// Solve the resolvent cubic equation corresponding to a quartic polynomial.
-    ///
-    /// This function solves the resolvent cubic equation corresponding to the input quartic polynomial, whose coefficients are passed as parameters. It stores the three roots of the resolvent cubic in the passed x array, and returns the number of real roots.
-    ///
-    /// - Parameters:
-    ///   - x: Array to store the three roots of the resolvent cubic. Passed by reference to allow modification.
-    ///   - aS: Coefficient of x^3 term in original quartic polynomial.
-    ///   - bS: Coefficient of x^2 term in original quartic polynomial.
-    ///   - cS: Coefficient of x term in original quartic polynomial.
-    /// - Returns: The number of real roots (1, 2 or 3).
-    private func solveResolventQuartic(
-        _ x: inout [Double],
-        _ aS: Double,
-        _ bS: Double,
-        _ cS: Double
-    ) -> Int {
-
-        let aR = aS / 3
-        let bR = bS
-        let cR = cS
-
-        let a2 = aR * aR
-        let r = (aR * (2 * a2 - bR) + cR) / 2
-        let r2 = r * r
-        var q = a2 - bR / 3
-        let q3 = q * q * q
-
-        if r2 < q3 {
-            let qsqrt = sqrt(q)
-            let t = min(max(r / (q * qsqrt), -1.0), 1.0)
-            q = -2 * qsqrt
-
-            let theta = acos(t) / 3
-            let ux = cos(theta) * q
-            let uyi = sin(theta) * q
-            x[0] = ux - aR
-            x[1] = ux * cos120 - uyi * sin120 - aR
-            x[2] = ux * cos120 + uyi * sin120 - aR
-            return 3
-
-        }
-
-        var A = -cbrt(abs(r) + sqrt(r2 - q3))
-        if r < 0.0 {
-            A = -A
-        }
-        let B = (0.0 == A ? 0.0 : q / A)
-
-        x[0] = (A + B) - aR
-        x[1] = -(A + B) / 2 - aR
-        x[2] = sqrt(3) * (A - B) / 2
-
-        if abs(x[2]) < .ulpOfOne {
-            x[2] = x[1]
-            return 2
-        }
-
-        return 1
     }
 
 }

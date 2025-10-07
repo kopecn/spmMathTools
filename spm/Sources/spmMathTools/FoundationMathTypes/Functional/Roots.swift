@@ -7,22 +7,8 @@
 
 import Foundation
 
-public let eps16: Double = 16 * .ulpOfOne
-private let tolerance: Double = 1e-14
+// Maximum iterations for numerical root finding algorithms
 private let maxIts: Int = 128
-
-extension Array where Element == Double {
-
-    /// Gate allowing only positive values to be appended.
-    ///
-    /// - Parameters:
-    ///        - val: Double, If true, elements will be joined with higher precision formatting.
-    fileprivate mutating func insertIfPositive(_ val: Double) {
-        if val >= 0 {
-            self.append(val)
-        }
-    }
-}
 
 /// Calculate all real roots of a cubic polynomial equation a*x^3 + b*x^2 + c*x + d = 0.
 ///
@@ -422,7 +408,7 @@ public func shrinkInterval(
             if temp == rts { break }
         }
 
-        if abs(dx) < tolerance { break }
+        if abs(dx) < polynomialTolerance { break }
 
         f = evaluatePolynomial(p, rts)
         df = evaluatePolynomial(deriv, rts)
