@@ -292,12 +292,12 @@ struct ValleyDetectionTests {
             amplitude: 1.0,
             phase: 0.0,
             duration: 3,
-            samplingRate: 350
+            samplingRate: 300
         )
 
-        let valleys3 = waveform3.detectValleys()
+        let valleys3 = waveform3.detectValleys(edgeValleys: true)
 
-        #expect(valleys3.count == 300)
+        #expect(valleys3.count == 301)
     }
 
     @Test("Valley detection with threshold")
