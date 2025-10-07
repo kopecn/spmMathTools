@@ -23,7 +23,6 @@ let package = Package(
             name: "spmMathTools",
             dependencies: [
                 .product(name: "kvSIMD", package: "kvSIMD.swift"),
-                .product(name: "kvSIMD", package: "kvSIMD.swift"),
                 .product(name: "FoundationTypes", package: "spmFoundationTools"),
             ],
             path: "spm/Sources/spmMathTools"

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import simd
 
 private let eps16: Double = 16 * .ulpOfOne
 private let tolerance: Double = 1e-14
@@ -32,7 +33,7 @@ extension Array where Element == Double {
 ///   - cS: Coefficient of x term.
 ///   - dS: Constant term.
 /// - Returns: Array containing all real roots.
-public func solve_cubic(
+public func solveCubic(
     _ aS: Double,
     _ bS: Double,
     _ cS: Double,
@@ -81,7 +82,7 @@ public func solve_cubic(
         let bb = b * b
         let bover3a = b * inva / 3
         let p = (a * c - bb / 3) * invaa
-        let halfq = (2 * bb * b - 9 * a * b * c + 27 * a * a * d) / 54 * invaa * inva
+        let halfq = (2 * bb * b - 9 * a * b * c + 27 * a * a * d) / 54 * invaa * invaa
         let yy = p * p * p / 27 + halfq * halfq
 
         if yy > .ulpOfOne {
@@ -140,7 +141,7 @@ public func solve_cubic(
 ///   - bS: Coefficient of x^2 term in original quartic polynomial.
 ///   - cS: Coefficient of x term in original quartic polynomial.
 /// - Returns: The number of real roots (1, 2 or 3).
-func solve_resolvent(
+public func solveResolvent(
     _ x: inout [Double],
     _ aS: Double,
     _ bS: Double,
@@ -205,7 +206,7 @@ func solve_resolvent(
 ///     - cS: Coefficient of x term in original quartic polynomial.
 ///     - dS: Constant term in original quartic polynomial.
 /// - Returns: Array containing all real roots of the original quartic polynomial.
-func solve_quart_monic(
+public func solveQuarticMonic(
     _ a: Double,
     _ b: Double,
     _ c: Double,
@@ -241,11 +242,11 @@ func solve_quart_monic(
 
     // Fix: Initialize with 3 zeros instead of empty array
     var x3: [Double] = [0.0, 0.0, 0.0]
-    let number_zeroes = solve_resolvent(&x3, a3, b3, c3)
-
+    let numberOfZeroes = solveResolvent(&x3, a3, b3, c3)
+    
     var y = x3[0]
     // Choosing Y with maximal absolute value.
-    if number_zeroes != 1 {
+    if numberOfZeroes != 1 {
         if abs(x3[1]) > abs(y) {
             y = x3[1]
         }
@@ -302,10 +303,10 @@ func solve_quart_monic(
 }
 
 /// Solves a quartic polynomial with monic coefficients by calling the overloaded function that accepts the individual coefficients as parameters.
-func solve_quart_monic(
+public func solveQuarticMonic(
     _ polynom: inout [Double]
 ) -> [Double] {
-    solve_quart_monic(polynom[0], polynom[1], polynom[2], polynom[3])
+    solveQuarticMonic(polynom[0], polynom[1], polynom[2], polynom[3])
 }
 
 /// Evaluates a polynomial with coefficients in p at the point x.
@@ -314,7 +315,7 @@ func solve_quart_monic(
 ///   - p: Array of polynomial coefficients from highest to lowest degree.
 ///   - x: Point to evaluate the polynomial at.
 /// - Returns: Value of the polynomial evaluated at x.
-func poly_eval(
+public func evaluatePolynomial(
     _ p: [Double],
     _ x: Double
 ) -> Double {
@@ -348,7 +349,7 @@ func poly_eval(
 /// - Parameters:
 ///   - coeffs: Array of polynomial coefficients from highest to lowest degree.
 /// - Returns: Array containing the derivative polynomial's coefficients.
-func poly_derivative(_ coeffs: inout [Double]) -> [Double] {
+public func polynomialDerivative(_ coeffs: inout [Double]) -> [Double] {
     guard coeffs.count > 1 else { return [] }
 
     var deriv: [Double] = Array(repeating: 0.0, count: coeffs.count - 1)
@@ -362,16 +363,16 @@ func poly_derivative(_ coeffs: inout [Double]) -> [Double] {
 /// Returns the derivative of a monic polynomial with the given coefficients.
 ///
 /// - Parameters:
-///   - monic_coeffs: Array of monic polynomial coefficients from highest to lowest degree.
+///   - monicCoeffs: Array of monic polynomial coefficients from highest to lowest degree.
 /// - Returns: Array containing the derivative polynomial's coefficients.
-func poly_monic_derivative(_ monic_coeffs: inout [Double]) -> [Double] {
-    guard monic_coeffs.count > 1 else { return [] }
+public func polynomialMonicDerivative(_ monicCoeffs: inout [Double]) -> [Double] {
+    guard monicCoeffs.count > 1 else { return [] }
 
-    var deriv: [Double] = Array(repeating: 0.0, count: monic_coeffs.count - 1)
+    var deriv: [Double] = Array(repeating: 0.0, count: monicCoeffs.count - 1)
     deriv[0] = 1.0
-    let N = monic_coeffs.count
+    let N = monicCoeffs.count
     for i in 1..<(N - 1) {
-        deriv[i] = Double(N - 1 - i) * monic_coeffs[i] / Double(N - 1)
+        deriv[i] = Double(N - 1 - i) * monicCoeffs[i] / Double(N - 1)
     }
     return deriv
 }
@@ -383,7 +384,7 @@ func poly_monic_derivative(_ monic_coeffs: inout [Double]) -> [Double] {
 ///   - li: Lower bound of initial interval
 ///   - hi: Upper bound of initial interval
 /// - Returns: Approximation of a root contained in the shrunken interval
-func shrink_interval(
+public func shrinkInterval(
     _ p: inout [Double],
     _ li: Double,
     _ hi: Double
@@ -391,10 +392,10 @@ func shrink_interval(
     var l = li
     var h = hi
 
-    let fl = poly_eval(p, l)
+    let fl = evaluatePolynomial(p, l)
     if fl == 0.0 { return l }
 
-    let fh = poly_eval(p, h)
+    let fh = evaluatePolynomial(p, h)
     if fh == 0.0 { return h }
 
     if fl > 0.0 { swap(&l, &h) }
@@ -402,9 +403,9 @@ func shrink_interval(
     var rts = (l + h) / 2
     var dxold = abs(h - l)
     var dx = dxold
-    let deriv = poly_derivative(&p)
-    var f = poly_eval(p, rts)
-    var df = poly_eval(deriv, rts)
+    let deriv = polynomialDerivative(&p)
+    var f = evaluatePolynomial(p, rts)
+    var df = evaluatePolynomial(deriv, rts)
     var temp: Double
 
     for _ in 0..<maxIts {
@@ -424,8 +425,8 @@ func shrink_interval(
 
         if abs(dx) < tolerance { break }
 
-        f = poly_eval(p, rts)
-        df = poly_eval(deriv, rts)
+        f = evaluatePolynomial(p, rts)
+        df = evaluatePolynomial(deriv, rts)
 
         if f < 0.0 {
             l = rts
