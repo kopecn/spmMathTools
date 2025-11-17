@@ -338,7 +338,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - samplingRate: Sampling rate in Hz
     ///   - t0: Optional start time
     /// - Returns: Base-10 logarithm waveform
-    public static func log10(
+    public static func logarithm10(
         amplitude: T = T(1.0),
         offset: Double = 0.01,
         duration: TimeInterval,
@@ -350,7 +350,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
         let values = (0..<sampleCount).map { i in
             let t = Double(i) * dt + offset
-            return amplitude * T(_math.log10(t))
+            return amplitude * T(log10(t))
         }
 
         return Waveform1D(values: values, dt: dt, t0: t0)
