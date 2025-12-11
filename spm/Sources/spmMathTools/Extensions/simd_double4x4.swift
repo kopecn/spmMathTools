@@ -1,3 +1,4 @@
+import Foundation
 import simd
 
 extension simd_double4x4 {
