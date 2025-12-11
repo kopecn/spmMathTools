@@ -134,28 +134,28 @@ struct BasicPeakDetectionTests {
 
         // Test each filter step by step
         print("Original values: \(values)")
-        
+
         // Step 1: Basic peak detection (no filters)
         let allPeaks = waveform.detectPeaks()
         print("All peaks found: \(allPeaks.count)")
         for peak in allPeaks {
             print("  Peak at index \(peak.index), value \(peak.value)")
         }
-        
+
         // Step 2: With threshold only
         let thresholdPeaks = waveform.detectPeaks(threshold: 3.0)
         print("Peaks with threshold 3.0: \(thresholdPeaks.count)")
         for peak in thresholdPeaks {
             print("  Peak at index \(peak.index), value \(peak.value)")
         }
-        
+
         // Step 3: With threshold and prominence
         let prominencePeaks = waveform.detectPeaks(threshold: 3.0, prominence: 0.5)
         print("Peaks with threshold 3.0 and prominence 0.5: \(prominencePeaks.count)")
         for peak in prominencePeaks {
             print("  Peak at index \(peak.index), value \(peak.value)")
         }
-        
+
         // Step 4: All filters
         let finalPeaks = waveform.detectPeaks(
             threshold: 3.0,
@@ -164,7 +164,7 @@ struct BasicPeakDetectionTests {
             edgePeaks: false
         )
         print("Final peaks: \(finalPeaks.count)")
-        
+
         #expect(!finalPeaks.isEmpty)
     }
 

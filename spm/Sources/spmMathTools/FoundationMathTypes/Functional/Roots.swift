@@ -228,7 +228,7 @@ public func solveQuarticMonic(
     // Fix: Initialize with 3 zeros instead of empty array
     var x3: [Double] = [0.0, 0.0, 0.0]
     let numberOfZeroes = solveResolvent(&x3, a3, b3, c3)
-    
+
     var y = x3[0]
     // Choosing Y with maximal absolute value.
     if numberOfZeroes != 1 {
@@ -432,31 +432,30 @@ private func cbrt(_ x: Double) -> Double {
     }
 }
 
-
 private func solveWithTrigonometric(p: Double, q: Double, a: Double, b: Double) -> [Double] {
     // For three real roots case: discriminant > 0
     let m = 2.0 * sqrt(-p / 3.0)
     let theta = (1.0 / 3.0) * acos((3.0 * q) / (p * m))
-    
+
     // Transform back from depressed cubic
     let shift = -b / (3.0 * a)
-    
+
     return [
         m * cos(theta) + shift,
         m * cos(theta - 2.0 * .pi / 3.0) + shift,
-        m * cos(theta - 4.0 * .pi / 3.0) + shift
+        m * cos(theta - 4.0 * .pi / 3.0) + shift,
     ]
 }
 
 private func solveWithCardano(p: Double, q: Double, a: Double, b: Double) -> [Double] {
     // For one real root case: discriminant <= 0
     let discriminant = (q * q / 4.0) + (p * p * p / 27.0)
-    
+
     if discriminant >= 0 {
         let sqrtDisc = sqrt(discriminant)
         let u = cbrt(-q / 2.0 + sqrtDisc)
         let v = cbrt(-q / 2.0 - sqrtDisc)
-        
+
         // Transform back from depressed cubic
         let shift = -b / (3.0 * a)
         return [u + v + shift]

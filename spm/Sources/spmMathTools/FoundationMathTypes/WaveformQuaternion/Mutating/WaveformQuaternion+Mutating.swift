@@ -1,10 +1,10 @@
 import Foundation
-import simd
 import FoundationTypes
+import simd
 
 // MARK: - Mutating Operations
 extension WaveformQuaternion {
-    
+
     /// Extend  another quaternion waveform to this one
     /// Both waveforms must have the same sampling rate
     public mutating func extend(_ other: WaveformQuaternion<T>) throws {
@@ -29,7 +29,7 @@ extension WaveformQuaternion {
     /// Create a new waveform by concatenating this one with another
     public func concatenated(with other: WaveformQuaternion<T>) throws -> WaveformQuaternion<T> {
         var result = self
-        try result.append(other)
+        try result.extend(other)
         return result
     }
 

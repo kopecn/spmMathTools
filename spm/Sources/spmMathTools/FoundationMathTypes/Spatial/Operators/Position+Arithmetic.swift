@@ -60,7 +60,6 @@ extension Position where T == Double {
     }
 }
 
-
 // MARK: - Arithmetic Operators for Float Position
 
 extension Position where T == Float {

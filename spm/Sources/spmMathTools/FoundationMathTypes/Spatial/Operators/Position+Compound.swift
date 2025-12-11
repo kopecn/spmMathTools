@@ -37,7 +37,6 @@ extension Position where T == Double {
     }
 }
 
-
 // MARK: - Compound Operators for Float Position
 
 extension Position where T == Float {

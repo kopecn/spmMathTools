@@ -25,13 +25,13 @@ struct AutoCorrelationTests {
     @Test("Random Value auto-correlation")
     func randomAutoCorrelation() {
         let values = [
-            4996.0, 4137, 3203, 3403, 4831, 4931, 4753, 4381, 4673
+            4996.0, 4137, 3203, 3403, 4831, 4931, 4753, 4381, 4673,
         ]
         let waveform = Waveform1D(values: values, dt: 0.1)
 
         let autoCorr = waveform.autoCorrelation(maxLag: 5)
 
-        #expect(autoCorr.values[1] -  0.366905848 < 1e-9)
+        #expect(autoCorr.values[1] - 0.366905848 < 1e-9)
         #expect(autoCorr.values[2] - -0.367265384 < 1e-9)
         #expect(autoCorr.values[3] - -0.445327629 < 1e-9)
         #expect(autoCorr.values[4] - -0.045295317 < 1e-9)
@@ -546,14 +546,14 @@ struct CorrelationApplicationTests {
         // For periodic signals, look for secondary peaks
         let maxValue = autoCorr.values[0]
         let threshold = maxValue * 0.5
-        
+
         var peakCount = 0
         for i in 10..<autoCorr.values.count {
             if autoCorr.values[i] > threshold {
                 peakCount += 1
             }
         }
-        
+
         #expect(peakCount > 0)  // Should find evidence of periodicity
     }
 

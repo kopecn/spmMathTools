@@ -1,6 +1,6 @@
 import Foundation
-import simd
 import FoundationTypes
+import simd
 
 // MARK: - Mutating Operations
 extension WaveformPosition {
@@ -29,7 +29,7 @@ extension WaveformPosition {
     /// Create a new waveform by concatenating this one with another
     public func concatenated(with other: WaveformPosition<T>) throws -> WaveformPosition<T> {
         var result = self
-        try result.append(other)
+        try result.extend(other)
         return result
     }
 

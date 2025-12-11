@@ -29,7 +29,7 @@ extension WaveformSpatialPose {
     /// Create a new waveform by concatenating this one with another
     public func concatenated(with other: WaveformSpatialPose<T>) throws -> WaveformSpatialPose<T> {
         var result = self
-        try result.append(other)
+        try result.extend(other)
         return result
     }
 

@@ -36,7 +36,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
             } else {
                 // Interior element - check both neighbors with plateau handling
                 let leftCondition = values[i] >= values[i - 1]  // >= to find peaks
-                let rightCondition = values[i] > values[i + 1]   // > to find peaks
+                let rightCondition = values[i] > values[i + 1]  // > to find peaks
 
                 // Must be at least as high as both neighbors, and strictly higher than at least one
                 isLocalMaximum =

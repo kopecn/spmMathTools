@@ -88,5 +88,5 @@ extension Position where T == Float {
 
 // MARK: - Operator Declarations
 
-infix operator •: MultiplicationPrecedence  // Dot product
-infix operator ×: MultiplicationPrecedence  // Cross product
+infix operator • : MultiplicationPrecedence  // Dot product
+infix operator × : MultiplicationPrecedence  // Cross product
