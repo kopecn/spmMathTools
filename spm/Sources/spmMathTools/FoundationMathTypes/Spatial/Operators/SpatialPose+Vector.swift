@@ -11,7 +11,7 @@ extension SpatialPose where T == Double {
     /// Transform a position by this pose (rotate then translate)
     @inlinable
     public func transform(_ position: Position<Double>) -> Position<Double> {
-        Position<Double>(vector: _pos + Self._qrot(_rot, position.vector))
+        _pos + _rot.rotate(position)
     }
 
     // MARK: Pose Operations
@@ -19,9 +19,10 @@ extension SpatialPose where T == Double {
     /// Compute the inverse of this pose
     @inlinable
     public var inverse: SpatialPose<Double> {
-        SpatialPose(
-            position: Self._qrot(SIMD4<Double>(-_rot.x, -_rot.y, -_rot.z, _rot.w), -_pos),
-            rotation: SIMD4<Double>(-_rot.x, -_rot.y, -_rot.z, _rot.w)
+        let _rotInv = _rot.inverse
+        return SpatialPose(
+            position: _rotInv.rotate(-_pos),
+            rotation: _rotInv
         )
     }
 
@@ -42,7 +43,7 @@ extension SpatialPose where T == Float {
     /// Transform a position by this pose (rotate then translate)
     @inlinable
     public func transform(_ position: Position<Float>) -> Position<Float> {
-        Position<Float>(vector: _pos + Self._qrot(_rot, position.vector))
+        _pos + _rot.rotate(position)
     }
 
     // MARK: Pose Operations
@@ -50,9 +51,10 @@ extension SpatialPose where T == Float {
     /// Compute the inverse of this pose
     @inlinable
     public var inverse: SpatialPose<Float> {
-        SpatialPose(
-            position: Self._qrot(SIMD4<Float>(-_rot.x, -_rot.y, -_rot.z, _rot.w), -_pos),
-            rotation: SIMD4<Float>(-_rot.x, -_rot.y, -_rot.z, _rot.w)
+        let _rotInv = _rot.inverse
+        return SpatialPose(
+            position: _rotInv.rotate(-_pos),
+            rotation: _rotInv
         )
     }
 

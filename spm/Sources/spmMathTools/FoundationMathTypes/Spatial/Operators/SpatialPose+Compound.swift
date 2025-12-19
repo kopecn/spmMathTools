@@ -15,13 +15,13 @@ extension SpatialPose where T == Double {
     /// Offset the pose position by a vector (in-place)
     @inlinable
     public static func += (lhs: inout SpatialPose<Double>, rhs: Position<Double>) {
-        lhs._pos += rhs.vector
+        lhs._pos += rhs
     }
 
     /// Offset the pose position by a negative vector (in-place)
     @inlinable
     public static func -= (lhs: inout SpatialPose<Double>, rhs: Position<Double>) {
-        lhs._pos -= rhs.vector
+        lhs._pos -= rhs
     }
 }
 
@@ -38,12 +38,12 @@ extension SpatialPose where T == Float {
     /// Offset the pose position by a vector (in-place)
     @inlinable
     public static func += (lhs: inout SpatialPose<Float>, rhs: Position<Float>) {
-        lhs._pos += rhs.vector
+        lhs._pos += rhs
     }
 
     /// Offset the pose position by a negative vector (in-place)
     @inlinable
     public static func -= (lhs: inout SpatialPose<Float>, rhs: Position<Float>) {
-        lhs._pos -= rhs.vector
+        lhs._pos -= rhs
     }
 }

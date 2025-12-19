@@ -11,8 +11,8 @@ extension SpatialPose where T == Double {
     @inlinable
     public static func * (lhs: SpatialPose<Double>, rhs: SpatialPose<Double>) -> SpatialPose<Double> {
         SpatialPose(
-            position: lhs._pos + _qrot(lhs._rot, rhs._pos),
-            rotation: _qmul(lhs._rot, rhs._rot)
+            position: lhs._pos + lhs._rot.rotate(rhs._pos),
+            rotation: lhs._rot * rhs._rot
         )
     }
 
@@ -27,13 +27,13 @@ extension SpatialPose where T == Double {
     /// Offset the pose position by a vector (no rotation change)
     @inlinable
     public static func + (lhs: SpatialPose<Double>, rhs: Position<Double>) -> SpatialPose<Double> {
-        SpatialPose(position: lhs._pos + rhs.vector, rotation: lhs._rot)
+        SpatialPose(position: lhs._pos + rhs, rotation: lhs._rot)
     }
 
     /// Offset the pose position by a negative vector
     @inlinable
     public static func - (lhs: SpatialPose<Double>, rhs: Position<Double>) -> SpatialPose<Double> {
-        SpatialPose(position: lhs._pos - rhs.vector, rotation: lhs._rot)
+        SpatialPose(position: lhs._pos - rhs, rotation: lhs._rot)
     }
 }
 
@@ -46,8 +46,8 @@ extension SpatialPose where T == Float {
     @inlinable
     public static func * (lhs: SpatialPose<Float>, rhs: SpatialPose<Float>) -> SpatialPose<Float> {
         SpatialPose(
-            position: lhs._pos + _qrot(lhs._rot, rhs._pos),
-            rotation: _qmul(lhs._rot, rhs._rot)
+            position: lhs._pos + lhs._rot.rotate(rhs._pos),
+            rotation: lhs._rot * rhs._rot
         )
     }
 
@@ -63,13 +63,13 @@ extension SpatialPose where T == Float {
     /// Offset the pose position by a vector (no rotation change)
     @inlinable
     public static func + (lhs: SpatialPose<Float>, rhs: Position<Float>) -> SpatialPose<Float> {
-        SpatialPose(position: lhs._pos + rhs.vector, rotation: lhs._rot)
+        SpatialPose(position: lhs._pos + rhs, rotation: lhs._rot)
     }
 
 
     /// Offset the pose position by a negative vector
     @inlinable
     public static func - (lhs: SpatialPose<Float>, rhs: Position<Float>) -> SpatialPose<Float> {
-        SpatialPose(position: lhs._pos - rhs.vector, rotation: lhs._rot)
+        SpatialPose(position: lhs._pos - rhs, rotation: lhs._rot)
     }
 }
