@@ -1,5 +1,5 @@
 /// Types of triggers
-public enum WaveformTriggerType<T> {
+public enum WaveformTriggerType<T: Numeric & Sendable> {
     /// Edge trigger (rising/falling)
     case edge(WaveformEdgeType, threshold: T)
     /// Level trigger (above/below threshold)

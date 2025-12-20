@@ -1,16 +1,16 @@
 import Foundation
 
 /// Spectral features extracted from spectrogram
-public struct WaveformSpectralFeatures<T> {
+public struct WaveformSpectralFeatures<U: BinaryFloatingPoint & Sendable> {
     /// Spectral centroid for each time frame
-    public let spectralCentroids: [T]
+    public let spectralCentroids: [U]
 
     /// Spectral rolloff for each time frame
-    public let spectralRolloffs: [T]
+    public let spectralRolloffs: [U]
 
     /// Spectral flux for each time frame
-    public let spectralFluxes: [T]
+    public let spectralFluxes: [U]
 
     /// Corresponding time frames
-    public let timeFrames: [TimeInterval]
+    public let timeFrames: [U]
 }

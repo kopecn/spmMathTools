@@ -10,12 +10,12 @@ extension Waveform1D where T: BinaryFloatingPoint {
         guard values.count > 1 else { return nil }
 
         // Convert to complex numbers
-        var complex = values.map { Complex(real: Double($0), imaginary: 0.0) }
+        var complex = values.map { Complex<T>(real: $0, imaginary: T.zero) }
 
         // Pad to next power of 2 for efficiency
         let fftSize = nextPowerOfTwo(complex.count)
         while complex.count < fftSize {
-            complex.append(Complex(real: 0.0, imaginary: 0.0))
+            complex.append(Complex<T>(real: T.zero, imaginary: T.zero))
         }
 
         // Perform FFT
@@ -47,7 +47,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         return 1 << Int(ceil(log2(Double(n))))
     }
 
-    private func bitReversePermutation(_ x: inout [Complex]) {
+    private func bitReversePermutation(_ x: inout [Complex<T>]) {
         let n = x.count
         var j = 0
 
@@ -79,7 +79,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func powerSpectralDensity(
         WaveformWindowType: WaveformWindowType = .hanning,
         windowSize: Int? = nil,
-        overlap: Double = 0.5,
+        overlap: T = 0.5,
         scaling: WaveformPSDScaling = .density
     ) -> (frequencies: [T], psd: [T])? {
 
@@ -87,7 +87,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
         let actualWindowSize = windowSize ?? max(256, values.count / 8)
         let clampedOverlap = max(0.0, min(0.99, overlap))
-        let hopSize = Int(Double(actualWindowSize) * (1.0 - clampedOverlap))
+        let hopSize = Int(actualWindowSize * (1.0 - clampedOverlap))
 
         guard actualWindowSize <= values.count && hopSize > 0 else {
             // Fall back to single segment
@@ -98,7 +98,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         let window = generateWindow(type: WaveformWindowType, length: actualWindowSize)
         let windowPower = window.reduce(0.0) { $0 + $1 * $1 }
 
-        var psdAccumulator: [Double] = []
+        var psdAccumulator: [T] = []
         var segmentCount = 0
 
         // Process overlapping segments
@@ -107,20 +107,20 @@ extension Waveform1D where T: BinaryFloatingPoint {
             let segment = Array(values[startIndex..<(startIndex + actualWindowSize)])
 
             // Apply window
-            let windowedSegment = zip(segment, window).map { Double($0.0) * $0.1 }
+            let windowedSegment = zip(segment, window).map { $0.0 * T($0.1) }
 
             // Convert to complex and perform FFT
-            var complex = windowedSegment.map { Complex(real: $0, imaginary: 0.0) }
+            var complex = windowedSegment.map { Complex<T>(real: $0, imaginary: T.zero) }
             let fftSize = nextPowerOfTwo(complex.count)
             while complex.count < fftSize {
-                complex.append(Complex(real: 0.0, imaginary: 0.0))
+                complex.append(Complex<T>(real: T.zero, imaginary: T.zero))
             }
 
             fft_cooleyTukey(&complex)
 
             // Calculate power spectrum for this segment
             let nyquistBin = fftSize / 2
-            let segmentPSD = (0..<nyquistBin).map { i -> Double in
+            let segmentPSD = (0..<nyquistBin).map { i -> T in
                 let magnitude = complex[i].magnitude
                 return magnitude * magnitude
             }
@@ -141,10 +141,10 @@ extension Waveform1D where T: BinaryFloatingPoint {
         guard segmentCount > 0 && !psdAccumulator.isEmpty else { return nil }
 
         // Average across segments
-        let averagedPSD = psdAccumulator.map { $0 / Double(segmentCount) }
+        let averagedPSD = psdAccumulator.map { $0 / T(segmentCount) }
 
         // Apply scaling
-        let samplingRate = 1.0 / dt
+        let samplingRate = 1.0 / T(dt)
         let scaledPSD = applyWaveformPSDScaling(
             averagedPSD,
             samplingRate: samplingRate,
@@ -178,20 +178,20 @@ extension Waveform1D where T: BinaryFloatingPoint {
         let windowPower = window.reduce(0.0) { $0 + $1 * $1 }
 
         // Apply window
-        let windowedValues = zip(values, window).map { Double($0.0) * $0.1 }
+        let windowedValues = zip(values, window).map { $0.0 * T($0.1) }
 
         // Convert to complex and perform FFT
-        var complex = windowedValues.map { Complex(real: $0, imaginary: 0.0) }
+        var complex = windowedValues.map { Complex<T>(real: $0, imaginary: T.zero) }
         let fftSize = nextPowerOfTwo(complex.count)
         while complex.count < fftSize {
-            complex.append(Complex(real: 0.0, imaginary: 0.0))
+            complex.append(Complex<T>(real: T.zero, imaginary: T.zero))
         }
 
         fft_cooleyTukey(&complex)
 
         // Calculate power spectrum
         let nyquistBin = fftSize / 2
-        let powerSpectrum = (0..<nyquistBin).map { i -> Double in
+        let powerSpectrum = (0..<nyquistBin).map { i -> T in
             let magnitude = complex[i].magnitude
             return magnitude * magnitude
         }
@@ -216,12 +216,12 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
     /// Apply appropriate scaling to PSD values
     private func applyWaveformPSDScaling(
-        _ powerSpectrum: [Double],
-        samplingRate: Double,
-        windowPower: Double,
+        _ powerSpectrum: [T],
+        samplingRate: T,
+        windowPower: T,
         windowSize: Int,
         scaling: WaveformPSDScaling
-    ) -> [Double] {
+    ) -> [T] {
 
         switch scaling {
         case .density:
@@ -237,11 +237,11 @@ extension Waveform1D where T: BinaryFloatingPoint {
     }
 
     /// Generate window coefficients (moved from main file if needed)
-    private func generateWindow(type: WaveformWindowType, length: Int) -> [Double] {
+    private func generateWindow(type: WaveformWindowType, length: Int) -> [T] {
         guard length > 0 else { return [] }
         guard length > 1 else { return [1.0] }
 
-        let n = Double(length)
+        let n = T(length)
 
         switch type {
         case .rectangular:
@@ -249,23 +249,23 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
         case .hanning:
             return (0..<length).map { i in
-                0.5 * (1.0 - cos(2.0 * .pi * Double(i) / (n - 1.0)))
+                0.5 * (1.0 - cos(2.0 * .pi * T(i) / (n - 1.0)))
             }
 
         case .hamming:
             return (0..<length).map { i in
-                0.54 - 0.46 * cos(2.0 * .pi * Double(i) / (n - 1.0))
+                0.54 - 0.46 * cos(2.0 * .pi * T(i) / (n - 1.0))
             }
 
         case .blackman:
             return (0..<length).map { i in
-                let factor = 2.0 * .pi * Double(i) / (n - 1.0)
+                let factor = 2.0 * .pi * T(i) / (n - 1.0)
                 return 0.42 - 0.5 * cos(factor) + 0.08 * cos(2.0 * factor)
             }
 
         case .blackmanHarris:
             return (0..<length).map { i in
-                let factor = 2.0 * .pi * Double(i) / (n - 1.0)
+                let factor = 2.0 * .pi * T(i) / (n - 1.0)
                 return 0.35875 - 0.48829 * cos(factor) + 0.14128 * cos(2.0 * factor) - 0.01168 * cos(3.0 * factor)
             }
 
@@ -274,7 +274,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
             let i0Beta = modifiedBesselI0(beta)
 
             return (0..<length).map { i in
-                let x = (Double(i) - alpha) / alpha
+                let x = (T(i) - alpha) / alpha
                 let arg = beta * sqrt(max(0.0, 1.0 - x * x))  // Clamp to avoid sqrt of negative
                 return modifiedBesselI0(arg) / i0Beta
             }
@@ -283,7 +283,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
             let clampedR = max(0.0, min(1.0, taperRatio))
 
             return (0..<length).map { i in
-                let x = Double(i) / (n - 1.0)
+                let x = T(i) / (n - 1.0)
 
                 if x < clampedR / 2.0 {
                     // Taper up
@@ -299,13 +299,13 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
         case .bartlett:
             return (0..<length).map { i in
-                let x = Double(i) / (n - 1.0)
+                let x = TimeZone(i) / (n - 1.0)
                 return 1.0 - 2.0 * abs(x - 0.5)
             }
 
         case .welch:
             return (0..<length).map { i in
-                let x = (Double(i) - (n - 1.0) / 2.0) / ((n - 1.0) / 2.0)
+                let x = (T(i) - (n - 1.0) / 2.0) / ((n - 1.0) / 2.0)
                 return 1.0 - x * x
             }
         }
@@ -313,9 +313,9 @@ extension Waveform1D where T: BinaryFloatingPoint {
 }
 
 /// Modified Bessel function of the first kind, order 0 (for Kaiser window)
-private func modifiedBesselI0(_ x: Double) -> Double {
+private func modifiedBesselI0(_ x: T) -> T {
     let ax = abs(x)
-    var ans: Double
+    var ans: T
 
     if ax < 3.75 {
         let y = x / 3.75
@@ -326,13 +326,8 @@ private func modifiedBesselI0(_ x: Double) -> Double {
     } else {
         let y = 3.75 / ax
         ans =
-            (exp(ax) / sqrt(ax))
-            * (0.39894228 + y
-                * (0.1328592e-1 + y
-                    * (0.225319e-2 + y
-                        * (-0.157565e-2 + y
-                            * (0.916281e-2 + y
-                                * (-0.2057706e-1 + y * (0.2635537e-1 + y * (-0.1647633e-1 + y * 0.392377e-2))))))))
+            exp(ax) / sqrt(ax) 
+            * (0.39894228 + y * (0.1328592e-1 + y * (0.225319e-2 + y * (-0.157565e-2 + y * (0.916281e-2 + y * (-0.2057706e-1 + y * (0.2635537e-1 + y * (-0.1647633e-1 + y * 0.392377e-2))))))))
     }
 
     return ans

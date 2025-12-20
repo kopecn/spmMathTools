@@ -5,45 +5,45 @@ import FoundationTypes
 
 extension Waveform1D where T == Double {
 
-    public static func += (lhs: inout Waveform1D<Double>, rhs: Waveform1D<Double>) {
+    public static func += (lhs: inout Waveform1D<T,U>, rhs: Waveform1D<T,U>) {
         let count = min(lhs.values.count, rhs.values.count)
         lhs.values = (0..<count).map { lhs.values[$0] + rhs.values[$0] }
     }
 
-    public static func += (lhs: inout Waveform1D<Double>, rhs: Double) {
+    public static func += (lhs: inout Waveform1D<T,U>, rhs: Double) {
         for i in lhs.values.indices {
             lhs.values[i] += rhs
         }
     }
 
-    public static func -= (lhs: inout Waveform1D<Double>, rhs: Waveform1D<Double>) {
+    public static func -= (lhs: inout Waveform1D<T,U>, rhs: Waveform1D<T,U>) {
         let count = min(lhs.values.count, rhs.values.count)
         lhs.values = (0..<count).map { lhs.values[$0] - rhs.values[$0] }
     }
 
-    public static func -= (lhs: inout Waveform1D<Double>, rhs: Double) {
+    public static func -= (lhs: inout Waveform1D<T,U>, rhs: Double) {
         for i in lhs.values.indices {
             lhs.values[i] -= rhs
         }
     }
 
-    public static func *= (lhs: inout Waveform1D<Double>, rhs: Waveform1D<Double>) {
+    public static func *= (lhs: inout Waveform1D<T,U>, rhs: Waveform1D<T,U>) {
         let count = min(lhs.values.count, rhs.values.count)
         lhs.values = (0..<count).map { lhs.values[$0] * rhs.values[$0] }
     }
 
-    public static func *= (lhs: inout Waveform1D<Double>, rhs: Double) {
+    public static func *= (lhs: inout Waveform1D<T,U>, rhs: Double) {
         for i in lhs.values.indices {
             lhs.values[i] *= rhs
         }
     }
 
-    public static func /= (lhs: inout Waveform1D<Double>, rhs: Waveform1D<Double>) {
+    public static func /= (lhs: inout Waveform1D<T,U>, rhs: Waveform1D<T,U>) {
         let count = min(lhs.values.count, rhs.values.count)
         lhs.values = (0..<count).map { lhs.values[$0] / rhs.values[$0] }
     }
 
-    public static func /= (lhs: inout Waveform1D<Double>, rhs: Double) {
+    public static func /= (lhs: inout Waveform1D<T,U>, rhs: Double) {
         for i in lhs.values.indices {
             lhs.values[i] /= rhs
         }
@@ -54,45 +54,45 @@ extension Waveform1D where T == Double {
 
 extension Waveform1D where T == Float {
 
-    public static func += (lhs: inout Waveform1D<Float>, rhs: Waveform1D<Float>) {
+    public static func += (lhs: inout Waveform1D<T,U>, rhs: Waveform1D<T,U>) {
         let count = min(lhs.values.count, rhs.values.count)
         lhs.values = (0..<count).map { lhs.values[$0] + rhs.values[$0] }
     }
 
-    public static func += (lhs: inout Waveform1D<Float>, rhs: Float) {
+    public static func += (lhs: inout Waveform1D<T,U>, rhs: Float) {
         for i in lhs.values.indices {
             lhs.values[i] += rhs
         }
     }
 
-    public static func -= (lhs: inout Waveform1D<Float>, rhs: Waveform1D<Float>) {
+    public static func -= (lhs: inout Waveform1D<T,U>, rhs: Waveform1D<T,U>) {
         let count = min(lhs.values.count, rhs.values.count)
         lhs.values = (0..<count).map { lhs.values[$0] - rhs.values[$0] }
     }
 
-    public static func -= (lhs: inout Waveform1D<Float>, rhs: Float) {
+    public static func -= (lhs: inout Waveform1D<T,U>, rhs: Float) {
         for i in lhs.values.indices {
             lhs.values[i] -= rhs
         }
     }
 
-    public static func *= (lhs: inout Waveform1D<Float>, rhs: Waveform1D<Float>) {
+    public static func *= (lhs: inout Waveform1D<T,U>, rhs: Waveform1D<T,U>) {
         let count = min(lhs.values.count, rhs.values.count)
         lhs.values = (0..<count).map { lhs.values[$0] * rhs.values[$0] }
     }
 
-    public static func *= (lhs: inout Waveform1D<Float>, rhs: Float) {
+    public static func *= (lhs: inout Waveform1D<T,U>, rhs: Float) {
         for i in lhs.values.indices {
             lhs.values[i] *= rhs
         }
     }
 
-    public static func /= (lhs: inout Waveform1D<Float>, rhs: Waveform1D<Float>) {
+    public static func /= (lhs: inout Waveform1D<T,U>, rhs: Waveform1D<T,U>) {
         let count = min(lhs.values.count, rhs.values.count)
         lhs.values = (0..<count).map { lhs.values[$0] / rhs.values[$0] }
     }
 
-    public static func /= (lhs: inout Waveform1D<Float>, rhs: Float) {
+    public static func /= (lhs: inout Waveform1D<T,U>, rhs: Float) {
         for i in lhs.values.indices {
             lhs.values[i] /= rhs
         }
@@ -103,56 +103,56 @@ extension Waveform1D where T == Float {
 
 extension Waveform1D where T == Int {
 
-    public static func += (lhs: inout Waveform1D<Int>, rhs: Waveform1D<Int>) {
+    public static func += (lhs: inout Waveform1D<T,U>, rhs: Waveform1D<T,U>) {
         let count = min(lhs.values.count, rhs.values.count)
         lhs.values = (0..<count).map { lhs.values[$0] + rhs.values[$0] }
     }
 
-    public static func += (lhs: inout Waveform1D<Int>, rhs: Int) {
+    public static func += (lhs: inout Waveform1D<T,U>, rhs: Int) {
         for i in lhs.values.indices {
             lhs.values[i] += rhs
         }
     }
 
-    public static func -= (lhs: inout Waveform1D<Int>, rhs: Waveform1D<Int>) {
+    public static func -= (lhs: inout Waveform1D<T,U>, rhs: Waveform1D<T,U>) {
         let count = min(lhs.values.count, rhs.values.count)
         lhs.values = (0..<count).map { lhs.values[$0] - rhs.values[$0] }
     }
 
-    public static func -= (lhs: inout Waveform1D<Int>, rhs: Int) {
+    public static func -= (lhs: inout Waveform1D<T,U>, rhs: Int) {
         for i in lhs.values.indices {
             lhs.values[i] -= rhs
         }
     }
 
-    public static func *= (lhs: inout Waveform1D<Int>, rhs: Waveform1D<Int>) {
+    public static func *= (lhs: inout Waveform1D<T,U>, rhs: Waveform1D<T,U>) {
         let count = min(lhs.values.count, rhs.values.count)
         lhs.values = (0..<count).map { lhs.values[$0] * rhs.values[$0] }
     }
 
-    public static func *= (lhs: inout Waveform1D<Int>, rhs: Int) {
+    public static func *= (lhs: inout Waveform1D<T,U>, rhs: Int) {
         for i in lhs.values.indices {
             lhs.values[i] *= rhs
         }
     }
 
-    public static func /= (lhs: inout Waveform1D<Int>, rhs: Waveform1D<Int>) {
+    public static func /= (lhs: inout Waveform1D<T,U>, rhs: Waveform1D<T,U>) {
         let count = min(lhs.values.count, rhs.values.count)
         lhs.values = (0..<count).map { lhs.values[$0] / rhs.values[$0] }
     }
 
-    public static func /= (lhs: inout Waveform1D<Int>, rhs: Int) {
+    public static func /= (lhs: inout Waveform1D<T,U>, rhs: Int) {
         for i in lhs.values.indices {
             lhs.values[i] /= rhs
         }
     }
 
-    public static func %= (lhs: inout Waveform1D<Int>, rhs: Waveform1D<Int>) {
+    public static func %= (lhs: inout Waveform1D<T,U>, rhs: Waveform1D<T,U>) {
         let count = min(lhs.values.count, rhs.values.count)
         lhs.values = (0..<count).map { lhs.values[$0] % rhs.values[$0] }
     }
 
-    public static func %= (lhs: inout Waveform1D<Int>, rhs: Int) {
+    public static func %= (lhs: inout Waveform1D<T,U>, rhs: Int) {
         for i in lhs.values.indices {
             lhs.values[i] %= rhs
         }

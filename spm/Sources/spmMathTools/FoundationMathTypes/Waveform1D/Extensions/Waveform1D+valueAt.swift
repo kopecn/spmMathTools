@@ -9,10 +9,10 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - clamp: If true, returns edge values when date is outside range. If false, returns nil.
     ///   - interpolationWindow: Maximum time difference (seconds) for interpolation. Beyond this, nearest sample is used.
     /// - Returns: Interpolated value or nil if date is invalid/outside range and clamp is false
-    public func value(at date: Date, clamp: Bool = false, interpolationWindow: TimeInterval = 0.5) -> T? {
+    public func value(at date: Date, clamp: Bool = false, interpolationWindow: U = 0.5) -> T? {
         guard let t0 = self.t0 else { return nil }
 
-        let timeOffset = date.timeIntervalSince(t0)
+        let timeOffset = U(date.timeIntervalSince(t0))
         return value(
             atTime: timeOffset,
             clamp: clamp,
@@ -29,25 +29,25 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - WaveformTimeReference: Whether time is relative to waveform start or Unix epoch
     /// - Returns: Interpolated value or nil if time is invalid/outside range and clamp is false
     public func value(
-        atTime time: TimeInterval,
+        atTime time: U,
         clamp: Bool = false,
-        interpolationWindow: TimeInterval = 0.5,
+        interpolationWindow: U = 0.5,
         WaveformTimeReference: WaveformTimeReference = .waveformStart
     ) -> T? {
 
         guard !values.isEmpty else { return nil }
 
-        let adjustedTime: TimeInterval
+        let adjustedTime: U
         switch WaveformTimeReference {
         case .waveformStart:
             adjustedTime = time
         case .epoch:
             guard let t0 = self.t0 else { return nil }
-            adjustedTime = time - t0.timeIntervalSince1970
+            adjustedTime = time - U(t0.timeIntervalSince1970)
         }
 
         let sampleIndex = adjustedTime / dt
-        let waveformDuration = TimeInterval(values.count - 1) * dt
+        let waveformDuration = U(values.count - 1) * dt
 
         // Check bounds
         if sampleIndex < 0 {
@@ -63,7 +63,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
             return values.last
         }
 
-        let fractionalPart = sampleIndex - Double(floorIndex)
+        let fractionalPart = sampleIndex - U(floorIndex)
 
         // If very close to a sample point or outside interpolation window, return nearest
         if fractionalPart < 1e-10 || abs(fractionalPart * dt) > interpolationWindow {
@@ -86,30 +86,30 @@ extension Waveform1D where T: BinaryInteger {
     public func value(at date: Date, clamp: Bool = false) -> T? {
         guard let t0 = self.t0 else { return nil }
 
-        let timeOffset = date.timeIntervalSince(t0)
+        let timeOffset = U(date.timeIntervalSince(t0))
         return value(atTime: timeOffset, clamp: clamp, WaveformTimeReference: .waveformStart)
     }
 
     /// Access value at a given time (nearest neighbor for integer types)
     public func value(
-        atTime time: TimeInterval,
+        atTime time: U,
         clamp: Bool = false,
         WaveformTimeReference: WaveformTimeReference = .waveformStart
     ) -> T? {
 
         guard !values.isEmpty else { return nil }
 
-        let adjustedTime: TimeInterval
+        let adjustedTime: U
         switch WaveformTimeReference {
         case .waveformStart:
             adjustedTime = time
         case .epoch:
             guard let t0 = self.t0 else { return nil }
-            adjustedTime = time - t0.timeIntervalSince1970
+            adjustedTime = time - U(t0.timeIntervalSince1970)
         }
 
         let sampleIndex = adjustedTime / dt
-        let waveformDuration = TimeInterval(values.count - 1) * dt
+        let waveformDuration = U(values.count - 1) * dt
 
         // Check bounds
         if sampleIndex < 0 {

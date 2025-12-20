@@ -15,10 +15,10 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func spectrogram(
         windowSize: Int = 256,
         hopSize: Int? = nil,
-        windowType: WaveformWindowType = .hanning,
+        windowType: WaveformWindowType<U> = .hanning,
         scaling: WaveformSpectrogramScaling = .magnitude,
-        frequencyRange: WaveformFrequencyRange? = nil
-    ) -> WaveformSpectrogram<T>? {
+        frequencyRange: WaveformFrequencyRange<T>? = nil
+    ) -> WaveformSpectrogram<T,U>? {
 
         guard !values.isEmpty && windowSize > 0 && windowSize <= values.count else { return nil }
 
@@ -227,12 +227,12 @@ extension Waveform1D where T: BinaryFloatingPoint {
         let doubleSegment = windowedSegment.map { Double($0) }
 
         // Create complex array for FFT
-        var complex = doubleSegment.map { Complex(real: $0, imaginary: 0.0) }
+        var complex = doubleSegment.map { Complex<T>(real: T($0), imaginary: T.zero) }
 
         // Pad to next power of 2
         let fftSize = nextPowerOfTwo(complex.count)
         while complex.count < fftSize {
-            complex.append(Complex(real: 0.0, imaginary: 0.0))
+            complex.append(Complex<T>(real: T.zero, imaginary: T.zero))
         }
 
         // Perform FFT (reuse from FFT extension)
@@ -345,7 +345,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     // Reuse from existing windowing functionality
     private func generateWindow(type: WaveformWindowType, length: Int) -> [Double] {
         // This would call the existing generateWindow function from the windowing extension
-        return Waveform1D<Double>.generateWindow(type: type, length: length)
+        return Waveform1D<Double,Double>.generateWindow(type: type, length: length)
     }
 }
 

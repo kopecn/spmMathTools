@@ -12,7 +12,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func instantaneousPhase(
         unwrap: Bool = true,
         method: WaveformPhaseMethod = .hilbert
-    ) -> Waveform1D<T> {
+    ) -> Waveform1D<T,U> {
 
         let phaseValues: [T]
 
@@ -65,7 +65,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func instantaneousFrequency(
         unwrappedPhase: [T]? = nil,
         method: WaveformPhaseMethod = .hilbert
-    ) -> Waveform1D<T> {
+    ) -> Waveform1D<T,U> {
 
         let phase = unwrappedPhase ?? instantaneousPhase(unwrap: true, method: method).values
         guard phase.count > 1 else {
@@ -100,10 +100,10 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - unwrap: Whether to unwrap the phase difference
     /// - Returns: Phase difference waveform
     public func phaseDifference(
-        with other: Waveform1D<T>,
+        with other: Waveform1D<T,U>,
         method: WaveformPhaseMethod = .hilbert,
         unwrap: Bool = true
-    ) -> Waveform1D<T>? {
+    ) -> Waveform1D<T,U>? {
 
         guard values.count == other.values.count else { return nil }
 
@@ -157,10 +157,10 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - overlap: Overlap between windows (0.0 to 1.0)
     /// - Returns: Phase coherence values
     public func phaseCoherence(
-        with other: Waveform1D<T>,
+        with other: Waveform1D<T,U>,
         windowSize: Int? = nil,
         overlap: Double = 0.5
-    ) -> Waveform1D<T>? {
+    ) -> Waveform1D<T,U>? {
 
         guard values.count == other.values.count && values.count > 1 else { return nil }
 
@@ -181,8 +181,8 @@ extension Waveform1D where T: BinaryFloatingPoint {
         }
 
         // Create time axis for coherence values
-        let coherenceDt = dt * Double(hopSize)
-        let coherenceT0 = t0?.addingTimeInterval(TimeInterval(actualWindowSize / 2) * dt)
+        let coherenceDt = dt * U(hopSize)
+        let coherenceT0 = t0?.addingTimeInterval(U(actualWindowSize / 2) * dt)
 
         return Waveform1D(values: coherenceValues, dt: coherenceDt, t0: coherenceT0)
     }
@@ -190,6 +190,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     // MARK: - Private Implementation Methods
 
     private func hilbertPhase() -> [T] {
+        // TODO: consider converting this to Complex Type
         guard values.count > 2 else {
             return values.map { _ in T.zero }
         }
@@ -248,6 +249,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         }
     }
 
+    // TODO: - consider converting this to Complex type
     private func quadratureComponent(at index: Int) -> T {
         // Simple quadrature filter approximation for Hilbert transform
         let windowSize = min(5, values.count / 4)
@@ -310,11 +312,11 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func detectPhaseLockEvents(
         referencePhase: T,
         tolerance: T = T.pi / T(6.0),  // 30 degrees
-        minInterval: TimeInterval? = nil
-    ) -> [WaveformTriggerEvent<T>] {
+        minInterval: U? = nil
+    ) -> [WaveformTriggerEvent<T,U>] {
 
         let phase = instantaneousPhase(unwrap: true).values
-        var events: [WaveformTriggerEvent<T>] = []
+        var events: [WaveformTriggerEvent<T,U>] = []
         var lastEventIndex: Int?
 
         for (index, phaseValue) in phase.enumerated() {
@@ -326,7 +328,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
                 if let lastIndex = lastEventIndex,
                     let minInterval = minInterval
                 {
-                    let timeSinceLastEvent = TimeInterval(index - lastIndex) * dt
+                    let timeSinceLastEvent = U(index - lastIndex) * dt
                     if timeSinceLastEvent < minInterval {
                         continue
                     }
@@ -335,8 +337,8 @@ extension Waveform1D where T: BinaryFloatingPoint {
                 let event = WaveformTriggerEvent(
                     index: index,
                     value: values[index],
-                    time: t0?.addingTimeInterval(TimeInterval(index) * dt),
-                    timeOffset: TimeInterval(index) * dt,
+                    time: t0?.addingTimeInterval(U(index) * dt),
+                    timeOffset: U(index) * dt,
                     type: .phase(referencePhase, tolerance: tolerance)
                 )
 
@@ -351,7 +353,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// Calculate phase synchronization index between signals
     /// - Parameter other: Other waveform to compare with
     /// - Returns: Phase synchronization index (0 to 1)
-    public func phaseSynchronizationIndex(with other: Waveform1D<T>) -> T? {
+    public func phaseSynchronizationIndex(with other: Waveform1D<T,U>) -> T? {
         guard let phaseDiff = phaseDifference(with: other, method: .hilbert, unwrap: false) else {
             return nil
         }

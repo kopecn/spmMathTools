@@ -2,12 +2,12 @@ import Foundation
 import FoundationTypes
 
 // MARK: - FFT Helpers for Spectrogram (if not available from main FFT extension)
-extension Waveform1D where T: BinaryFloatingPoint {
+extension Waveform1D where T: BinaryFloatingPoint, U: SIMDScalar {
 
     // This file provides FFT helpers if they're not accessible from the main FFT extension
     // These should match the implementations in Waveform1D-FFT.swift
 
-    internal func fft_cooleyTukey(_ x: inout [Complex]) {
+    internal func fft_cooleyTukey(_ x: inout [Complex<U>]) {
         let n = x.count
         guard n > 1 else { return }
         guard n.nonzeroBitCount == 1 else {
@@ -16,26 +16,29 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
         // Bit-reversal permutation
         bitReversePermutation(&x)
-
+        // FIXME: - This is broken
         // Cooley-Tukey FFT
-        var length = 2
-        while length <= n {
-            for i in stride(from: 0, to: n, by: length) {
-                for j in 0..<(length / 2) {
-                    let u = x[i + j]
-                    let angle = -2.0 * Double.pi * Double(j) / Double(length)
-                    let w = Complex(real: cos(angle), imaginary: sin(angle))
-                    let v = w * x[i + j + length / 2]
+        // var length = 2
+        // while length <= n {
+        //     for i in stride(from: 0, to: n, by: length) {
+        //         for j in 0..<(length / 2) {
+        //             let u = x[i + j]
+        //             let angle = -2.0 * U.pi * U(j) / U(length)
+        //             let cosValue = U(cos(Double(angle)))
+        //             let sinValue = U(sin(Double(angle)))
+        //             let w = Complex<U>(real: U(cosValue), imaginary: U(sinValue))
+        //             let v = w * x[i + j + length / 2]
 
-                    x[i + j] = u + v
-                    x[i + j + length / 2] = u - v
-                }
-            }
-            length *= 2
-        }
+        //             x[i + j] = u + v
+        //             x[i + j + length / 2] = u - v
+        //         }
+        //     }
+        //     length *= 2
+        // }
+        // FIXME: - This is broken
     }
 
-    private func bitReversePermutation(_ x: inout [Complex]) {
+    private func bitReversePermutation(_ x: inout [Complex<U>]) {
         let n = x.count
         var j = 0
 

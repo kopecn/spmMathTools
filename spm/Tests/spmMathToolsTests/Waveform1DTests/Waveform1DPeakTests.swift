@@ -29,7 +29,7 @@ struct BasicPeakDetectionTests {
     /// VALIDATED
     @Test("Large peak detection")
     func largePeakDetection() {
-        let waveform1 = Waveform1D<Double>.sine(
+        let waveform1 = Waveform1D<Double,Double>.sine(
             frequency: 100,
             amplitude: 1.0,
             phase: 0.0,
@@ -41,7 +41,7 @@ struct BasicPeakDetectionTests {
 
         #expect(peaks1.count == 300)
 
-        let waveform2 = Waveform1D<Double>.sine(
+        let waveform2 = Waveform1D<Double,Double>.sine(
             frequency: 100,
             amplitude: 1.0,
             phase: 0.0,
@@ -54,7 +54,7 @@ struct BasicPeakDetectionTests {
         #expect(peaks2.count == 300)
 
         /// Push hard against the nyquist frequency.
-        let waveform3 = Waveform1D<Double>.sine(
+        let waveform3 = Waveform1D<Double,Double>.sine(
             frequency: 100,
             amplitude: 1.0,
             phase: 0.0,
@@ -262,7 +262,7 @@ struct ValleyDetectionTests {
     /// VALIDATED
     @Test("Large valley detection")
     func largeValleyDetection() {
-        let waveform1 = Waveform1D<Double>.sine(
+        let waveform1 = Waveform1D<Double,Double>.sine(
             frequency: 100,
             amplitude: 1.0,
             phase: 0.0,
@@ -274,7 +274,7 @@ struct ValleyDetectionTests {
 
         #expect(valleys1.count == 300)
 
-        let waveform2 = Waveform1D<Double>.sine(
+        let waveform2 = Waveform1D<Double,Double>.sine(
             frequency: 100,
             amplitude: 1.0,
             phase: 0.0,
@@ -287,7 +287,7 @@ struct ValleyDetectionTests {
         #expect(valleys2.count == 300)
 
         /// Push hard against the nyquist frequency.
-        let waveform3 = Waveform1D<Double>.sine(
+        let waveform3 = Waveform1D<Double,Double>.sine(
             frequency: 100,
             amplitude: 1.0,
             phase: 0.0,

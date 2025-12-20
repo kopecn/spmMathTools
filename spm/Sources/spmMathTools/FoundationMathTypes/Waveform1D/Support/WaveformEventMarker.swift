@@ -1,7 +1,7 @@
 import Foundation
 
 /// Event marker for visualization
-public struct WaveformEventMarker {
+public struct WaveformEventMarker<U: BinaryFloatingPoint & Sendable> {
     /// Sample index of the event
     public let index: Int
 
@@ -9,7 +9,7 @@ public struct WaveformEventMarker {
     public let time: Date?
 
     /// Time offset from waveform start
-    public let timeOffset: TimeInterval
+    public let timeOffset: U
 
     /// Annotation type
     public let annotation: WaveformEventAnnotation

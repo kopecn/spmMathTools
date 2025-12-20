@@ -17,13 +17,13 @@ extension Waveform1D {
         paddingBefore: Int = 0,
         paddingAfter: Int = 0,
         retainT0: Bool = true
-    ) -> Waveform1D<T>? {
+    ) -> Waveform1D<T,U>? {
 
         guard let t0 = self.t0 else { return nil }
         guard startDate <= endDate else { return nil }
 
-        let startTime = startDate.timeIntervalSince(t0)
-        let endTime = endDate.timeIntervalSince(t0)
+        let startTime = U(startDate.timeIntervalSince(t0))
+        let endTime = U(endDate.timeIntervalSince(t0))
 
         return subset(
             fromTime: startTime,
@@ -45,19 +45,19 @@ extension Waveform1D {
     ///   - WaveformTimeReference: Whether time is relative to waveform start or Unix epoch
     /// - Returns: New waveform subset or nil if time range is outside waveform bounds
     public func subset(
-        fromTime startTime: TimeInterval,
-        toTime endTime: TimeInterval,
+        fromTime startTime: U,
+        toTime endTime: U,
         paddingBefore: Int = 0,
         paddingAfter: Int = 0,
         retainT0: Bool = true,
         WaveformTimeReference: WaveformTimeReference = .waveformStart
-    ) -> Waveform1D<T>? {
+    ) -> Waveform1D<T,U>? {
 
         guard !values.isEmpty else { return nil }
         guard startTime <= endTime else { return nil }
 
-        let adjustedStartTime: TimeInterval
-        let adjustedEndTime: TimeInterval
+        let adjustedStartTime: U
+        let adjustedEndTime: U
 
         switch WaveformTimeReference {
         case .waveformStart:
@@ -65,11 +65,11 @@ extension Waveform1D {
             adjustedEndTime = endTime
         case .epoch:
             guard let t0 = self.t0 else { return nil }
-            adjustedStartTime = startTime - t0.timeIntervalSince1970
-            adjustedEndTime = endTime - t0.timeIntervalSince1970
+            adjustedStartTime = startTime - U(t0.timeIntervalSince1970)
+            adjustedEndTime = endTime - U(t0.timeIntervalSince1970)
         }
 
-        let waveformDuration = TimeInterval(values.count - 1) * dt
+        let waveformDuration = U(values.count - 1) * dt
 
         // Check if range is completely outside waveform bounds
         if adjustedEndTime < 0 || adjustedStartTime > waveformDuration {
@@ -104,7 +104,7 @@ extension Waveform1D {
         // Calculate new t0 if retaining
         let newT0: Date?
         if retainT0, let originalT0 = self.t0 {
-            let timeOffset = TimeInterval(clampedStartIndex - paddingBefore) * dt
+            let timeOffset = U(clampedStartIndex - paddingBefore) * dt
             newT0 = originalT0.addingTimeInterval(timeOffset)
         } else {
             newT0 = nil

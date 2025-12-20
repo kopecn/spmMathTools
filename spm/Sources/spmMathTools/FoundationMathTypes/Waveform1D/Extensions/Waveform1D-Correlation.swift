@@ -9,7 +9,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - maxLag: Maximum lag to compute (default: half the signal length)
     ///   - normalized: If true, normalizes the correlation (default: true)
     /// - Returns: New waveform containing auto-correlation values with lags as time indices
-    public func autoCorrelation(maxLag: Int? = nil, normalized: Bool = true) -> Waveform1D<T> {
+    public func autoCorrelation(maxLag: Int? = nil, normalized: Bool = true) -> Waveform1D<T,U> {
         guard !values.isEmpty else { return Waveform1D(values: [], dt: dt, t0: nil) }
 
         let actualMaxLag = maxLag ?? (values.count / 2)
@@ -72,10 +72,10 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - normalized: If true, normalizes the correlation (default: true)
     /// - Returns: New waveform containing cross-correlation values
     public func crossCorrelation(
-        with other: Waveform1D<T>,
+        with other: Waveform1D<T,U>,
         mode: WaveformCorrelationMode = .full,
         normalized: Bool = true
-    ) -> Waveform1D<T>? {
+    ) -> Waveform1D<T,U>? {
 
         guard !values.isEmpty && !other.values.isEmpty else { return nil }
 
@@ -177,9 +177,9 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - searchRange: Range of lags to search (default: full range)
     /// - Returns: Tuple containing (lag in samples, lag in time, correlation value)
     public func findMaxCorrelation(
-        with other: Waveform1D<T>,
+        with other: Waveform1D<T,U>,
         searchRange: Range<Int>? = nil
-    ) -> (lagSamples: Int, lagTime: TimeInterval, correlation: T)? {
+    ) -> (lagSamples: Int, lagTime: U, correlation: T)? {
 
         guard let crossCorr = crossCorrelation(with: other, mode: .full, normalized: true) else {
             return nil
@@ -204,7 +204,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
         // Convert to actual lag (accounting for full correlation indexing)
         let actualLag = maxIndex - (other.values.count - 1)
-        let lagTime = TimeInterval(actualLag) * dt
+        let lagTime = U(actualLag) * dt
 
         return (actualLag, lagTime, maxCorrelation)
     }

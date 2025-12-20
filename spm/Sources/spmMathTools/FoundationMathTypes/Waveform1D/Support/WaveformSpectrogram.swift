@@ -1,30 +1,30 @@
 import Foundation
 
 /// Spectrogram data structure
-public struct WaveformSpectrogram<T> {
+public struct WaveformSpectrogram<T: Numeric & Sendable, U: BinaryFloatingPoint & Sendable> {
     /// Time frames (center time of each window)
-    public let timeFrames: [TimeInterval]
+    public let timeFrames: [U]
 
     /// Frequency bins
-    public let frequencies: [T]
+    public let frequencies: [U]
 
     /// Spectrogram data [time][frequency]
-    public let data: [[T]]
+    public let data: [[U]]
 
     /// Analysis parameters
     public let windowSize: Int
     public let hopSize: Int
-    public let windowType: WaveformWindowType
+    public let windowType: WaveformWindowType<U>
     public let scaling: WaveformSpectrogramScaling
-    public let samplingRate: Double
-    public let originalDuration: TimeInterval
+    public let samplingRate: U
+    public let originalDuration: U
 
     /// Get spectrogram value at specific time and frequency indices
     /// - Parameters:
     ///   - timeIndex: Time frame index
     ///   - frequencyIndex: Frequency bin index
     /// - Returns: Spectrogram value or nil if indices are out of bounds
-    public func value(at timeIndex: Int, frequencyIndex: Int) -> T? {
+    public func value(at timeIndex: Int, frequencyIndex: Int) -> U? {
         guard timeIndex >= 0 && timeIndex < data.count && frequencyIndex >= 0 && frequencyIndex < frequencies.count
         else {
             return nil
@@ -35,7 +35,7 @@ public struct WaveformSpectrogram<T> {
     /// Get time slice at specific frequency
     /// - Parameter frequencyIndex: Frequency bin index
     /// - Returns: Time series at the specified frequency
-    public func timeSlice(at frequencyIndex: Int) -> [T]? {
+    public func timeSlice(at frequencyIndex: Int) -> [U]? {
         guard frequencyIndex >= 0 && frequencyIndex < frequencies.count else { return nil }
         return data.map { $0[frequencyIndex] }
     }
@@ -43,7 +43,7 @@ public struct WaveformSpectrogram<T> {
     /// Get frequency slice at specific time
     /// - Parameter timeIndex: Time frame index
     /// - Returns: Frequency spectrum at the specified time
-    public func frequencySlice(at timeIndex: Int) -> [T]? {
+    public func frequencySlice(at timeIndex: Int) -> [U]? {
         guard timeIndex >= 0 && timeIndex < data.count else { return nil }
         return data[timeIndex]
     }

@@ -1,6 +1,6 @@
 import Foundation
 
-public struct WaveformPeak<T> {
+public struct WaveformPeak<T: Numeric & Sendable, U: BinaryFloatingPoint & Sendable> {
     /// Index in the values array where the peak occurs
     public let index: Int
 
@@ -11,5 +11,5 @@ public struct WaveformPeak<T> {
     public let time: Date?
 
     /// Time offset from waveform start in seconds
-    public let timeOffset: TimeInterval
+    public let timeOffset: U
 }

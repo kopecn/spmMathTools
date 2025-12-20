@@ -1,9 +1,9 @@
 import Foundation
 
 /// Instantaneous frequency analysis result
-public struct WaveformInstantaneousFrequency<T> {
+public struct WaveformInstantaneousFrequency<T: BinaryFloatingPoint> {
     /// Time frames
-    public let timeFrames: [TimeInterval]
+    public let timeFrames: [T]
 
     /// Base frequency bins
     public let frequencies: [T]

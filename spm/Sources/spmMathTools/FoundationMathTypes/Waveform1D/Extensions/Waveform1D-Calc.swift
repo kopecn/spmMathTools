@@ -9,7 +9,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// Compute the numerical integral of the waveform using trapezoidal rule
     /// - Parameter initialValue: Starting value for integration (default: 0)
     /// - Returns: New waveform representing the integral
-    public func integrate(initialValue: T = T.zero) -> Waveform1D<T> {
+    public func integrate(initialValue: T = T.zero) -> Waveform1D<T,U> {
         guard !values.isEmpty else { return Waveform1D(values: [], dt: dt, t0: t0) }
 
         var integral: [T] = [initialValue]
@@ -25,7 +25,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
     /// Compute the numerical derivative of the waveform using central difference
     /// - Returns: New waveform representing the derivative
-    public func derivative() -> Waveform1D<T> {
+    public func derivative() -> Waveform1D<T,U> {
         guard values.count >= 2 else { return Waveform1D(values: [], dt: dt, t0: t0) }
 
         var derivative: [T] = []

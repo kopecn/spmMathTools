@@ -2,12 +2,12 @@ import Foundation
 import FoundationTypes
 
 // MARK: - Window Functions
-extension Waveform1D where T: BinaryFloatingPoint {
+extension Waveform1D where T: Numeric {
 
     /// Apply a window function to the waveform
     /// - Parameter WaveformWindowType: The type of window to apply
     /// - Returns: New waveform with the window function applied
-    public func windowed(with WaveformWindowType: WaveformWindowType) -> Waveform1D<T> {
+    public func windowed(with WaveformWindowType: WaveformWindowType<U>) -> Waveform1D<T,U> {
         guard !values.isEmpty else { return self }
 
         let windowCoefficients = Self.generateWindow(type: WaveformWindowType, length: values.count)
@@ -21,7 +21,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - type: The window function type
     ///   - length: The number of samples in the window
     /// - Returns: Array of window coefficients
-    public static func generateWindow(type: WaveformWindowType, length: Int) -> [Double] {
+    public static func generateWindow(type: WaveformWindowType<U>, length: Int) -> [T] {
         guard length > 0 else { return [] }
         guard length > 1 else { return [1.0] }
 
@@ -98,7 +98,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// Calculate the coherent gain of a window function
     /// - Parameter WaveformWindowType: The window function type
     /// - Returns: The coherent gain factor
-    public func windowCoherentGain(for WaveformWindowType: WaveformWindowType) -> Double {
+    public func windowCoherentGain(for WaveformWindowType: WaveformWindowType<U>) -> Double {
         let window = Self.generateWindow(type: WaveformWindowType, length: values.count)
         return window.reduce(0.0, +) / Double(window.count)
     }
@@ -106,7 +106,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// Calculate the processing gain of a window function
     /// - Parameter WaveformWindowType: The window function type
     /// - Returns: The processing gain factor
-    public func windowProcessingGain(for WaveformWindowType: WaveformWindowType) -> Double {
+    public func windowProcessingGain(for WaveformWindowType: WaveformWindowType<U>) -> Double {
         let window = Self.generateWindow(type: WaveformWindowType, length: values.count)
         let sumSquares = window.reduce(0.0) { $0 + $1 * $1 }
         return sqrt(sumSquares / Double(window.count))

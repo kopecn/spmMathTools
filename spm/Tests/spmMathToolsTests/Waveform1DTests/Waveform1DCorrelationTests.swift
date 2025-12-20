@@ -40,7 +40,7 @@ struct AutoCorrelationTests {
 
     @Test("Auto-correlation of sine wave")
     func autoCorrelationSineWave() {
-        let waveform = Waveform1D<Double>.sine(frequency: 1.0, duration: 2.0, samplingRate: 100.0)
+        let waveform = Waveform1D<Double,Double>.sine(frequency: 1.0, duration: 2.0, samplingRate: 100.0)
         let autoCorr = waveform.autoCorrelation(maxLag: 50)
 
         #expect(autoCorr.values.count == 51)  // 0 to 50 lags
@@ -147,8 +147,8 @@ struct CrossCorrelationTests {
 
     @Test("Cross-correlation with sine waves")
     func crossCorrelationSineWaves() {
-        let waveform1 = Waveform1D<Double>.sine(frequency: 2.0, duration: 1.0, samplingRate: 100.0)
-        let waveform2 = Waveform1D<Double>.sine(
+        let waveform1 = Waveform1D<Double,Double>.sine(frequency: 2.0, duration: 1.0, samplingRate: 100.0)
+        let waveform2 = Waveform1D<Double,Double>.sine(
             frequency: 2.0,
             phase: Double.pi / 2,
             duration: 1.0,
@@ -523,7 +523,7 @@ struct CorrelationApplicationTests {
     @Test("Signal delay detection")
     func signalDelayDetection() {
         // Create a reference signal and a delayed version
-        let reference = Waveform1D<Double>.triangle(frequency: 5.0, duration: 1.0, samplingRate: 100.0)
+        let reference = Waveform1D<Double,Double>.triangle(frequency: 5.0, duration: 1.0, samplingRate: 100.0)
 
         // Create delayed signal by padding with zeros
         let delayInSamples = 10
@@ -539,7 +539,7 @@ struct CorrelationApplicationTests {
 
     @Test("Periodic signal correlation")
     func periodicSignalCorrelation() {
-        let waveform1 = Waveform1D<Double>.sine(frequency: 2.0, duration: 2.0, samplingRate: 50.0)
+        let waveform1 = Waveform1D<Double,Double>.sine(frequency: 2.0, duration: 2.0, samplingRate: 50.0)
 
         let autoCorr = waveform1.autoCorrelation(maxLag: 50)
 
@@ -578,7 +578,7 @@ struct CorrelationApplicationTests {
     @Test("Mixed signal correlation")
     func mixedSignalCorrelation() {
         // Create a signal with both sine and noise components
-        let pure = Waveform1D<Double>.sine(frequency: 3.0, duration: 1.0, samplingRate: 100.0)
+        let pure = Waveform1D<Double,Double>.sine(frequency: 3.0, duration: 1.0, samplingRate: 100.0)
         let noise = (0..<100).map { _ in 0.2 * Double.random(in: -1...1) }
         let mixed = pure.values.enumerated().map { index, value in value + noise[index] }
         let mixedWaveform = Waveform1D(values: mixed, dt: pure.dt)

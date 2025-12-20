@@ -10,12 +10,12 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     ///   - hysteresis: Optional hysteresis to prevent false triggers
     /// - Returns: Array of detected trigger events
     public func detectTriggers(
-        trigger: WaveformTrigger<T>,
+        trigger: WaveformTrigger<T,U>,
         hysteresis: T? = nil
-    ) -> [WaveformTriggerEvent<T>] {
+    ) -> [WaveformTriggerEvent<T,U>] {
         guard !values.isEmpty else { return [] }
 
-        var events: [WaveformTriggerEvent<T>] = []
+        var events: [WaveformTriggerEvent<T,U>] = []
         var triggerState = false
         var lastTriggerIndex: Int?
 
@@ -29,7 +29,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
                 if let lastIndex = lastTriggerIndex,
                     let minInterval = trigger.minimumInterval
                 {
-                    let timeSinceLastTrigger = TimeInterval(index - lastIndex) * dt
+                    let timeSinceLastTrigger = U(index - lastIndex) * dt
                     if timeSinceLastTrigger < minInterval {
                         continue  // Skip due to minimum interval
                     }
@@ -38,8 +38,8 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
                 let event = WaveformTriggerEvent(
                     index: index,
                     value: value,
-                    time: t0?.addingTimeInterval(TimeInterval(index) * dt),
-                    timeOffset: TimeInterval(index) * dt,
+                    time: t0?.addingTimeInterval(U(index) * dt),
+                    timeOffset: U(index) * dt,
                     type: trigger.type
                 )
 
@@ -78,9 +78,9 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
         edgeType: WaveformEdgeType,
         threshold: T,
         minInterval: TimeInterval? = nil
-    ) -> [WaveformTriggerEvent<T>] {
+    ) -> [WaveformTriggerEvent<T,U>] {
 
-        let trigger = WaveformTrigger<T>(
+        let trigger = WaveformTrigger<T,U>(
             type: .edge(edgeType, threshold: threshold),
             minimumInterval: minInterval
         )
@@ -100,9 +100,9 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
         threshold: T,
         minInterval: TimeInterval? = nil,
         hysteresis: T? = nil
-    ) -> [WaveformTriggerEvent<T>] {
+    ) -> [WaveformTriggerEvent<T,U>] {
 
-        let trigger = WaveformTrigger<T>(
+        let trigger = WaveformTrigger<T,U>(
             type: .level(levelType, threshold: threshold),
             minimumInterval: minInterval
         )
@@ -122,9 +122,9 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
         lowerBound: T,
         upperBound: T,
         minInterval: TimeInterval? = nil
-    ) -> [WaveformTriggerEvent<T>] {
+    ) -> [WaveformTriggerEvent<T,U>] {
 
-        let trigger = WaveformTrigger<T>(
+        let trigger = WaveformTrigger<T,U>(
             type: .window(windowType, lower: lowerBound, upper: upperBound),
             minimumInterval: minInterval
         )
@@ -141,12 +141,12 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     public func detectPatternTriggers(
         pattern: [T],
         threshold: T,
-        minInterval: TimeInterval? = nil
-    ) -> [WaveformTriggerEvent<T>] {
+        minInterval: U? = nil
+    ) -> [WaveformTriggerEvent<T,U>] {
 
         guard pattern.count > 0 && pattern.count <= values.count else { return [] }
 
-        var events: [WaveformTriggerEvent<T>] = []
+        var events: [WaveformTriggerEvent<T,U>] = []
         var lastTriggerIndex: Int?
 
         let halfPatternLength = pattern.count / 2
@@ -160,7 +160,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
                 if let lastIndex = lastTriggerIndex,
                     let minInterval = minInterval
                 {
-                    let timeSinceLastTrigger = TimeInterval(i - lastIndex) * dt
+                    let timeSinceLastTrigger = U(i - lastIndex) * dt
                     if timeSinceLastTrigger < minInterval {
                         continue
                     }
@@ -170,8 +170,8 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
                 let event = WaveformTriggerEvent(
                     index: triggerIndex,
                     value: values[triggerIndex],
-                    time: t0?.addingTimeInterval(TimeInterval(triggerIndex) * dt),
-                    timeOffset: TimeInterval(triggerIndex) * dt,
+                    time: t0?.addingTimeInterval(U(triggerIndex) * dt),
+                    timeOffset: U(triggerIndex) * dt,
                     type: .pattern(pattern, threshold: threshold)
                 )
 
@@ -189,9 +189,9 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     ///   - annotation: Annotation type for the events
     /// - Returns: Waveform with event markers
     public func withEventMarkers(
-        events: [WaveformTriggerEvent<T>],
+        events: [WaveformTriggerEvent<T,U>],
         annotation: WaveformEventAnnotation = .marker
-    ) -> WaveformWithEvents<T> {
+    ) -> WaveformWithEvents<T,U> {
 
         let eventMarkers = events.map { event in
             WaveformEventMarker(
@@ -203,7 +203,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
             )
         }
 
-        return WaveformWithEvents<T>(
+        return WaveformWithEvents<T,U>(
             waveform: self,
             events: eventMarkers
         )
@@ -211,7 +211,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
 
     // MARK: - Private Helper Methods
 
-    private func evaluateTrigger(value: T, trigger: WaveformTrigger<T>) -> Bool {
+    private func evaluateTrigger(value: T, trigger: WaveformTrigger<T,U>) -> Bool {
         switch trigger.type {
         case .edge(let edgeType, let threshold):
             return evaluateEdgeTrigger(value: value, edgeType: edgeType, threshold: threshold)
@@ -262,7 +262,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
         }
     }
 
-    private func evaluateHysteresisReset(value: T, trigger: WaveformTrigger<T>, hysteresis: T) -> Bool {
+    private func evaluateHysteresisReset(value: T, trigger: WaveformTrigger<T,U>, hysteresis: T) -> Bool {
         switch trigger.type {
         case .level(.above, let threshold):
             return value < (threshold - hysteresis)
@@ -312,10 +312,10 @@ extension Waveform1D where T: BinaryInteger & Comparable {
     public func detectThresholdTriggers(
         threshold: T,
         direction: WaveformLevelType,
-        minInterval: TimeInterval? = nil
-    ) -> [WaveformTriggerEvent<T>] {
+        minInterval: T? = nil
+    ) -> [WaveformTriggerEvent<T,U>] {
 
-        var events: [WaveformTriggerEvent<T>] = []
+        var events: [WaveformTriggerEvent<T,U>] = []
         var lastTriggerIndex: Int?
 
         for (index, value) in values.enumerated() {
@@ -344,7 +344,7 @@ extension Waveform1D where T: BinaryInteger & Comparable {
                 let event = WaveformTriggerEvent(
                     index: index,
                     value: value,
-                    time: t0?.addingTimeInterval(TimeInterval(index) * dt),
+                    time: t0?.addingTimeInterval(TimeInterval(index) * TimeInterval(dt)),
                     timeOffset: TimeInterval(index) * dt,
                     type: .level(direction, threshold: threshold)
                 )

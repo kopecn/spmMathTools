@@ -1,9 +1,9 @@
 /// Frequency range specification
-public struct WaveformFrequencyRange {
-    public let minFreq: Double
-    public let maxFreq: Double
+public struct WaveformFrequencyRange<T: BinaryFloatingPoint> {
+    public let minFreq: T
+    public let maxFreq: T
 
-    public init(minFreq: Double, maxFreq: Double) {
+    public init(minFreq: T, maxFreq: T) {
         self.minFreq = minFreq
         self.maxFreq = maxFreq
     }

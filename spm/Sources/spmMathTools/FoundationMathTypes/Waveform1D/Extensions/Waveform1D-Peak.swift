@@ -16,10 +16,10 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
         prominence: T? = nil,
         minDistance: Int = 1,
         edgePeaks: Bool = false
-    ) -> [WaveformPeak<T>] {
+    ) -> [WaveformPeak<T,U>] {
         guard values.count >= 3 else { return [] }
 
-        var candidatePeaks: [WaveformPeak<T>] = []
+        var candidatePeaks: [WaveformPeak<T,U>] = []
         let startIndex = edgePeaks ? 0 : 1
         let endIndex = edgePeaks ? values.count : values.count - 1
 
@@ -49,11 +49,11 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
                     continue
                 }
 
-                let peak = WaveformPeak<T>(
+                let peak = WaveformPeak<T,U>(
                     index: i,
                     value: values[i],
-                    time: t0?.addingTimeInterval(TimeInterval(i) * dt),
-                    timeOffset: TimeInterval(i) * dt
+                    time: t0?.addingTimeInterval(U(i) * dt),
+                    timeOffset: U(i) * dt
                 )
                 candidatePeaks.append(peak)
             }
@@ -82,10 +82,10 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
         prominence: T? = nil,
         minDistance: Int = 1,
         edgeValleys: Bool = false
-    ) -> [WaveformPeak<T>] {
+    ) -> [WaveformPeak<T,U>] {
         guard values.count >= 3 else { return [] }
 
-        var candidateValleys: [WaveformPeak<T>] = []
+        var candidateValleys: [WaveformPeak<T,U>] = []
         let startIndex = edgeValleys ? 0 : 1
         let endIndex = edgeValleys ? values.count : values.count - 1
 
@@ -115,11 +115,11 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
                     continue
                 }
 
-                let valley = WaveformPeak<T>(
+                let valley = WaveformPeak<T,U>(
                     index: i,
                     value: values[i],
-                    time: t0?.addingTimeInterval(TimeInterval(i) * dt),
-                    timeOffset: TimeInterval(i) * dt
+                    time: t0?.addingTimeInterval(U(i) * dt),
+                    timeOffset: U(i) * dt
                 )
                 candidateValleys.append(valley)
             }
@@ -141,7 +141,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     ///   - count: Maximum number of peaks to return
     ///   - minDistance: Minimum distance between peaks in samples
     /// - Returns: Array of peaks sorted by prominence (highest first)
-    public func findMostProminentPeaks(count: Int, minDistance: Int = 1) -> [WaveformPeak<T>] {
+    public func findMostProminentPeaks(count: Int, minDistance: Int = 1) -> [WaveformPeak<T,U>] {
         let allPeaks = detectPeaks(minDistance: minDistance)
         let peaksWithProminence = allPeaks.map { peak in
             let prominence = calculateProminence(at: peak.index)
@@ -154,10 +154,10 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
 
     // MARK: - Private Helper Methods
 
-    private func applyMinimumDistance(_ peaks: [WaveformPeak<T>], minDistance: Int) -> [WaveformPeak<T>] {
+    private func applyMinimumDistance(_ peaks: [WaveformPeak<T,U>], minDistance: Int) -> [WaveformPeak<T,U>] {
         guard minDistance > 1 else { return peaks }
 
-        var filteredPeaks: [WaveformPeak<T>] = []
+        var filteredPeaks: [WaveformPeak<T,U>] = []
 
         for peak in peaks.sorted(by: { $0.value > $1.value }) {  // Sort by height, highest first
             let tooClose = filteredPeaks.contains { existingPeak in
@@ -172,14 +172,14 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
         return filteredPeaks.sorted { $0.index < $1.index }  // Sort back by index
     }
 
-    private func applyProminenceFilter(_ peaks: [WaveformPeak<T>], minimumProminence: T) -> [WaveformPeak<T>] {
+    private func applyProminenceFilter(_ peaks: [WaveformPeak<T,U>], minimumProminence: T) -> [WaveformPeak<T,U>] {
         return peaks.filter { peak in
             let prominence = calculateProminence(at: peak.index)
             return prominence >= minimumProminence
         }
     }
 
-    private func applyValleyProminenceFilter(_ valleys: [WaveformPeak<T>], minimumProminence: T) -> [WaveformPeak<T>] {
+    private func applyValleyProminenceFilter(_ valleys: [WaveformPeak<T,U>], minimumProminence: T) -> [WaveformPeak<T,U>] {
         return valleys.filter { valley in
             let prominence = calculateValleyProminence(at: valley.index)
             return prominence >= minimumProminence
@@ -281,10 +281,10 @@ extension Waveform1D where T: BinaryInteger & Comparable {
         threshold: T? = nil,
         minDistance: Int = 1,
         edgePeaks: Bool = false
-    ) -> [WaveformPeak<T>] {
+    ) -> [WaveformPeak<T,U>] {
         guard values.count >= 3 else { return [] }
 
-        var candidatePeaks: [WaveformPeak<T>] = []
+        var candidatePeaks: [WaveformPeak<T,U>] = []
         let startIndex = edgePeaks ? 0 : 1
         let endIndex = edgePeaks ? values.count : values.count - 1
 
@@ -308,8 +308,8 @@ extension Waveform1D where T: BinaryInteger & Comparable {
                 let peak = WaveformPeak(
                     index: i,
                     value: values[i],
-                    time: t0?.addingTimeInterval(TimeInterval(i) * dt),
-                    timeOffset: TimeInterval(i) * dt
+                    time: t0?.addingTimeInterval(U(i) * dt),
+                    timeOffset: U(i) * dt
                 )
                 candidatePeaks.append(peak)
             }
@@ -319,10 +319,10 @@ extension Waveform1D where T: BinaryInteger & Comparable {
         return applyMinimumDistanceInteger(candidatePeaks, minDistance: minDistance)
     }
 
-    private func applyMinimumDistanceInteger(_ peaks: [WaveformPeak<T>], minDistance: Int) -> [WaveformPeak<T>] {
+    private func applyMinimumDistanceInteger(_ peaks: [WaveformPeak<T,U>], minDistance: Int) -> [WaveformPeak<T,U>] {
         guard minDistance > 1 else { return peaks }
 
-        var filteredPeaks: [WaveformPeak<T>] = []
+        var filteredPeaks: [WaveformPeak<T,U>] = []
 
         for peak in peaks.sorted(by: { $0.value > $1.value }) {
             let tooClose = filteredPeaks.contains { existingPeak in

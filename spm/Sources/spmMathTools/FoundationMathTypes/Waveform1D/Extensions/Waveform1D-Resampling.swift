@@ -14,7 +14,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         by factor: Int,
         antiAliasFilter: Bool = true,
         filterOrder: Int = 4
-    ) -> Waveform1D<T> {
+    ) -> Waveform1D<T,U> {
         guard factor > 0 && !values.isEmpty else { return self }
         guard factor > 1 else { return self }  // No decimation needed
 
@@ -47,7 +47,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         method: WaveformInterpolationMethod = .linear,
         antiAliasFilter: Bool = true,
         filterOrder: Int = 4
-    ) -> Waveform1D<T> {
+    ) -> Waveform1D<T,U> {
         guard factor > 0 && !values.isEmpty else { return self }
         guard factor > 1 else { return self }  // No interpolation needed
 
@@ -75,10 +75,10 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - antiAliasFilter: Apply anti-aliasing filters
     /// - Returns: Resampled waveform
     public func resampled(
-        to newSamplingRate: Double,
+        to newSamplingRate: U,
         method: WaveformInterpolationMethod = .linear,
         antiAliasFilter: Bool = true
-    ) -> Waveform1D<T> {
+    ) -> Waveform1D<T,U> {
         guard newSamplingRate > 0 && !values.isEmpty else { return self }
 
         let currentRate = samplingFrequency
@@ -115,7 +115,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func resampledToMatch<U>(
         _ other: Waveform1D<U>,
         method: WaveformInterpolationMethod = .linear
-    ) -> Waveform1D<T> {
+    ) -> Waveform1D<T,U> {
         return resampled(to: other.samplingFrequency, method: method)
     }
 
@@ -164,10 +164,10 @@ extension Waveform1D where T: BinaryFloatingPoint {
     }
 
     private func fractionalResample(
-        targetRate: Double,
+        targetRate: U,
         method: WaveformInterpolationMethod,
         antiAliasFilter: Bool
-    ) -> Waveform1D<T> {
+    ) -> Waveform1D<T,U> {
         let currentRate = samplingFrequency
         let ratio = targetRate / currentRate
         let newLength = Int(Double(values.count) * ratio)
@@ -176,7 +176,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         resampledValues.reserveCapacity(newLength)
 
         for i in 0..<newLength {
-            let sourceIndex = Double(i) / ratio
+            let sourceIndex = U(i) / ratio
             let floorIndex = Int(sourceIndex)
             let fractionalPart = sourceIndex - Double(floorIndex)
 
@@ -214,7 +214,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - factor: Decimation factor
     ///   - filterTaps: Number of filter taps (default: 64)
     /// - Returns: Decimated waveform with polyphase filtering
-    public func polyphaseDecimated(by factor: Int, filterTaps: Int = 64) -> Waveform1D<T> {
+    public func polyphaseDecimated(by factor: Int, filterTaps: Int = 64) -> Waveform1D<T,U> {
         guard factor > 1 && !values.isEmpty else { return self }
 
         // Design a simple low-pass FIR filter
@@ -233,7 +233,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - factor: Interpolation factor
     ///   - filterTaps: Number of filter taps (default: 64)
     /// - Returns: Interpolated waveform with polyphase filtering
-    public func polyphaseInterpolated(by factor: Int, filterTaps: Int = 64) -> Waveform1D<T> {
+    public func polyphaseInterpolated(by factor: Int, filterTaps: Int = 64) -> Waveform1D<T,U> {
         guard factor > 1 && !values.isEmpty else { return self }
 
         // Design a simple low-pass FIR filter
@@ -326,13 +326,13 @@ extension Waveform1D where T: BinaryInteger {
     /// Decimate integer waveform using nearest neighbor
     /// - Parameter factor: Decimation factor
     /// - Returns: Decimated waveform
-    public func decimated(by factor: Int) -> Waveform1D<T> {
+    public func decimated(by factor: Int) -> Waveform1D<T,U> {
         guard factor > 1 && !values.isEmpty else { return self }
 
         let decimatedValues = stride(from: 0, to: values.count, by: factor)
             .map { values[$0] }
 
-        let newDt = dt * Double(factor)
+        let newDt = dt * U(factor)
 
         return Waveform1D(values: decimatedValues, dt: newDt, t0: t0)
     }
@@ -345,7 +345,7 @@ extension Waveform1D where T: BinaryInteger {
     public func interpolated(
         by factor: Int,
         method: WaveformInterpolationMethod = .nearestNeighbor
-    ) -> Waveform1D<T> {
+    ) -> Waveform1D<T,U> {
         guard factor > 1 && !values.isEmpty else { return self }
 
         var interpolatedValues: [T] = []

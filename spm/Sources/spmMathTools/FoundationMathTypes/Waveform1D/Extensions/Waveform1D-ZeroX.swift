@@ -2,7 +2,7 @@ import Foundation
 import FoundationTypes
 
 // MARK: - Zero-Crossing Detection
-extension Waveform1D where T: BinaryFloatingPoint & Comparable {
+extension Waveform1D where T: SignedNumeric & Comparable {
 
     /// Detect zero crossings in the waveform
     /// - Parameters:
@@ -10,12 +10,12 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     ///   - direction: Type of crossings to detect (default: all)
     /// - Returns: Array of zero crossing information
     public func zeroCrossings(
-        threshold: T = T(1e-10),
+        threshold: T,
         direction: WaveformZeroCrossingDirection = .all
-    ) -> [WaveformZeroCrossing<T>] {
+    ) -> [WaveformZeroCrossing<T,U>] {
         guard values.count >= 2 else { return [] }
 
-        var crossings: [WaveformZeroCrossing<T>] = []
+        var crossings: [WaveformZeroCrossing<T,U>] = []
 
         for i in 0..<(values.count - 1) {
             let currentValue = values[i]
@@ -75,7 +75,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     ///   - direction: Type of crossings to count
     /// - Returns: Number of zero crossings
     public func zeroCrossingCount(
-        threshold: T = T(1e-10),
+        threshold: T,
         direction: WaveformZeroCrossingDirection = .all
     ) -> Int {
         return zeroCrossings(threshold: threshold, direction: direction).count
@@ -87,14 +87,14 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     ///   - direction: Type of crossings to count
     /// - Returns: Zero crossing rate in crossings per second
     public func zeroCrossingRate(
-        threshold: T = T(1e-10),
+        threshold: T,
         direction: WaveformZeroCrossingDirection = .all
-    ) -> Double {
+    ) -> U {
         let crossingCount = zeroCrossingCount(threshold: threshold, direction: direction)
         let totalDuration = duration
 
         guard totalDuration > 0 else { return 0.0 }
-        return Double(crossingCount) / totalDuration
+        return U(crossingCount) / totalDuration
     }
 
     /// Get segments between zero crossings
@@ -103,15 +103,15 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     ///   - includePartial: Include partial segments at start/end
     /// - Returns: Array of waveform segments between crossings
     public func segmentsBetweenZeroCrossings(
-        threshold: T = T(1e-10),
+        threshold: T,
         includePartial: Bool = false
-    ) -> [Waveform1D<T>] {
+    ) -> [Waveform1D<T,U>] {
         let crossings = zeroCrossings(threshold: threshold, direction: .all)
         guard !crossings.isEmpty else {
             return includePartial ? [self] : []
         }
 
-        var segments: [Waveform1D<T>] = []
+        var segments: [Waveform1D<T,U>] = []
         var segmentIndices: [Int] = []
 
         // Add start index if including partial segments
@@ -135,7 +135,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
             guard startIdx < endIdx && endIdx < values.count else { continue }
 
             let segmentValues = Array(values[startIdx...endIdx])
-            let segmentT0 = t0?.addingTimeInterval(TimeInterval(startIdx) * dt)
+            let segmentT0 = t0?.addingTimeInterval(U(startIdx) * dt)
 
             let segment = Waveform1D(values: segmentValues, dt: dt, t0: segmentT0)
             segments.append(segment)
@@ -156,16 +156,19 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
         }
     }
 
-    private func interpolateZeroCrossing(value1: T, value2: T, index1: Int, threshold: T) -> Double {
+    private func interpolateZeroCrossing(value1: T, value2: T, index1: Int, threshold: T) -> U {
         // Linear interpolation to find exact crossing point
         let denominator = value2 - value1
 
         guard abs(denominator) > threshold else {
-            return Double(index1) + 0.5  // Midpoint if values are too close
+            return U(index1) + 0.5  // Midpoint if values are too close
         }
 
-        let fraction = -Double(value1) / Double(denominator)
-        return Double(index1) + max(0.0, min(1.0, fraction))
+        // FIXME: - This is broken
+        // let fraction = -U(value1) / U(denominator)
+        let fraction = 0.0
+        // FIXME: - This is broken
+        return U(index1) + U(max(0.0, min(1.0, fraction)))
     }
 }
 
@@ -175,10 +178,10 @@ extension Waveform1D where T: BinaryInteger & Comparable {
     /// Detect zero crossings for integer waveforms
     /// - Parameter direction: Type of crossings to detect
     /// - Returns: Array of zero crossing information
-    public func zeroCrossings(direction: WaveformZeroCrossingDirection = .all) -> [WaveformZeroCrossing<T>] {
+    public func zeroCrossings(direction: WaveformZeroCrossingDirection = .all) -> [WaveformZeroCrossing<T,U>] {
         guard values.count >= 2 else { return [] }
 
-        var crossings: [WaveformZeroCrossing<T>] = []
+        var crossings: [WaveformZeroCrossing<T,U>] = []
 
         for i in 0..<(values.count - 1) {
             let currentValue = values[i]
@@ -205,7 +208,7 @@ extension Waveform1D where T: BinaryInteger & Comparable {
             guard let type = crossingType, direction.includes(type) else { continue }
 
             // For integers, crossing occurs at midpoint
-            let interpolatedIndex = Double(i) + 0.5
+            let interpolatedIndex = U(i) + 0.5
             let crossingTime = t0?.addingTimeInterval(interpolatedIndex * dt)
 
             let crossing = WaveformZeroCrossing(
@@ -228,11 +231,11 @@ extension Waveform1D where T: BinaryInteger & Comparable {
     }
 
     /// Calculate zero crossing rate for integer waveforms
-    public func zeroCrossingRate(direction: WaveformZeroCrossingDirection = .all) -> Double {
+    public func zeroCrossingRate(direction: WaveformZeroCrossingDirection = .all) -> U {
         let crossingCount = zeroCrossingCount(direction: direction)
         let totalDuration = duration
 
         guard totalDuration > 0 else { return 0.0 }
-        return Double(crossingCount) / totalDuration
+        return U(crossingCount) / totalDuration
     }
 }

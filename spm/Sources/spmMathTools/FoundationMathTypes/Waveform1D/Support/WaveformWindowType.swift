@@ -1,5 +1,5 @@
 /// Available window function types
-public enum WaveformWindowType {
+public enum WaveformWindowType<U: BinaryFloatingPoint & Sendable> {
     /// Rectangular window (no windowing)
     case rectangular
     /// Hanning window (raised cosine)
@@ -11,9 +11,9 @@ public enum WaveformWindowType {
     /// Blackman-Harris window
     case blackmanHarris
     /// Kaiser window with beta parameter
-    case kaiser(beta: Double)
+    case kaiser(beta: U)
     /// Tukey window with taper ratio
-    case tukey(taperRatio: Double)
+    case tukey(taperRatio: U)
     /// Bartlett (triangular) window
     case bartlett
     /// Welch (parabolic) window
