@@ -115,10 +115,9 @@ final class PolynomialUnivariateFunctionTests: XCTestCase {
 
         for r in quarticRootTruthTable {
             let quartic = QuarticUnivariatePolynomial(coefficients: r.coeff)
-            if let roots = try? quartic.roots {
-                for (qr, rr) in zip(roots, r.roots) {
-                    XCTAssertEqual(qr, rr, accuracy: 0.0001)
-                }
+            let roots = quartic.roots 
+            for (qr, rr) in zip(roots, r.roots) {
+                XCTAssertEqual(qr, rr, accuracy: 0.0001)
             }
         }
     }

@@ -261,8 +261,8 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - order: Filter order
     /// - Returns: Tuple containing magnitude and phase response
     public func frequencyResponse(
-        at frequencies: [Double],
-        filterType: WaveformFilterType,
+        at frequencies: [U],
+        filterType: WaveformFilterType<U>,
         order: Int = 4
     ) -> (magnitude: [T], phase: [T]) {
 
@@ -272,7 +272,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
         for freq in frequencies {
             let normalizedFreq = freq / nyquist
-            let omega = .pi * normalizedFreq
+            let omega = U.pi * normalizedFreq
 
             let response = calculateFilterResponse(omega: omega, filterType: filterType, order: order)
             magnitudes.append(T(response.magnitude))
@@ -283,18 +283,18 @@ extension Waveform1D where T: BinaryFloatingPoint {
     }
 
     private func calculateFilterResponse(
-        omega: Double,
-        filterType: WaveformFilterType,
+        omega: U,
+        filterType: WaveformFilterType<U>,
         order: Int
-    ) -> (magnitude: Double, phase: Double) {
+    ) -> (magnitude: U, phase: U) {
         // Simplified frequency response calculation
         // For demonstration purposes - a complete implementation would use proper transfer functions
 
         switch filterType {
         case .lowPass(let cutoffFreq):
-            let wc = 2.0 * .pi * cutoffFreq / samplingFrequency
+            let wc = 2.0 * U.pi * cutoffFreq / samplingFrequency
             let ratio = omega / wc
-            let magnitude = 1.0 / sqrt(1.0 + pow(ratio, 2.0 * Double(order)))
+            let magnitude = 1.0 / sqrt(1.0 + pow(Double(ratio), 2.0 * Double(order)))
             let phase = -Double(order) * atan(ratio)
             return (magnitude, phase)
 

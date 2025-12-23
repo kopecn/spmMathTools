@@ -77,7 +77,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     public func detectEdgeTriggers(
         edgeType: WaveformEdgeType,
         threshold: T,
-        minInterval: TimeInterval? = nil
+        minInterval: U? = nil
     ) -> [WaveformTriggerEvent<T,U>] {
 
         let trigger = WaveformTrigger<T,U>(
@@ -98,7 +98,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     public func detectLevelTriggers(
         levelType: WaveformLevelType,
         threshold: T,
-        minInterval: TimeInterval? = nil,
+        minInterval: U? = nil,
         hysteresis: T? = nil
     ) -> [WaveformTriggerEvent<T,U>] {
 
@@ -121,7 +121,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
         windowType: WaveformWindowTriggerType,
         lowerBound: T,
         upperBound: T,
-        minInterval: TimeInterval? = nil
+        minInterval: U? = nil
     ) -> [WaveformTriggerEvent<T,U>] {
 
         let trigger = WaveformTrigger<T,U>(
@@ -312,7 +312,7 @@ extension Waveform1D where T: BinaryInteger & Comparable {
     public func detectThresholdTriggers(
         threshold: T,
         direction: WaveformLevelType,
-        minInterval: T? = nil
+        minInterval: U? = nil
     ) -> [WaveformTriggerEvent<T,U>] {
 
         var events: [WaveformTriggerEvent<T,U>] = []
@@ -335,7 +335,7 @@ extension Waveform1D where T: BinaryInteger & Comparable {
                 if let lastIndex = lastTriggerIndex,
                     let minInterval = minInterval
                 {
-                    let timeSinceLastTrigger = TimeInterval(index - lastIndex) * dt
+                    let timeSinceLastTrigger = U(index - lastIndex) * dt
                     if timeSinceLastTrigger < minInterval {
                         continue
                     }
@@ -345,7 +345,7 @@ extension Waveform1D where T: BinaryInteger & Comparable {
                     index: index,
                     value: value,
                     time: t0?.addingTimeInterval(TimeInterval(index) * TimeInterval(dt)),
-                    timeOffset: TimeInterval(index) * dt,
+                    timeOffset: U(index) * dt,
                     type: .level(direction, threshold: threshold)
                 )
 
