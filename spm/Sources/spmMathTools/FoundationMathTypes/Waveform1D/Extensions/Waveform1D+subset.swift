@@ -12,8 +12,8 @@ extension Waveform1D {
     ///   - retainT0: If true, keeps original t0. If false, sets t0 to nil
     /// - Returns: New waveform subset or nil if date range is outside waveform bounds
     public func subset(
-        from startDate: Date,
-        to endDate: Date,
+        from startDate: PrecisionTimestamp,
+        to endDate: PrecisionTimestamp,
         paddingBefore: Int = 0,
         paddingAfter: Int = 0,
         retainT0: Bool = true
@@ -22,8 +22,18 @@ extension Waveform1D {
         guard let t0 = self.t0 else { return nil }
         guard startDate <= endDate else { return nil }
 
-        let startTime = U(startDate.timeIntervalSince(t0))
-        let endTime = U(endDate.timeIntervalSince(t0))
+        // Convert PrecisionTimeInterval to U (BinaryFloatingPoint)
+        let startInterval = startDate - t0
+        let startTime = {
+            let seconds = U(startInterval.seconds) + U(startInterval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
+            return startInterval.sign == .positive ? seconds : -seconds
+        }()
+
+        let endInterval = endDate - t0
+        let endTime = {
+            let seconds = U(endInterval.seconds) + U(endInterval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
+            return endInterval.sign == .positive ? seconds : -seconds
+        }()
 
         return subset(
             fromTime: startTime,
@@ -65,8 +75,11 @@ extension Waveform1D {
             adjustedEndTime = endTime
         case .epoch:
             guard let t0 = self.t0 else { return nil }
-            adjustedStartTime = startTime - U(t0.timeIntervalSince1970)
-            adjustedEndTime = endTime - U(t0.timeIntervalSince1970)
+            // Convert t0's interval from epoch to U
+            let t0Seconds = U(t0.interval.seconds) + U(t0.interval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
+            let t0Interval = t0.interval.sign == .positive ? t0Seconds : -t0Seconds
+            adjustedStartTime = startTime - t0Interval
+            adjustedEndTime = endTime - t0Interval
         }
 
         let waveformDuration = U(values.count - 1) * dt
@@ -102,7 +115,7 @@ extension Waveform1D {
         }
 
         // Calculate new t0 if retaining
-        let newT0: Date?
+        let newT0: PrecisionTimestamp?
         if retainT0, let originalT0 = self.t0 {
             let timeOffset = U(clampedStartIndex - paddingBefore) * dt
             newT0 = originalT0.addingTimeInterval(add: timeOffset)

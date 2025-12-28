@@ -9,10 +9,15 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - clamp: If true, returns edge values when date is outside range. If false, returns nil.
     ///   - interpolationWindow: Maximum time difference (seconds) for interpolation. Beyond this, nearest sample is used.
     /// - Returns: Interpolated value or nil if date is invalid/outside range and clamp is false
-    public func value(at date: Date, clamp: Bool = false, interpolationWindow: U = 0.5) -> T? {
+    public func value(at date: PrecisionTimestamp, clamp: Bool = false, interpolationWindow: U = 0.5) -> T? {
         guard let t0 = self.t0 else { return nil }
 
-        let timeOffset = U(date.timeIntervalSince(t0))
+        // Convert PrecisionTimeInterval to U
+        let interval = date - t0
+        let timeOffset = {
+            let seconds = U(interval.seconds) + U(interval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
+            return interval.sign == .positive ? seconds : -seconds
+        }()
         return value(
             atTime: timeOffset,
             clamp: clamp,
@@ -43,7 +48,10 @@ extension Waveform1D where T: BinaryFloatingPoint {
             adjustedTime = time
         case .epoch:
             guard let t0 = self.t0 else { return nil }
-            adjustedTime = time - U(t0.timeIntervalSince1970)
+            // Convert t0's interval from epoch to U
+            let t0Seconds = U(t0.interval.seconds) + U(t0.interval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
+            let t0Interval = t0.interval.sign == .positive ? t0Seconds : -t0Seconds
+            adjustedTime = time - t0Interval
         }
 
         let sampleIndex = adjustedTime / dt
@@ -83,10 +91,15 @@ extension Waveform1D where T: BinaryFloatingPoint {
 extension Waveform1D where T: BinaryInteger {
 
     /// Access value at a given Date (nearest neighbor for integer types)
-    public func value(at date: Date, clamp: Bool = false) -> T? {
+    public func value(at date: PrecisionTimestamp, clamp: Bool = false) -> T? {
         guard let t0 = self.t0 else { return nil }
 
-        let timeOffset = U(date.timeIntervalSince(t0))
+        // Convert PrecisionTimeInterval to U
+        let interval = date - t0
+        let timeOffset = {
+            let seconds = U(interval.seconds) + U(interval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
+            return interval.sign == .positive ? seconds : -seconds
+        }()
         return value(atTime: timeOffset, clamp: clamp, WaveformTimeReference: .waveformStart)
     }
 
@@ -105,7 +118,10 @@ extension Waveform1D where T: BinaryInteger {
             adjustedTime = time
         case .epoch:
             guard let t0 = self.t0 else { return nil }
-            adjustedTime = time - U(t0.timeIntervalSince1970)
+            // Convert t0's interval from epoch to U
+            let t0Seconds = U(t0.interval.seconds) + U(t0.interval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
+            let t0Interval = t0.interval.sign == .positive ? t0Seconds : -t0Seconds
+            adjustedTime = time - t0Interval
         }
 
         let sampleIndex = adjustedTime / dt

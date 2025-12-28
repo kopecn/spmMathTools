@@ -1,4 +1,5 @@
 import Foundation
+import FoundationTypes
 
 /// Represents a zero crossing event
 
@@ -7,7 +8,7 @@ public struct WaveformZeroCrossing<T: Numeric, U: BinaryFloatingPoint> {
     public let sampleIndex: U
 
     /// Absolute time of crossing (if t0 is available)
-    public let time: Date?
+    public let time: PrecisionTimestamp?
 
     /// Time offset from waveform start in seconds
     public let timeOffset: U
