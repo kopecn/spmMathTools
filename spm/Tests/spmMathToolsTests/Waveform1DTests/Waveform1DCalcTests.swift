@@ -150,7 +150,7 @@ struct Waveform1DIntegrationTests {
 
     @Test("Integration preserves dt and t0")
     func integrationPreservesMetadata() {
-        let startTime = Date()
+        let startTime = PrecisionTimestamp()
         let waveform = Waveform1D<Double,Double>.sine(frequency: 1.0, duration: 1.0, samplingRate: 100.0, t0: startTime)
         let integrated = waveform.integrate()
 
@@ -310,7 +310,7 @@ struct Waveform1DDerivativeTests {
 
     @Test("Derivative preserves dt and t0")
     func derivativePreservesMetadata() {
-        let startTime = Date()
+        let startTime = PrecisionTimestamp()
         let waveform = Waveform1D<Double,Double>.sine(frequency: 1.0, duration: 1.0, samplingRate: 100.0, t0: startTime)
         let derived = waveform.derivative()
 

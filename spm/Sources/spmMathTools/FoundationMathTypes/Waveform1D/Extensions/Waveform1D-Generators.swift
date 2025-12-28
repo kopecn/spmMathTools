@@ -21,7 +21,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         phase: U = 0.0,
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -50,7 +50,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         phase: U = 0.0,
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -79,7 +79,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         dutyCycle: U = 0.5,
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -108,7 +108,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         amplitude: T = T(1.0),
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -140,7 +140,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         amplitude: T = T(1.0),
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -173,7 +173,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         amplitude: T = T(1.0),
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -203,7 +203,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         timeConstant: U,
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -229,7 +229,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         timeConstant: U,
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -255,7 +255,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         coefficients: [U],
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         guard !coefficients.isEmpty else {
             return Waveform1D(values: [], dt: 1.0 / samplingRate, t0: t0)
@@ -289,7 +289,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         endValue: T,
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -317,7 +317,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         offset: U = 0.01,
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -343,7 +343,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         offset: U = 0.01,
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -369,7 +369,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         amplitude: T = T(1.0),
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -397,7 +397,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         stepTime: U? = nil,
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -424,7 +424,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         threshold: U = 0.0,
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -453,7 +453,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         center: U? = nil,
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -484,7 +484,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         duration: U,
         samplingRate: U,
         seed: UInt64? = nil,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -511,7 +511,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         value: T,
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -535,7 +535,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         impulseTime: U = 0.0,
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -568,7 +568,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         phase: U = 0.0,
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -604,7 +604,7 @@ extension Waveform1D where T: BinaryInteger {
         dutyCycle: U = 0.5,
         duration: U,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
@@ -633,7 +633,7 @@ extension Waveform1D where T: BinaryInteger {
         increment: T,
         sampleCount: Int,
         samplingRate: U,
-        t0: Date? = nil
+        t0: PrecisionTimestamp? = nil
     ) -> Waveform1D<T,U> {
         let dt = 1.0 / samplingRate
 
