@@ -38,7 +38,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
                 let event = WaveformTriggerEvent(
                     index: index,
                     value: value,
-                    time: t0?.addingTimeInterval(U(index) * dt),
+                    time: t0?.addingTimeInterval(add: U(index) * dt),
                     timeOffset: U(index) * dt,
                     type: trigger.type
                 )
@@ -170,7 +170,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
                 let event = WaveformTriggerEvent(
                     index: triggerIndex,
                     value: values[triggerIndex],
-                    time: t0?.addingTimeInterval(U(triggerIndex) * dt),
+                    time: t0?.addingTimeInterval(add: U(triggerIndex) * dt),
                     timeOffset: U(triggerIndex) * dt,
                     type: .pattern(pattern, threshold: threshold)
                 )
@@ -344,7 +344,7 @@ extension Waveform1D where T: BinaryInteger & Comparable {
                 let event = WaveformTriggerEvent(
                     index: index,
                     value: value,
-                    time: t0?.addingTimeInterval(TimeInterval(index) * TimeInterval(dt)),
+                    time: t0?.addingTimeInterval(add: TimeInterval(index) * TimeInterval(dt)),
                     timeOffset: U(index) * dt,
                     type: .level(direction, threshold: threshold)
                 )

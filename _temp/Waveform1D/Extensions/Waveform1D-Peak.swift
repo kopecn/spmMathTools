@@ -52,7 +52,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
                 let peak = WaveformPeak<T,U>(
                     index: i,
                     value: values[i],
-                    time: t0?.addingTimeInterval(U(i) * dt),
+                    time: t0?.addingTimeInterval(add: U(i) * dt),
                     timeOffset: U(i) * dt
                 )
                 candidatePeaks.append(peak)
@@ -118,7 +118,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
                 let valley = WaveformPeak<T,U>(
                     index: i,
                     value: values[i],
-                    time: t0?.addingTimeInterval(U(i) * dt),
+                    time: t0?.addingTimeInterval(add: U(i) * dt),
                     timeOffset: U(i) * dt
                 )
                 candidateValleys.append(valley)
@@ -308,7 +308,7 @@ extension Waveform1D where T: BinaryInteger & Comparable {
                 let peak = WaveformPeak(
                     index: i,
                     value: values[i],
-                    time: t0?.addingTimeInterval(U(i) * dt),
+                    time: t0?.addingTimeInterval(add: U(i) * dt),
                     timeOffset: U(i) * dt
                 )
                 candidatePeaks.append(peak)

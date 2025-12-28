@@ -402,7 +402,7 @@ struct PeakTimeInformationTests {
 
             // Check absolute time if available
             if let peakTime = peak.time {
-                let expectedTime = startTime.addingTimeInterval(expectedTimeOffset)
+                let expectedTime = startTime.addingTimeInterval(add: expectedTimeOffset)
                 #expect(abs(peakTime.timeIntervalSince(expectedTime)) < 1e-10)
             }
         }

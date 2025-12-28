@@ -136,7 +136,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     }
 
     private func alignByManualOffset(_ offsetSeconds: TimeInterval) -> Waveform1D<T,U> {
-        let newT0 = t0?.addingTimeInterval(offsetSeconds)
+        let newT0 = t0?.addingTimeInterval(add: offsetSeconds)
         return Waveform1D(values: values, dt: dt, t0: newT0)
     }
 
@@ -230,7 +230,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
             }
 
             // Create windowed waveform with adjusted t0
-            let windowT0 = t0?.addingTimeInterval(TimeInterval(startIndex) * dt)
+            let windowT0 = t0?.addingTimeInterval(add: TimeInterval(startIndex) * dt)
             let window = Waveform1D(values: windowValues, dt: dt, t0: windowT0)
             windows.append(window)
 
@@ -270,7 +270,7 @@ extension Waveform1D where T: BinaryInteger {
         guard let referenceT0 = reference.t0, let selfT0 = t0 else { return self }
 
         let timeOffset = selfT0.timeIntervalSince(referenceT0)
-        let newT0 = t0?.addingTimeInterval(-timeOffset)
+        let newT0 = t0?.addingTimeInterval(add: -timeOffset)
 
         return Waveform1D(values: values, dt: dt, t0: newT0)
     }
@@ -295,7 +295,7 @@ extension Waveform1D where T: BinaryInteger {
 
         while startIndex + windowSamples <= values.count {
             let windowValues = Array(values[startIndex..<(startIndex + windowSamples)])
-            let windowT0 = t0?.addingTimeInterval(TimeInterval(startIndex) * dt)
+            let windowT0 = t0?.addingTimeInterval(add: TimeInterval(startIndex) * dt)
             let window = Waveform1D(values: windowValues, dt: dt, t0: windowT0)
             windows.append(window)
 

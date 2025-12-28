@@ -2,7 +2,7 @@ import Foundation
 import FoundationTypes
 
 // MARK: - FFT Mathematical Operations
-extension Waveform1D where T: BinaryFloatingPoint {
+extension Waveform1D where T: BinaryFloatingPoint & SIMDScalar{
 
     /// Compute the Fast Fourier Transform using Cooley-Tukey algorithm
     /// - Returns: Tuple containing frequency array, magnitudes, and phases
@@ -241,32 +241,32 @@ extension Waveform1D where T: BinaryFloatingPoint {
         guard length > 0 else { return [] }
         guard length > 1 else { return [1.0] }
 
-        let n = T(length)
+        let n = Double(length)
 
         switch type {
         case .rectangular:
-            return Array(repeating: 1.0, count: length)
+            return Array(repeating: T(1.0), count: length)
 
         case .hanning:
             return (0..<length).map { i in
-                0.5 * (1.0 - cos(2.0 * .pi * T(i) / (n - 1.0)))
+                T(0.5 * (1.0 - cos(2.0 * .pi * Double(i) / (n - 1.0))))
             }
 
         case .hamming:
             return (0..<length).map { i in
-                0.54 - 0.46 * cos(2.0 * .pi * T(i) / (n - 1.0))
+                T(0.54 - 0.46 * cos(2.0 * .pi * Double(i) / (n - 1.0)))
             }
 
         case .blackman:
             return (0..<length).map { i in
-                let factor = 2.0 * .pi * T(i) / (n - 1.0)
-                return 0.42 - 0.5 * cos(factor) + 0.08 * cos(2.0 * factor)
+                let factor = 2.0 * .pi * U(i) / (n - 1.0)
+                return T(0.42 - 0.5 * cos(factor) + 0.08 * cos(2.0 * factor))
             }
 
         case .blackmanHarris:
             return (0..<length).map { i in
-                let factor = 2.0 * .pi * T(i) / (n - 1.0)
-                return 0.35875 - 0.48829 * cos(factor) + 0.14128 * cos(2.0 * factor) - 0.01168 * cos(3.0 * factor)
+                let factor = 2.0 * .pi * Double(i) / (n - 1.0)
+                return T(0.35875 - 0.48829 * cos(factor) + 0.14128 * cos(2.0 * factor) - 0.01168 * cos(3.0 * factor))
             }
 
         case .kaiser(let beta):

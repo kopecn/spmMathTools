@@ -105,7 +105,7 @@ extension Waveform1D {
         let newT0: Date?
         if retainT0, let originalT0 = self.t0 {
             let timeOffset = U(clampedStartIndex - paddingBefore) * dt
-            newT0 = originalT0.addingTimeInterval(timeOffset)
+            newT0 = originalT0.addingTimeInterval(add: timeOffset)
         } else {
             newT0 = nil
         }

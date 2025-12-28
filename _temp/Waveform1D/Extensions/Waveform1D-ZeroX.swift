@@ -52,7 +52,7 @@ extension Waveform1D where T: SignedNumeric & Comparable {
                     threshold: threshold
                 )
 
-                let crossingTime = t0?.addingTimeInterval(interpolatedIndex * dt)
+                let crossingTime = t0?.addingTimeInterval(add: interpolatedIndex * dt)
 
                 let crossing = WaveformZeroCrossing(
                     sampleIndex: interpolatedIndex,
@@ -135,7 +135,7 @@ extension Waveform1D where T: SignedNumeric & Comparable {
             guard startIdx < endIdx && endIdx < values.count else { continue }
 
             let segmentValues = Array(values[startIdx...endIdx])
-            let segmentT0 = t0?.addingTimeInterval(U(startIdx) * dt)
+            let segmentT0 = t0?.addingTimeInterval(add: U(startIdx) * dt)
 
             let segment = Waveform1D(values: segmentValues, dt: dt, t0: segmentT0)
             segments.append(segment)
@@ -209,7 +209,7 @@ extension Waveform1D where T: BinaryInteger & Comparable {
 
             // For integers, crossing occurs at midpoint
             let interpolatedIndex = U(i) + 0.5
-            let crossingTime = t0?.addingTimeInterval(interpolatedIndex * dt)
+            let crossingTime = t0?.addingTimeInterval(add: interpolatedIndex * dt)
 
             let crossing = WaveformZeroCrossing(
                 sampleIndex: interpolatedIndex,

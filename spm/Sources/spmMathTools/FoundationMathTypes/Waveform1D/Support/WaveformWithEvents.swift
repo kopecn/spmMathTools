@@ -2,7 +2,7 @@ import Foundation
 import FoundationTypes
 
 /// Waveform with event markers
-public struct WaveformWithEvents<T: Numeric & Sendable, U: BinaryFloatingPoint & Sendable> {
+public struct WaveformWithEvents<T: Numeric & Sendable, U: BinaryFloatingPoint & SIMDScalar & Sendable> {
     /// The original waveform
     public let waveform: Waveform1D<T,U>
 

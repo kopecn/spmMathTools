@@ -159,13 +159,13 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func phaseCoherence(
         with other: Waveform1D<T,U>,
         windowSize: Int? = nil,
-        overlap: Double = 0.5
+        overlap: U = 0.5
     ) -> Waveform1D<T,U>? {
 
         guard values.count == other.values.count && values.count > 1 else { return nil }
 
         let actualWindowSize = windowSize ?? min(256, values.count / 4)
-        let hopSize = Int(Double(actualWindowSize) * (1.0 - max(0.0, min(0.99, overlap))))
+        let hopSize = Int(U(actualWindowSize) * (1.0 - max(0.0, min(0.99, overlap))))
 
         var coherenceValues: [T] = []
         var startIndex = 0
@@ -182,7 +182,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
         // Create time axis for coherence values
         let coherenceDt = dt * U(hopSize)
-        let coherenceT0 = t0?.addingTimeInterval(U(actualWindowSize / 2) * dt)
+        let coherenceT0 = t0?.addingTimeInterval(add: U(actualWindowSize / 2) * dt)
 
         return Waveform1D(values: coherenceValues, dt: coherenceDt, t0: coherenceT0)
     }
@@ -337,7 +337,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
                 let event = WaveformTriggerEvent(
                     index: index,
                     value: values[index],
-                    time: t0?.addingTimeInterval(U(index) * dt),
+                    time: t0?.addingTimeInterval(add: U(index) * dt),
                     timeOffset: U(index) * dt,
                     type: .phase(referencePhase, tolerance: tolerance)
                 )

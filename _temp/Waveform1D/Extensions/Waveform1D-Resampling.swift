@@ -19,10 +19,11 @@ extension Waveform1D where T: BinaryFloatingPoint {
         guard factor > 1 else { return self }  // No decimation needed
 
         var processedWaveform = self
+        let factorU = U(factor)
 
         // Apply anti-aliasing filter if requested
         if antiAliasFilter {
-            let cutoffFrequency = samplingFrequency / (2.0 * Double(factor))
+            let cutoffFrequency = samplingFrequency / (2.0 * factorU)
             processedWaveform = lowPassFilter(cutoffFrequency: cutoffFrequency, order: filterOrder)
         }
 
@@ -30,7 +31,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         let decimatedValues = stride(from: 0, to: processedWaveform.values.count, by: factor)
             .map { processedWaveform.values[$0] }
 
-        let newDt = dt * Double(factor)
+        let newDt = dt * factorU
 
         return Waveform1D(values: decimatedValues, dt: newDt, t0: t0)
     }
@@ -170,7 +171,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ) -> Waveform1D<T,U> {
         let currentRate = samplingFrequency
         let ratio = targetRate / currentRate
-        let newLength = Int(Double(values.count) * ratio)
+        let newLength = Int(U(values.count) * ratio)
 
         var resampledValues: [T] = []
         resampledValues.reserveCapacity(newLength)
@@ -217,13 +218,15 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func polyphaseDecimated(by factor: Int, filterTaps: Int = 64) -> Waveform1D<T,U> {
         guard factor > 1 && !values.isEmpty else { return self }
 
+        let factorU = U(factor)
+
         // Design a simple low-pass FIR filter
-        let cutoffFrequency = 0.5 / Double(factor)  // Normalized cutoff frequency
+        let cutoffFrequency = 0.5 / factorU  // Normalized cutoff frequency
         let filterCoeffs = designLowPassFIR(taps: filterTaps, cutoff: cutoffFrequency)
 
         // Apply polyphase decimation
         let decimatedValues = polyphaseFilter(coefficients: filterCoeffs, decimationFactor: factor)
-        let newDt = dt * Double(factor)
+        let newDt = dt * factorU
 
         return Waveform1D(values: decimatedValues, dt: newDt, t0: t0)
     }
@@ -367,7 +370,7 @@ extension Waveform1D where T: BinaryInteger {
         }
 
         interpolatedValues.append(values.last!)
-        let newDt = dt / Double(factor)
+        let newDt = dt / U(factor)
 
         return Waveform1D(values: interpolatedValues, dt: newDt, t0: t0)
     }
