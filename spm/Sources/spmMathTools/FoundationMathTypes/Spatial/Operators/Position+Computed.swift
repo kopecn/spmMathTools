@@ -6,47 +6,6 @@ import simd
 
 extension Position where T == Double {
 
-    /// The magnitude (distance from origin) of the position
-    @inlinable
-    public var magnitude: T {
-        return simd_length(vector)
-    }
-
-    /// The squared magnitude of the position
-    @inlinable
-    public var magnitudeSquared: T {
-        return simd_length_squared(vector)
-    }
-
-    /// Get a normalized copy of the position (unit vector)
-    @inlinable
-    public var normalized: Position<T> {
-        let mag = magnitude
-        if mag > T.ulpOfOne {
-            return Position<T>(vector: simd_normalize(vector))
-        } else {
-            return .origin
-        }
-    }
-
-    /// Normalize the position in place to make it a unit vector
-    @inlinable
-    public mutating func normalize() {
-        let mag = magnitude
-        if mag > T.ulpOfOne {
-            vector = simd_normalize(vector)
-        } else {
-            self = .origin
-        }
-    }
-
-    /// Check if this is a unit position (magnitude ≈ 1)
-    @inlinable
-    public var isUnit: Bool {
-        let mag = magnitude
-        return abs(mag - 1) < T.ulpOfOne * 10
-    }
-
     /// Convert to cylindrical coordinates (radius, angle, height)
     public var cylindrical: (radius: T, angle: T, height: T) {
         let radius = sqrt(x * x + y * y)
@@ -82,47 +41,6 @@ extension Position where T == Double {
 // MARK: - Computed Properties for Float Position
 
 extension Position where T == Float {
-
-    /// The magnitude (distance from origin) of the position
-    @inlinable
-    public var magnitude: T {
-        return simd_length(vector)
-    }
-
-    /// The squared magnitude of the position
-    @inlinable
-    public var magnitudeSquared: T {
-        return simd_length_squared(vector)
-    }
-
-    /// Get a normalized copy of the position (unit vector)
-    @inlinable
-    public var normalized: Position<T> {
-        let mag = magnitude
-        if mag > T.ulpOfOne {
-            return Position<T>(vector: simd_normalize(vector))
-        } else {
-            return .origin
-        }
-    }
-
-    /// Normalize the position in place to make it a unit vector
-    @inlinable
-    public mutating func normalize() {
-        let mag = magnitude
-        if mag > T.ulpOfOne {
-            vector = simd_normalize(vector)
-        } else {
-            self = .origin
-        }
-    }
-
-    /// Check if this is a unit position (magnitude ≈ 1)
-    @inlinable
-    public var isUnit: Bool {
-        let mag = magnitude
-        return abs(mag - 1) < T.ulpOfOne * 10
-    }
 
     /// Convert to cylindrical coordinates (radius, angle, height)
     public var cylindrical: (radius: T, angle: T, height: T) {
