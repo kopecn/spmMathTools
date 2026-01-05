@@ -25,7 +25,7 @@ extension Waveform1D {
 
         // Adjust t0 if it exists (shift back by dt)
         if let currentT0 = self.t0 {
-            self.t0 = currentT0.addingTimeInterval(add: -dt)
+            self.t0 = currentT0 - dt
         }
     }
 
@@ -37,7 +37,7 @@ extension Waveform1D {
 
         // Adjust t0 if it exists (shift back by dt * count)
         if let currentT0 = self.t0 {
-            self.t0 = currentT0.addingTimeInterval(add: -dt * U(values.count))
+            self.t0 = currentT0 - dt * values.count
         }
     }
 
@@ -54,7 +54,7 @@ extension Waveform1D {
 
         // Adjust t0 if inserting at the beginning
         if index == 0, let currentT0 = self.t0 {
-            self.t0 = currentT0.addingTimeInterval(add: -dt)
+            self.t0 = currentT0 - dt
         }
     }
 
@@ -71,7 +71,7 @@ extension Waveform1D {
 
         // Adjust t0 if inserting at the beginning
         if index == 0, let currentT0 = self.t0 {
-            self.t0 = currentT0.addingTimeInterval(add: -dt * U(values.count))
+            self.t0 = currentT0 - dt * values.count
         }
     }
 
@@ -106,7 +106,7 @@ extension Waveform1D {
 
         // Adjust t0 if removing the first element
         if index == 0, let currentT0 = self.t0 {
-            self.t0 = currentT0.addingTimeInterval(add: dt)
+            self.t0 = currentT0 + dt
         }
 
         return removedValue

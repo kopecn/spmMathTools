@@ -1,6 +1,6 @@
 import Foundation
 
-public struct WaveformPeakWithProminence<T: Numeric & Sendable, U: BinaryFloatingPoint & Sendable> {
-    let peak: WaveformPeak<T,U>
+public struct WaveformPeakWithProminence<T: Numeric & Sendable> {
+    let peak: WaveformPeak<T>
     let prominence: T
 }

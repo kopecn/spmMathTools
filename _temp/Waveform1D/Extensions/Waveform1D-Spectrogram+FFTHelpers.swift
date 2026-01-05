@@ -2,7 +2,7 @@ import Foundation
 import FoundationTypes
 
 // MARK: - FFT Helpers for Spectrogram (if not available from main FFT extension)
-extension Waveform1D where T: BinaryFloatingPoint, U: SIMDScalar {
+extension Waveform1D where T: BinaryFloatingPoint {
 
     // This file provides FFT helpers if they're not accessible from the main FFT extension
     // These should match the implementations in Waveform1D-FFT.swift

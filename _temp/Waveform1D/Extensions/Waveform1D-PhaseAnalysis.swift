@@ -12,7 +12,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func instantaneousPhase(
         unwrap: Bool = true,
         method: WaveformPhaseMethod = .hilbert
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
 
         let phaseValues: [T]
 
@@ -65,7 +65,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func instantaneousFrequency(
         unwrappedPhase: [T]? = nil,
         method: WaveformPhaseMethod = .hilbert
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
 
         let phase = unwrappedPhase ?? instantaneousPhase(unwrap: true, method: method).values
         guard phase.count > 1 else {
@@ -100,10 +100,10 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - unwrap: Whether to unwrap the phase difference
     /// - Returns: Phase difference waveform
     public func phaseDifference(
-        with other: Waveform1D<T,U>,
+        with other: Waveform1D<T>,
         method: WaveformPhaseMethod = .hilbert,
         unwrap: Bool = true
-    ) -> Waveform1D<T,U>? {
+    ) -> Waveform1D<T>? {
 
         guard values.count == other.values.count else { return nil }
 
@@ -157,10 +157,10 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - overlap: Overlap between windows (0.0 to 1.0)
     /// - Returns: Phase coherence values
     public func phaseCoherence(
-        with other: Waveform1D<T,U>,
+        with other: Waveform1D<T>,
         windowSize: Int? = nil,
         overlap: U = 0.5
-    ) -> Waveform1D<T,U>? {
+    ) -> Waveform1D<T>? {
 
         guard values.count == other.values.count && values.count > 1 else { return nil }
 
@@ -353,7 +353,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// Calculate phase synchronization index between signals
     /// - Parameter other: Other waveform to compare with
     /// - Returns: Phase synchronization index (0 to 1)
-    public func phaseSynchronizationIndex(with other: Waveform1D<T,U>) -> T? {
+    public func phaseSynchronizationIndex(with other: Waveform1D<T>) -> T? {
         guard let phaseDiff = phaseDifference(with: other, method: .hilbert, unwrap: false) else {
             return nil
         }

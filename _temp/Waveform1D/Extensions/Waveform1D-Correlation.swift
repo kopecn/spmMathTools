@@ -9,7 +9,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - maxLag: Maximum lag to compute (default: half the signal length)
     ///   - normalized: If true, normalizes the correlation (default: true)
     /// - Returns: New waveform containing auto-correlation values with lags as time indices
-    public func autoCorrelation(maxLag: Int? = nil, normalized: Bool = true) -> Waveform1D<T,U> {
+    public func autoCorrelation(maxLag: Int? = nil, normalized: Bool = true) -> Waveform1D<T> {
         guard !values.isEmpty else { return Waveform1D(values: [], dt: dt, t0: nil) }
 
         let actualMaxLag = maxLag ?? (values.count / 2)
@@ -72,10 +72,10 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - normalized: If true, normalizes the correlation (default: true)
     /// - Returns: New waveform containing cross-correlation values
     public func crossCorrelation(
-        with other: Waveform1D<T,U>,
+        with other: Waveform1D<T>,
         mode: WaveformCorrelationMode = .full,
         normalized: Bool = true
-    ) -> Waveform1D<T,U>? {
+    ) -> Waveform1D<T>? {
 
         guard !values.isEmpty && !other.values.isEmpty else { return nil }
 
@@ -177,7 +177,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - searchRange: Range of lags to search (default: full range)
     /// - Returns: Tuple containing (lag in samples, lag in time, correlation value)
     public func findMaxCorrelation(
-        with other: Waveform1D<T,U>,
+        with other: Waveform1D<T>,
         searchRange: Range<Int>? = nil
     ) -> (lagSamples: Int, lagTime: U, correlation: T)? {
 

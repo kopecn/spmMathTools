@@ -6,7 +6,7 @@ import FoundationTypes
 extension Waveform1D where T == Double {
 
     /// Element-wise equality
-    public func elementsEqual(to other: Waveform1D<T,U>) -> [Bool] {
+    public func elementsEqual(to other: Waveform1D<T>) -> [Bool] {
         let count = min(values.count, other.values.count)
         return (0..<count).map { values[$0] == other.values[$0] }
     }
@@ -16,7 +16,7 @@ extension Waveform1D where T == Double {
     }
 
     /// Element-wise less than
-    public func elementsLessThan(_ other: Waveform1D<T,U>) -> [Bool] {
+    public func elementsLessThan(_ other: Waveform1D<T>) -> [Bool] {
         let count = min(values.count, other.values.count)
         return (0..<count).map { values[$0] < other.values[$0] }
     }
@@ -26,7 +26,7 @@ extension Waveform1D where T == Double {
     }
 
     /// Element-wise greater than
-    public func elementsGreaterThan(_ other: Waveform1D<T,U>) -> [Bool] {
+    public func elementsGreaterThan(_ other: Waveform1D<T>) -> [Bool] {
         let count = min(values.count, other.values.count)
         return (0..<count).map { values[$0] > other.values[$0] }
     }
@@ -36,7 +36,7 @@ extension Waveform1D where T == Double {
     }
 
     /// Element-wise approximate equality
-    public func elementsApproximatelyEqual(to other: Waveform1D<T,U>, tolerance: Double = 1e-10) -> [Bool] {
+    public func elementsApproximatelyEqual(to other: Waveform1D<T>, tolerance: Double = 1e-10) -> [Bool] {
         let count = min(values.count, other.values.count)
         return (0..<count).map { abs(values[$0] - other.values[$0]) <= tolerance }
     }
@@ -51,7 +51,7 @@ extension Waveform1D where T == Double {
 extension Waveform1D where T == Float {
 
     /// Element-wise equality
-    public func elementsEqual(to other: Waveform1D<T,U>) -> [Bool] {
+    public func elementsEqual(to other: Waveform1D<T>) -> [Bool] {
         let count = min(values.count, other.values.count)
         return (0..<count).map { values[$0] == other.values[$0] }
     }
@@ -61,7 +61,7 @@ extension Waveform1D where T == Float {
     }
 
     /// Element-wise less than
-    public func elementsLessThan(_ other: Waveform1D<T,U>) -> [Bool] {
+    public func elementsLessThan(_ other: Waveform1D<T>) -> [Bool] {
         let count = min(values.count, other.values.count)
         return (0..<count).map { values[$0] < other.values[$0] }
     }
@@ -71,7 +71,7 @@ extension Waveform1D where T == Float {
     }
 
     /// Element-wise greater than
-    public func elementsGreaterThan(_ other: Waveform1D<T,U>) -> [Bool] {
+    public func elementsGreaterThan(_ other: Waveform1D<T>) -> [Bool] {
         let count = min(values.count, other.values.count)
         return (0..<count).map { values[$0] > other.values[$0] }
     }
@@ -81,7 +81,7 @@ extension Waveform1D where T == Float {
     }
 
     /// Element-wise approximate equality
-    public func elementsApproximatelyEqual(to other: Waveform1D<T,U>, tolerance: Float = 1e-6) -> [Bool] {
+    public func elementsApproximatelyEqual(to other: Waveform1D<T>, tolerance: Float = 1e-6) -> [Bool] {
         let count = min(values.count, other.values.count)
         return (0..<count).map { abs(values[$0] - other.values[$0]) <= tolerance }
     }
@@ -93,10 +93,10 @@ extension Waveform1D where T == Float {
 
 // MARK: - Comparison Methods for Int Waveforms
 
-extension Waveform1D where T == Int, U == Double {
+extension Waveform1D where T == Int {
 
     /// Element-wise equality
-    public func elementsEqual(to other: Waveform1D<T,U>) -> [Bool] {
+    public func elementsEqual(to other: Waveform1D<T>) -> [Bool] {
         let count = min(values.count, other.values.count)
         return (0..<count).map { values[$0] == other.values[$0] }
     }
@@ -106,7 +106,7 @@ extension Waveform1D where T == Int, U == Double {
     }
 
     /// Element-wise less than
-    public func elementsLessThan(_ other: Waveform1D<T,U>) -> [Bool] {
+    public func elementsLessThan(_ other: Waveform1D<T>) -> [Bool] {
         let count = min(values.count, other.values.count)
         return (0..<count).map { values[$0] < other.values[$0] }
     }
@@ -116,7 +116,7 @@ extension Waveform1D where T == Int, U == Double {
     }
 
     /// Element-wise greater than
-    public func elementsGreaterThan(_ other: Waveform1D<T,U>) -> [Bool] {
+    public func elementsGreaterThan(_ other: Waveform1D<T>) -> [Bool] {
         let count = min(values.count, other.values.count)
         return (0..<count).map { values[$0] > other.values[$0] }
     }

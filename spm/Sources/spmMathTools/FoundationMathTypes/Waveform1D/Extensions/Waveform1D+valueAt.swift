@@ -1,23 +1,36 @@
 import Foundation
 import FoundationTypes
 
-extension Waveform1D where T: BinaryFloatingPoint {
+// MARK: - Generic Numeric Extension
+extension Waveform1D {
 
-    /// Access value at a given Date with linear interpolation
+    /// Helper function to convert PrecisionTimeInterval to BinaryFloatingPoint type U
+    private func intervalToU<U: BinaryFloatingPoint>(_ interval: PrecisionTimeInterval) -> U {
+        let seconds = U(interval.seconds)
+        let fractionalSeconds = U(interval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
+        switch interval.sign {
+        case .positive: return seconds + fractionalSeconds
+        case .negative: return -(seconds + fractionalSeconds)
+        case .zero: return 0
+        }
+    }
+
+    /// Access value at a given Date
     /// - Parameters:
     ///   - date: The date to sample at
     ///   - clamp: If true, returns edge values when date is outside range. If false, returns nil.
-    ///   - interpolationWindow: Maximum time difference (seconds) for interpolation. Beyond this, nearest sample is used.
-    /// - Returns: Interpolated value or nil if date is invalid/outside range and clamp is false
-    public func value(at date: PrecisionTimestamp, clamp: Bool = false, interpolationWindow: U = 0.5) -> T? {
+    ///   - interpolationWindow: Maximum time difference (seconds) for interpolation. Beyond this, nearest sample is used. Only applies to BinaryFloatingPoint types.
+    /// - Returns: Value at the date or nil if date is invalid/outside range and clamp is false
+    public func value<U: BinaryFloatingPoint>(
+        at date: PrecisionTimestamp,
+        clamp: Bool = false,
+        interpolationWindow: U = 0.5
+    ) -> T? {
         guard let t0 = self.t0 else { return nil }
 
         // Convert PrecisionTimeInterval to U
         let interval = date - t0
-        let timeOffset = {
-            let seconds = U(interval.seconds) + U(interval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
-            return interval.sign == .positive ? seconds : -seconds
-        }()
+        let timeOffset: U = intervalToU(interval)
         return value(
             atTime: timeOffset,
             clamp: clamp,
@@ -26,14 +39,14 @@ extension Waveform1D where T: BinaryFloatingPoint {
         )
     }
 
-    /// Access value at a given time with linear interpolation
+    /// Access value at a given time
     /// - Parameters:
     ///   - time: Time in seconds
     ///   - clamp: If true, returns edge values when time is outside range. If false, returns nil.
-    ///   - interpolationWindow: Maximum time difference (seconds) for interpolation. Beyond this, nearest sample is used.
+    ///   - interpolationWindow: Maximum time difference (seconds) for interpolation. Beyond this, nearest sample is used. Only applies to BinaryFloatingPoint types.
     ///   - WaveformTimeReference: Whether time is relative to waveform start or Unix epoch
-    /// - Returns: Interpolated value or nil if time is invalid/outside range and clamp is false
-    public func value(
+    /// - Returns: Value at the time or nil if time is invalid/outside range and clamp is false
+    public func value<U: BinaryFloatingPoint>(
         atTime time: U,
         clamp: Bool = false,
         interpolationWindow: U = 0.5,
@@ -49,13 +62,13 @@ extension Waveform1D where T: BinaryFloatingPoint {
         case .epoch:
             guard let t0 = self.t0 else { return nil }
             // Convert t0's interval from epoch to U
-            let t0Seconds = U(t0.interval.seconds) + U(t0.interval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
-            let t0Interval = t0.interval.sign == .positive ? t0Seconds : -t0Seconds
+            let t0Interval: U = intervalToU(t0.interval)
             adjustedTime = time - t0Interval
         }
 
-        let sampleIndex = adjustedTime / dt
-        let waveformDuration = U(values.count - 1) * dt
+        let dtAsU: U = intervalToU(dt)
+        let sampleIndex = adjustedTime / dtAsU
+        let waveformDuration = U(values.count - 1) * dtAsU
 
         // Check bounds
         if sampleIndex < 0 {
@@ -65,7 +78,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
             return clamp ? values.last : nil
         }
 
-        // Exact sample match
+        // Get indices
         let floorIndex = Int(sampleIndex)
         if floorIndex >= values.count - 1 {
             return values.last
@@ -73,72 +86,53 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
         let fractionalPart = sampleIndex - U(floorIndex)
 
-        // If very close to a sample point or outside interpolation window, return nearest
-        if fractionalPart < 1e-10 || abs(fractionalPart * dt) > interpolationWindow {
-            return fractionalPart < 0.5 ? values[floorIndex] : values[floorIndex + 1]
+        // Determine if we should use interpolation or nearest neighbor
+        // For BinaryFloatingPoint types, we can do interpolation
+        // For other types (like integers), we use nearest neighbor
+        if T.self is any BinaryFloatingPoint.Type {
+            // If very close to a sample point or outside interpolation window, return nearest
+            if fractionalPart < 1e-10 || abs(fractionalPart * dtAsU) > interpolationWindow {
+                return fractionalPart < 0.5 ? values[floorIndex] : values[floorIndex + 1]
+            }
+
+            // Linear interpolation for BinaryFloatingPoint types
+            let v1 = values[floorIndex]
+            let v2 = values[floorIndex + 1]
+
+            // Convert fractionalPart to T safely
+            if let weight = convertToNumeric(fractionalPart, targetType: T.self) {
+                return v1 + weight * (v2 - v1)
+            } else {
+                // Fallback to nearest neighbor if conversion fails
+                return fractionalPart < 0.5 ? values[floorIndex] : values[floorIndex + 1]
+            }
+        } else {
+            // Nearest neighbor for non-BinaryFloatingPoint types (e.g., integers)
+            let nearestIndex = Int(round(Double(sampleIndex)))
+            let clampedIndex = min(max(nearestIndex, 0), values.count - 1)
+            return values[clampedIndex]
         }
-
-        // Linear interpolation
-        let v1 = values[floorIndex]
-        let v2 = values[floorIndex + 1]
-        let weight = T(fractionalPart)
-
-        return v1 + weight * (v2 - v1)
-    }
-}
-
-// Extension for integer types (no interpolation, nearest neighbor)
-extension Waveform1D where T: BinaryInteger {
-
-    /// Access value at a given Date (nearest neighbor for integer types)
-    public func value(at date: PrecisionTimestamp, clamp: Bool = false) -> T? {
-        guard let t0 = self.t0 else { return nil }
-
-        // Convert PrecisionTimeInterval to U
-        let interval = date - t0
-        let timeOffset = {
-            let seconds = U(interval.seconds) + U(interval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
-            return interval.sign == .positive ? seconds : -seconds
-        }()
-        return value(atTime: timeOffset, clamp: clamp, WaveformTimeReference: .waveformStart)
     }
 
-    /// Access value at a given time (nearest neighbor for integer types)
-    public func value(
-        atTime time: U,
-        clamp: Bool = false,
-        WaveformTimeReference: WaveformTimeReference = .waveformStart
-    ) -> T? {
-
-        guard !values.isEmpty else { return nil }
-
-        let adjustedTime: U
-        switch WaveformTimeReference {
-        case .waveformStart:
-            adjustedTime = time
-        case .epoch:
-            guard let t0 = self.t0 else { return nil }
-            // Convert t0's interval from epoch to U
-            let t0Seconds = U(t0.interval.seconds) + U(t0.interval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
-            let t0Interval = t0.interval.sign == .positive ? t0Seconds : -t0Seconds
-            adjustedTime = time - t0Interval
+    /// Helper function to convert a BinaryFloatingPoint value to a Numeric type
+    /// - Parameters:
+    ///   - value: The floating point value to convert
+    ///   - targetType: The target numeric type
+    /// - Returns: Converted value or nil if conversion is not possible
+    private func convertToNumeric<F: BinaryFloatingPoint, N: Numeric>(_ value: F, targetType: N.Type) -> N? {
+        // Handle conversion based on target type
+        switch N.self {
+        case is Double.Type:
+            return Double(value) as? N
+        case is Float.Type:
+            return Float(value) as? N
+        case is CGFloat.Type:
+            return CGFloat(value) as? N
+        case is any BinaryInteger.Type:
+            return N(exactly: Int(value))
+        default:
+            // For other numeric types, try integer conversion
+            return N(exactly: Int(value))
         }
-
-        let sampleIndex = adjustedTime / dt
-        let waveformDuration = U(values.count - 1) * dt
-
-        // Check bounds
-        if sampleIndex < 0 {
-            return clamp ? values.first : nil
-        }
-        if adjustedTime > waveformDuration {
-            return clamp ? values.last : nil
-        }
-
-        // Nearest neighbor
-        let nearestIndex = Int(round(sampleIndex))
-        let clampedIndex = min(max(nearestIndex, 0), values.count - 1)
-
-        return values[clampedIndex]
     }
 }

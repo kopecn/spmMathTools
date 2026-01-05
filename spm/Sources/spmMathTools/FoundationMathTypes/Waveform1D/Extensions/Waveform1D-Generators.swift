@@ -16,23 +16,23 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - t0: Optional start time
     /// - Returns: Sine wave waveform
     public static func sine(
-        frequency: U,
+        frequency: T,
         amplitude: T = T(1.0),
-        phase: U = 0.0,
-        duration: U,
-        samplingRate: U,
+        phase: T = 0.0,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
-        let omega = 2.0 * U.pi * frequency
+        let omega = 2.0 * T.pi * frequency
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt
+            let t = T(i) * dt
             return amplitude * T( sin(Double(omega * t + phase)) )
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     /// Generate a cosine wave
@@ -45,23 +45,23 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - t0: Optional start time
     /// - Returns: Cosine wave waveform
     public static func cosine(
-        frequency: U,
+        frequency: T,
         amplitude: T = T(1.0),
-        phase: U = 0.0,
-        duration: U,
-        samplingRate: U,
+        phase: T = 0.0,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
-        let omega = 2.0 * U.pi * frequency
+        let omega = 2.0 * T.pi * frequency
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt
+            let t = T(i) * dt
             return amplitude * T(cos(Double(omega * t + phase)))
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     /// Generate a square wave
@@ -74,25 +74,25 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - t0: Optional start time
     /// - Returns: Square wave waveform
     public static func square(
-        frequency: U,
+        frequency: T,
         amplitude: T = T(1.0),
-        dutyCycle: U = 0.5,
-        duration: U,
-        samplingRate: U,
+        dutyCycle: T = 0.5,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
         let period = 1.0 / frequency
         let clampedDutyCycle = max(0.0, min(1.0, dutyCycle))
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt
+            let t = T(i) * dt
             let phaseInPeriod = (t.truncatingRemainder(dividingBy: period)) / period
             return phaseInPeriod < clampedDutyCycle ? amplitude : -amplitude
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     /// Generate a triangle wave
@@ -104,18 +104,18 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - t0: Optional start time
     /// - Returns: Triangle wave waveform
     public static func triangle(
-        frequency: U,
+        frequency: T,
         amplitude: T = T(1.0),
-        duration: U,
-        samplingRate: U,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
         let period = 1.0 / frequency
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt
+            let t = T(i) * dt
             let phaseInPeriod = (t.truncatingRemainder(dividingBy: period)) / period
             let triangleValue =
                 phaseInPeriod < 0.5
@@ -124,7 +124,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
             return amplitude * T(triangleValue)
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     /// Generate a sawtooth wave
@@ -136,24 +136,24 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - t0: Optional start time
     /// - Returns: Sawtooth wave waveform
     public static func sawtooth(
-        frequency: U,
+        frequency: T,
         amplitude: T = T(1.0),
-        duration: U,
-        samplingRate: U,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
         let period = 1.0 / frequency
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt
+            let t = T(i) * dt
             let phaseInPeriod = (t.truncatingRemainder(dividingBy: period)) / period
             let sawtoothValue = 2.0 * phaseInPeriod - 1.0
             return amplitude * T(sawtoothValue)
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     // MARK: - Chirp and Frequency-Modulated Signals
@@ -168,24 +168,24 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - t0: Optional start time
     /// - Returns: Linear chirp waveform
     public static func chirp(
-        startFrequency: U,
-        endFrequency: U,
+        startFrequency: T,
+        endFrequency: T,
         amplitude: T = T(1.0),
-        duration: U,
-        samplingRate: U,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
         let sweepRate = (endFrequency - startFrequency) / duration
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt
-            let phase = 2.0 * U.pi * (startFrequency * t + 0.5 * sweepRate * t * t)
+            let t = T(i) * dt
+            let phase = 2.0 * T.pi * (startFrequency * t + 0.5 * sweepRate * t * t)
             return amplitude * T(sin(Double(phase)))
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     // MARK: - Exponential Functions
@@ -200,20 +200,20 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// - Returns: Exponential decay waveform
     public static func exponentialDecay(
         amplitude: T = T(1.0),
-        timeConstant: U,
-        duration: U,
-        samplingRate: U,
+        timeConstant: T,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt
+            let t = T(i) * dt
             return amplitude * T(exp(Double(-t / timeConstant)))
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     /// Generate an exponential growth
@@ -226,20 +226,20 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// - Returns: Exponential growth waveform
     public static func exponentialGrowth(
         amplitude: T = T(1.0),
-        timeConstant: U,
-        duration: U,
-        samplingRate: U,
+        timeConstant: T,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt
+            let t = T(i) * dt
             return amplitude * T(exp(Double(t / timeConstant)))
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     // MARK: - Polynomial Functions
@@ -252,28 +252,28 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - t0: Optional start time
     /// - Returns: Polynomial waveform
     public static func polynomial(
-        coefficients: [U],
-        duration: U,
-        samplingRate: U,
+        coefficients: [T],
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         guard !coefficients.isEmpty else {
-            return Waveform1D(values: [], dt: 1.0 / samplingRate, t0: t0)
+            return Waveform1D(values: [], dtSeconds: Double(1.0 / samplingRate), t0: t0)
         }
 
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt
-            var result: U = 0.0
+            let t = T(i) * dt
+            var result: T = 0.0
             for (power, coeff) in coefficients.enumerated() {
-                result += U(coeff) * U(pow(Double(t), Double(power)))
+                result += T(coeff) * T(pow(Double(t), Double(power)))
             }
             return T(result)
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     /// Generate a linear ramp
@@ -287,19 +287,19 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public static func linearRamp(
         startValue: T,
         endValue: T,
-        duration: U,
-        samplingRate: U,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
 
         let values = (0..<sampleCount).map { i in
-            let progress = T(U(i) / U(sampleCount - 1))
+            let progress = T(T(i) / T(sampleCount - 1))
             return startValue + (endValue - startValue) * progress
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     // MARK: - Logarithmic Functions
@@ -314,20 +314,20 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// - Returns: Natural logarithm waveform
     public static func logarithm(
         amplitude: T = T(1.0),
-        offset: U = 0.01,
-        duration: U,
-        samplingRate: U,
+        offset: T = 0.01,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt + offset
+            let t = T(i) * dt + offset
             return amplitude * T(log(Double(t)))
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     /// Generate a base-10 logarithm waveform
@@ -340,20 +340,20 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// - Returns: Base-10 logarithm waveform
     public static func logarithm10(
         amplitude: T = T(1.0),
-        offset: U = 0.01,
-        duration: U,
-        samplingRate: U,
+        offset: T = 0.01,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt + offset
+            let t = T(i) * dt + offset
             return amplitude * T(log10(Double(t)))
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     // MARK: - Square Root Functions
@@ -367,19 +367,19 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// - Returns: Square root waveform
     public static func squareRoot(
         amplitude: T = T(1.0),
-        duration: U,
-        samplingRate: U,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt
+            let t = T(i) * dt
             return amplitude * T(sqrt(t))
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     // MARK: - Step Functions
@@ -394,21 +394,21 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// - Returns: Heaviside step waveform
     public static func heaviside(
         amplitude: T = T(1.0),
-        stepTime: U? = nil,
-        duration: U,
-        samplingRate: U,
+        stepTime: T? = nil,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
         let actualStepTime = stepTime ?? (duration / 2.0)
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt
+            let t = T(i) * dt
             return t >= actualStepTime ? amplitude : T.zero
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     /// Generate a ReLU (Rectified Linear Unit) function
@@ -421,21 +421,21 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// - Returns: ReLU waveform
     public static func relu(
         slope: T = 1.0,
-        threshold: U = 0.0,
-        duration: U,
-        samplingRate: U,
+        threshold: T = 0.0,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt
+            let t = T(i) * dt
             let x = T(t - threshold)
             return x > 0 ? T(slope * x) : T.zero
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     /// Generate a sigmoid function
@@ -449,24 +449,24 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// - Returns: Sigmoid waveform
     public static func sigmoid(
         amplitude: T = T(1.0),
-        steepness: U = 1.0,
-        center: U? = nil,
-        duration: U,
-        samplingRate: U,
+        steepness: T = 1.0,
+        center: T? = nil,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
         let actualCenter = center ?? (duration / 2.0)
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt
+            let t = T(i) * dt
             let x = steepness * (t - actualCenter)
             let sigmoidValue = 1.0 / (1.0 + exp(Double(-x)))
             return amplitude * T(sigmoidValue)
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     // MARK: - Noise and Random Signals
@@ -481,11 +481,11 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// - Returns: White noise waveform
     public static func whiteNoise(
         amplitude: T = T(1.0),
-        duration: U,
-        samplingRate: U,
+        duration: T,
+        samplingRate: T,
         seed: UInt64? = nil,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
 
@@ -497,7 +497,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
             return amplitude * T(gaussian)
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     /// Generate a constant (DC) signal
@@ -509,15 +509,15 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// - Returns: Constant waveform
     public static func constant(
         value: T,
-        duration: U,
-        samplingRate: U,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
         let values = Array(repeating: value, count: sampleCount)
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     // MARK: - Impulse and Delta Functions
@@ -532,11 +532,11 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// - Returns: Unit impulse waveform
     public static func impulse(
         amplitude: T = T(1.0),
-        impulseTime: U = 0.0,
-        duration: U,
-        samplingRate: U,
+        impulseTime: T = 0.0,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
         let impulseIndex = Int(impulseTime * samplingRate)
@@ -546,7 +546,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
             values[impulseIndex] = amplitude
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     // MARK: - Composite Waveforms
@@ -562,25 +562,25 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - t0: Optional start time
     /// - Returns: Damped sinusoid waveform
     public static func dampedSinusoid(
-        frequency: U,
+        frequency: T,
         amplitude: T = T(1.0),
-        dampingConstant: U,
-        phase: U = 0.0,
-        duration: U,
-        samplingRate: U,
+        dampingConstant: T,
+        phase: T = 0.0,
+        duration: T,
+        samplingRate: T,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
-        let omega = 2.0 * U.pi * frequency
+        let omega = 2.0 * T.pi * frequency
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt
+            let t = T(i) * dt
             let envelope = exp(Double(-t / dampingConstant))
             return amplitude * T(envelope * sin(Double(omega * t + phase)))
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 }
 
@@ -597,27 +597,27 @@ extension Waveform1D where T: BinaryInteger {
     ///   - samplingRate: Sampling rate in Hz
     ///   - t0: Optional start time
     /// - Returns: Integer square wave waveform
-    public static func digitalSquare(
-        frequency: U,
+    public static func digitalSquare<F: BinaryFloatingPoint>(
+        frequency: F,
         highValue: T,
         lowValue: T,
-        dutyCycle: U = 0.5,
-        duration: U,
-        samplingRate: U,
+        dutyCycle: F = 0.5,
+        duration: F,
+        samplingRate: F,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
         let period = 1.0 / frequency
         let clampedDutyCycle = max(0.0, min(1.0, dutyCycle))
 
         let values = (0..<sampleCount).map { i in
-            let t = U(i) * dt
+            let t = F(i) * dt
             let phaseInPeriod = (t.truncatingRemainder(dividingBy: period)) / period
             return phaseInPeriod < clampedDutyCycle ? highValue : lowValue
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 
     /// Generate a counter/ramp with integer values
@@ -628,13 +628,13 @@ extension Waveform1D where T: BinaryInteger {
     ///   - samplingRate: Sampling rate in Hz
     ///   - t0: Optional start time
     /// - Returns: Integer counter waveform
-    public static func counter(
+    public static func counter<F: BinaryFloatingPoint>(
         startValue: T,
         increment: T,
         sampleCount: Int,
-        samplingRate: U,
+        samplingRate: F,
         t0: PrecisionTimestamp? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let dt = 1.0 / samplingRate
 
         var values: [T] = []
@@ -645,6 +645,6 @@ extension Waveform1D where T: BinaryInteger {
             currentValue += increment
         }
 
-        return Waveform1D(values: values, dt: dt, t0: t0)
+        return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
     }
 }

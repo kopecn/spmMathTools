@@ -12,7 +12,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     public func amplitudeEnvelope(
         method: WaveformEnvelopeMethod = .hilbert,
         smoothing: Int? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         guard !values.isEmpty else { return Waveform1D(values: [], dt: dt, t0: t0) }
 
         let envelope: [T]
@@ -43,7 +43,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
         windowSize: Int = 5,
         interpolationMethod: WaveformInterpolationMethod = .linear
     )
-        -> (upper: Waveform1D<T,U>, lower: Waveform1D<T,U>)
+        -> (upper: Waveform1D<T>, lower: Waveform1D<T>)
     {
 
         guard values.count > windowSize else {
@@ -96,7 +96,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     /// Calculate the instantaneous amplitude using multiple methods
     /// - Parameter method: Method for calculating instantaneous amplitude
     /// - Returns: New waveform representing instantaneous amplitude
-    public func instantaneousAmplitude(method: WaveformInstantaneousMethod = .magnitude) -> Waveform1D<T,U> {
+    public func instantaneousAmplitude(method: WaveformInstantaneousMethod = .magnitude) -> Waveform1D<T> {
         switch method {
         case .magnitude:
             return amplitudeEnvelope(method: .hilbert)

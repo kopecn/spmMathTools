@@ -1,7 +1,8 @@
 import Foundation
+import FoundationTypes
 
 /// Trigger event information
-public struct WaveformTriggerEvent<T: Numeric & Sendable, U: BinaryFloatingPoint & Sendable> {
+public struct WaveformTriggerEvent<T: Numeric & Sendable> {
     /// Sample index where trigger occurred
     public let index: Int
 
@@ -12,7 +13,7 @@ public struct WaveformTriggerEvent<T: Numeric & Sendable, U: BinaryFloatingPoint
     public let time: Date?
 
     /// Time offset from waveform start
-    public let timeOffset: U
+    public let timeOffset: PrecisionTimeInterval
 
     /// Type of trigger that fired
     public let type: WaveformTriggerType<T>

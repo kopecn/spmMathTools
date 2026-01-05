@@ -12,10 +12,10 @@ extension Waveform1D where T: SignedNumeric & Comparable {
     public func zeroCrossings(
         threshold: T,
         direction: WaveformZeroCrossingDirection = .all
-    ) -> [WaveformZeroCrossing<T,U>] {
+    ) -> [WaveformZeroCrossing<T>] {
         guard values.count >= 2 else { return [] }
 
-        var crossings: [WaveformZeroCrossing<T,U>] = []
+        var crossings: [WaveformZeroCrossing<T>] = []
 
         for i in 0..<(values.count - 1) {
             let currentValue = values[i]
@@ -89,12 +89,12 @@ extension Waveform1D where T: SignedNumeric & Comparable {
     public func zeroCrossingRate(
         threshold: T,
         direction: WaveformZeroCrossingDirection = .all
-    ) -> U {
-        let crossingCount = zeroCrossingCount(threshold: threshold, direction: direction)
-        let totalDuration = duration
+    ) -> Double {
+        let crossingCount = Double(zeroCrossingCount(threshold: threshold, direction: direction))
+        let totalDuration = duration.secondsAsDouble
 
         guard totalDuration > 0 else { return 0.0 }
-        return U(crossingCount) / totalDuration
+        return crossingCount / totalDuration
     }
 
     /// Get segments between zero crossings
@@ -105,13 +105,13 @@ extension Waveform1D where T: SignedNumeric & Comparable {
     public func segmentsBetweenZeroCrossings(
         threshold: T,
         includePartial: Bool = false
-    ) -> [Waveform1D<T,U>] {
+    ) -> [Waveform1D<T>] {
         let crossings = zeroCrossings(threshold: threshold, direction: .all)
         guard !crossings.isEmpty else {
             return includePartial ? [self] : []
         }
 
-        var segments: [Waveform1D<T,U>] = []
+        var segments: [Waveform1D<T>] = []
         var segmentIndices: [Int] = []
 
         // Add start index if including partial segments
@@ -178,10 +178,10 @@ extension Waveform1D where T: BinaryInteger & Comparable {
     /// Detect zero crossings for integer waveforms
     /// - Parameter direction: Type of crossings to detect
     /// - Returns: Array of zero crossing information
-    public func zeroCrossings(direction: WaveformZeroCrossingDirection = .all) -> [WaveformZeroCrossing<T,U>] {
+    public func zeroCrossings(direction: WaveformZeroCrossingDirection = .all) -> [WaveformZeroCrossing<T>] {
         guard values.count >= 2 else { return [] }
 
-        var crossings: [WaveformZeroCrossing<T,U>] = []
+        var crossings: [WaveformZeroCrossing<T>] = []
 
         for i in 0..<(values.count - 1) {
             let currentValue = values[i]
@@ -208,8 +208,8 @@ extension Waveform1D where T: BinaryInteger & Comparable {
             guard let type = crossingType, direction.includes(type) else { continue }
 
             // For integers, crossing occurs at midpoint
-            let interpolatedIndex = U(i) + 0.5
-            let crossingTime = t0?.addingTimeInterval(add: interpolatedIndex * dt)
+            let interpolatedIndex = Double(i) + 0.5
+            let crossingTime = t0 + interpolatedIndex * dt
 
             let crossing = WaveformZeroCrossing(
                 sampleIndex: interpolatedIndex,

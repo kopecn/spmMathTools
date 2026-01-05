@@ -17,7 +17,7 @@ extension Waveform1D {
         paddingBefore: Int = 0,
         paddingAfter: Int = 0,
         retainT0: Bool = true
-    ) -> Waveform1D<T,U>? {
+    ) -> Waveform1D<T>? {
 
         guard let t0 = self.t0 else { return nil }
         guard startDate <= endDate else { return nil }
@@ -26,13 +26,21 @@ extension Waveform1D {
         let startInterval = startDate - t0
         let startTime = {
             let seconds = U(startInterval.seconds) + U(startInterval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
-            return startInterval.sign == .positive ? seconds : -seconds
+            switch startInterval.sign {
+            case .positive: return seconds
+            case .negative: return -seconds
+            case .zero: return 0
+            }
         }()
 
         let endInterval = endDate - t0
         let endTime = {
             let seconds = U(endInterval.seconds) + U(endInterval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
-            return endInterval.sign == .positive ? seconds : -seconds
+            switch endInterval.sign {
+            case .positive: return seconds
+            case .negative: return -seconds
+            case .zero: return 0
+            }
         }()
 
         return subset(
@@ -55,19 +63,19 @@ extension Waveform1D {
     ///   - WaveformTimeReference: Whether time is relative to waveform start or Unix epoch
     /// - Returns: New waveform subset or nil if time range is outside waveform bounds
     public func subset(
-        fromTime startTime: U,
-        toTime endTime: U,
+        fromTime startTime: T,
+        toTime endTime: T,
         paddingBefore: Int = 0,
         paddingAfter: Int = 0,
         retainT0: Bool = true,
         WaveformTimeReference: WaveformTimeReference = .waveformStart
-    ) -> Waveform1D<T,U>? {
+    ) -> Waveform1D<T>? {
 
         guard !values.isEmpty else { return nil }
         guard startTime <= endTime else { return nil }
 
-        let adjustedStartTime: U
-        let adjustedEndTime: U
+        let adjustedStartTime: T
+        let adjustedEndTime: T
 
         switch WaveformTimeReference {
         case .waveformStart:
@@ -76,8 +84,13 @@ extension Waveform1D {
         case .epoch:
             guard let t0 = self.t0 else { return nil }
             // Convert t0's interval from epoch to U
-            let t0Seconds = U(t0.interval.seconds) + U(t0.interval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
-            let t0Interval = t0.interval.sign == .positive ? t0Seconds : -t0Seconds
+            let t0Seconds = T(t0.interval.seconds) + T(t0.interval.attoseconds) / T(PrecisionTimeInterval.attosecondsPerSecond)
+            let t0Interval: T
+            switch t0.interval.sign {
+            case .positive: t0Interval = t0Seconds
+            case .negative: t0Interval = -t0Seconds
+            case .zero: t0Interval = 0
+            }
             adjustedStartTime = startTime - t0Interval
             adjustedEndTime = endTime - t0Interval
         }
@@ -117,8 +130,8 @@ extension Waveform1D {
         // Calculate new t0 if retaining
         let newT0: PrecisionTimestamp?
         if retainT0, let originalT0 = self.t0 {
-            let timeOffset = U(clampedStartIndex - paddingBefore) * dt
-            newT0 = originalT0.addingTimeInterval(add: timeOffset)
+            let timeOffset = T(clampedStartIndex - paddingBefore) * dt
+            newT0 = originalT0 + timeOffset
         } else {
             newT0 = nil
         }

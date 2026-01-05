@@ -10,16 +10,16 @@ struct Waveform1DIntegrationTests {
 
     @Test("Integration of empty waveform")
     func integrationEmpty() {
-        let waveform = Waveform1D<Double,Double>(values: [], dt: 0.1)
+        let waveform = Waveform1D<Double>(values: [], dtSeconds: 0.1)
         let integrated = waveform.integrate()
 
         #expect(integrated.values.isEmpty)
-        #expect(integrated.dt == 0.1)
+        #expect(integrated.dt.secondsAsDouble == 0.1)
     }
 
     @Test("Integration of single point")
     func integrationSinglePoint() {
-        let waveform = Waveform1D<Double,Double>(values: [5.0], dt: 0.1)
+        let waveform = Waveform1D<Double>(values: [5.0], dtSeconds: 0.1)
         let integrated = waveform.integrate()
 
         #expect(integrated.values.count == 1)
@@ -29,7 +29,7 @@ struct Waveform1DIntegrationTests {
     @Test("Integration of constant waveform (100 samples)")
     func integrationConstant() {
         // f(x) = 3, integral should be F(x) = 3x (linear)
-        let waveform = Waveform1D<Double,Double>.constant(value: 3.0, duration: 1.0, samplingRate: 100.0)
+        let waveform = Waveform1D<Double>.constant(value: 3.0, duration: 1.0, samplingRate: 100.0)
         let integrated = waveform.integrate()
 
         // Using trapezoidal rule: area under constant = height * width
@@ -50,7 +50,7 @@ struct Waveform1DIntegrationTests {
     @Test("Integration of linear ramp (500 samples)")
     func integrationLinear() {
         // f(x) = x from 0 to 1, integral F(x) = x²/2
-        let waveform = Waveform1D<Double,Double>.linearRamp(startValue: 0.0, endValue: 1.0, duration: 1.0, samplingRate: 500.0)
+        let waveform = Waveform1D<Double>.linearRamp(startValue: 0.0, endValue: 1.0, duration: 1.0, samplingRate: 500.0)
         let integrated = waveform.integrate()
 
         // At t=1, integral should be approximately 0.5 (1²/2)
@@ -71,7 +71,7 @@ struct Waveform1DIntegrationTests {
     func integrationSineWave() {
         // ∫sin(2πft)dt = -cos(2πft)/(2πf) + C
         let frequency = 2.0
-        let waveform = Waveform1D<Double,Double>.sine(frequency: frequency, duration: 1.0, samplingRate: 1000.0)
+        let waveform = Waveform1D<Double>.sine(frequency: frequency, duration: 1.0, samplingRate: 1000.0)
         let integrated = waveform.integrate()
 
         #expect(integrated.values.count == 1000)
@@ -107,7 +107,7 @@ struct Waveform1DIntegrationTests {
     func integrationCosineWave() {
         // ∫cos(2πft)dt = sin(2πft)/(2πf) + C
         let frequency = 1.0
-        let waveform = Waveform1D<Double,Double>.cosine(frequency: frequency, duration: 2.0, samplingRate: 400.0)
+        let waveform = Waveform1D<Double>.cosine(frequency: frequency, duration: 2.0, samplingRate: 400.0)
         let integrated = waveform.integrate()
 
         #expect(integrated.values.count == 800)
@@ -125,7 +125,7 @@ struct Waveform1DIntegrationTests {
 
     @Test("Integration of triangle wave (500 samples)")
     func integrationTriangleWave() {
-        let waveform = Waveform1D<Double,Double>.triangle(frequency: 2.0, duration: 1.0, samplingRate: 500.0)
+        let waveform = Waveform1D<Double>.triangle(frequency: 2.0, duration: 1.0, samplingRate: 500.0)
         let integrated = waveform.integrate()
 
         #expect(integrated.values.count == 500)
@@ -140,7 +140,7 @@ struct Waveform1DIntegrationTests {
 
     @Test("Integration with custom initial value (200 samples)")
     func integrationWithInitialValue() {
-        let waveform = Waveform1D<Double,Double>.constant(value: 2.0, duration: 1.0, samplingRate: 200.0)
+        let waveform = Waveform1D<Double>.constant(value: 2.0, duration: 1.0, samplingRate: 200.0)
         let integrated = waveform.integrate(initialValue: 10.0)
 
         // Start at 10, then add area under constant 2.0 over 1 second = 2.0 total
@@ -151,7 +151,7 @@ struct Waveform1DIntegrationTests {
     @Test("Integration preserves dt and t0")
     func integrationPreservesMetadata() {
         let startTime = PrecisionTimestamp()
-        let waveform = Waveform1D<Double,Double>.sine(frequency: 1.0, duration: 1.0, samplingRate: 100.0, t0: startTime)
+        let waveform = Waveform1D<Double>.sine(frequency: 1.0, duration: 1.0, samplingRate: 100.0, t0: startTime)
         let integrated = waveform.integrate()
 
         #expect(integrated.dt == waveform.dt)
@@ -160,7 +160,7 @@ struct Waveform1DIntegrationTests {
 
     @Test("Integration of square wave (600 samples)")
     func integrationSquareWave() {
-        let waveform = Waveform1D<Double,Double>.square(frequency: 3.0, duration: 1.0, samplingRate: 600.0)
+        let waveform = Waveform1D<Double>.square(frequency: 3.0, duration: 1.0, samplingRate: 600.0)
         let integrated = waveform.integrate()
 
         #expect(integrated.values.count == 600)
@@ -175,7 +175,7 @@ struct Waveform1DIntegrationTests {
 
     @Test("Integration of sawtooth wave (400 samples)")
     func integrationSawtoothWave() {
-        let waveform = Waveform1D<Double,Double>.sawtooth(frequency: 2.0, duration: 1.0, samplingRate: 400.0)
+        let waveform = Waveform1D<Double>.sawtooth(frequency: 2.0, duration: 1.0, samplingRate: 400.0)
         let integrated = waveform.integrate()
 
         #expect(integrated.values.count == 400)
@@ -194,7 +194,7 @@ struct Waveform1DDerivativeTests {
 
     @Test("Derivative of empty waveform")
     func derivativeEmpty() {
-        let waveform = Waveform1D<Double,Double>(values: [], dt: 0.1)
+        let waveform = Waveform1D<Double>(values: [], dtSeconds: 0.1)
         let derived = waveform.derivative()
 
         #expect(derived.values.isEmpty)
@@ -202,7 +202,7 @@ struct Waveform1DDerivativeTests {
 
     @Test("Derivative of single point")
     func derivativeSinglePoint() {
-        let waveform = Waveform1D<Double,Double>(values: [5.0], dt: 0.1)
+        let waveform = Waveform1D<Double>(values: [5.0], dtSeconds: 0.1)
         let derived = waveform.derivative()
 
         #expect(derived.values.isEmpty)
@@ -211,7 +211,7 @@ struct Waveform1DDerivativeTests {
     @Test("Derivative of constant waveform (100 samples)")
     func derivativeConstant() {
         // d/dx(c) = 0
-        let waveform = Waveform1D<Double,Double>.constant(value: 5.0, duration: 1.0, samplingRate: 100.0)
+        let waveform = Waveform1D<Double>.constant(value: 5.0, duration: 1.0, samplingRate: 100.0)
         let derived = waveform.derivative()
 
         #expect(derived.values.count == 100)
@@ -223,7 +223,7 @@ struct Waveform1DDerivativeTests {
     @Test("Derivative of linear ramp (500 samples)")
     func derivativeLinear() {
         // d/dx(x) = 1
-        let waveform = Waveform1D<Double,Double>.linearRamp(startValue: 0.0, endValue: 1.0, duration: 1.0, samplingRate: 500.0)
+        let waveform = Waveform1D<Double>.linearRamp(startValue: 0.0, endValue: 1.0, duration: 1.0, samplingRate: 500.0)
         let derived = waveform.derivative()
 
         #expect(derived.values.count == 500)
@@ -236,11 +236,11 @@ struct Waveform1DDerivativeTests {
     func derivativeSineWave() {
         // d/dx(sin(2πft)) = 2πf·cos(2πft)
         let frequency = 2.0
-        let waveform = Waveform1D<Double,Double>.sine(frequency: frequency, duration: 1.0, samplingRate: 1000.0)
+        let waveform = Waveform1D<Double>.sine(frequency: frequency, duration: 1.0, samplingRate: 1000.0)
         let derived = waveform.derivative()
 
         // Compare with actual cosine (scaled by 2πf)
-        let cosineWave = Waveform1D<Double,Double>.cosine(frequency: frequency, duration: 1.0, samplingRate: 1000.0)
+        let cosineWave = Waveform1D<Double>.cosine(frequency: frequency, duration: 1.0, samplingRate: 1000.0)
         let scaledCosine = cosineWave.values.map { $0 * 2.0 * Double.pi * frequency }
 
         #expect(derived.values.count == 1000)
@@ -255,10 +255,10 @@ struct Waveform1DDerivativeTests {
     func derivativeCosineWave() {
         // d/dx(cos(2πft)) = -2πf·sin(2πft)
         let frequency = 1.0
-        let waveform = Waveform1D<Double,Double>.cosine(frequency: frequency, duration: 2.0, samplingRate: 400.0)
+        let waveform = Waveform1D<Double>.cosine(frequency: frequency, duration: 2.0, samplingRate: 400.0)
         let derived = waveform.derivative()
 
-        let sineWave = Waveform1D<Double,Double>.sine(frequency: frequency, duration: 2.0, samplingRate: 400.0)
+        let sineWave = Waveform1D<Double>.sine(frequency: frequency, duration: 2.0, samplingRate: 400.0)
         let negScaledSine = sineWave.values.map { -$0 * 2.0 * Double.pi * frequency }
 
         #expect(derived.values.count == 800)
@@ -271,7 +271,7 @@ struct Waveform1DDerivativeTests {
 
     @Test("Derivative of triangle wave (500 samples)")
     func derivativeTriangleWave() {
-        let waveform = Waveform1D<Double,Double>.triangle(frequency: 2.0, duration: 1.0, samplingRate: 500.0)
+        let waveform = Waveform1D<Double>.triangle(frequency: 2.0, duration: 1.0, samplingRate: 500.0)
         let derived = waveform.derivative()
 
         #expect(derived.values.count == 500)
@@ -286,7 +286,7 @@ struct Waveform1DDerivativeTests {
 
     @Test("Derivative of square wave (600 samples)")
     func derivativeSquareWave() {
-        let waveform = Waveform1D<Double,Double>.square(frequency: 3.0, duration: 1.0, samplingRate: 600.0)
+        let waveform = Waveform1D<Double>.square(frequency: 3.0, duration: 1.0, samplingRate: 600.0)
         let derived = waveform.derivative()
 
         #expect(derived.values.count == 600)
@@ -298,7 +298,7 @@ struct Waveform1DDerivativeTests {
 
     @Test("Derivative of sawtooth wave (400 samples)")
     func derivativeSawtoothWave() {
-        let waveform = Waveform1D<Double,Double>.sawtooth(frequency: 2.0, duration: 1.0, samplingRate: 400.0)
+        let waveform = Waveform1D<Double>.sawtooth(frequency: 2.0, duration: 1.0, samplingRate: 400.0)
         let derived = waveform.derivative()
 
         #expect(derived.values.count == 400)
@@ -311,7 +311,7 @@ struct Waveform1DDerivativeTests {
     @Test("Derivative preserves dt and t0")
     func derivativePreservesMetadata() {
         let startTime = PrecisionTimestamp()
-        let waveform = Waveform1D<Double,Double>.sine(frequency: 1.0, duration: 1.0, samplingRate: 100.0, t0: startTime)
+        let waveform = Waveform1D<Double>.sine(frequency: 1.0, duration: 1.0, samplingRate: 100.0, t0: startTime)
         let derived = waveform.derivative()
 
         #expect(derived.dt == waveform.dt)
@@ -320,7 +320,7 @@ struct Waveform1DDerivativeTests {
 
     @Test("Derivative handles negative values (200 samples)")
     func derivativeNegativeValues() {
-        let waveform = Waveform1D<Double,Double>.linearRamp(
+        let waveform = Waveform1D<Double>.linearRamp(
             startValue: -10.0,
             endValue: 10.0,
             duration: 1.0,
@@ -341,7 +341,7 @@ struct CalculusFundamentalTheoremTests {
 
     @Test("Derivative of integral returns approximate original (sine, 500 samples)")
     func derivativeOfIntegralSine() {
-        let original = Waveform1D<Double,Double>.sine(frequency: 1.0, duration: 1.0, samplingRate: 500.0)
+        let original = Waveform1D<Double>.sine(frequency: 1.0, duration: 1.0, samplingRate: 500.0)
 
         let integrated = original.integrate()
         let derived = integrated.derivative()
@@ -357,7 +357,7 @@ struct CalculusFundamentalTheoremTests {
 
     @Test("Derivative of integral returns approximate original (triangle, 400 samples)")
     func derivativeOfIntegralTriangle() {
-        let original = Waveform1D<Double,Double>.triangle(frequency: 2.0, duration: 1.0, samplingRate: 400.0)
+        let original = Waveform1D<Double>.triangle(frequency: 2.0, duration: 1.0, samplingRate: 400.0)
 
         let integrated = original.integrate()
         let derived = integrated.derivative()
@@ -372,7 +372,7 @@ struct CalculusFundamentalTheoremTests {
 
     @Test("Integral of derivative returns approximate original (cosine, 600 samples)")
     func integralOfDerivativeCosine() {
-        let original = Waveform1D<Double,Double>.cosine(frequency: 1.0, duration: 1.0, samplingRate: 600.0)
+        let original = Waveform1D<Double>.cosine(frequency: 1.0, duration: 1.0, samplingRate: 600.0)
 
         let derived = original.derivative()
         let integrated = derived.integrate()
@@ -391,7 +391,7 @@ struct CalculusFundamentalTheoremTests {
     @Test("Second derivative of sine is negative sine (1000 samples)")
     func secondDerivativeSine() {
         // d²/dx²(sin(x)) = -sin(x)
-        let waveform = Waveform1D<Double,Double>.sine(frequency: 1.0, duration: 2.0, samplingRate: 500.0)
+        let waveform = Waveform1D<Double>.sine(frequency: 1.0, duration: 2.0, samplingRate: 500.0)
 
         let firstDerivative = waveform.derivative()
         let secondDerivative = firstDerivative.derivative()
@@ -409,7 +409,7 @@ struct CalculusFundamentalTheoremTests {
     @Test("Third derivative of cubic (ramp integrated twice, 300 samples)")
     func thirdDerivative() {
         // Start with linear ramp
-        let linear = Waveform1D<Double,Double>.linearRamp(startValue: 0.0, endValue: 1.0, duration: 1.0, samplingRate: 300.0)
+        let linear = Waveform1D<Double>.linearRamp(startValue: 0.0, endValue: 1.0, duration: 1.0, samplingRate: 300.0)
         let quadratic = linear.integrate()  // x²/2
         let cubic = quadratic.integrate()  // x³/6
 
@@ -442,7 +442,7 @@ struct CalculusEdgeCasesTests {
 
     @Test("Very small dt values (1000 samples)")
     func verySmallDt() {
-        let waveform = Waveform1D<Double,Double>.linearRamp(
+        let waveform = Waveform1D<Double>.linearRamp(
             startValue: 0.0,
             endValue: 1.0,
             duration: 0.1,
@@ -459,7 +459,7 @@ struct CalculusEdgeCasesTests {
 
     @Test("Large dt values (100 samples)")
     func largeDt() {
-        let waveform = Waveform1D<Double,Double>.linearRamp(
+        let waveform = Waveform1D<Double>.linearRamp(
             startValue: 0.0,
             endValue: 100.0,
             duration: 100.0,
@@ -476,7 +476,7 @@ struct CalculusEdgeCasesTests {
 
     @Test("Integration with many points (1000 samples)")
     func integrationManyPoints() {
-        let waveform = Waveform1D<Double,Double>.constant(value: 1.0, duration: 1.0, samplingRate: 1000.0)
+        let waveform = Waveform1D<Double>.constant(value: 1.0, duration: 1.0, samplingRate: 1000.0)
 
         let integrated = waveform.integrate()
         #expect(integrated.values.count == 1000)
@@ -485,7 +485,7 @@ struct CalculusEdgeCasesTests {
 
     @Test("Derivative with many points (1000 samples)")
     func derivativeManyPoints() {
-        let waveform = Waveform1D<Double,Double>.linearRamp(
+        let waveform = Waveform1D<Double>.linearRamp(
             startValue: 0.0,
             endValue: 999.0,
             duration: 1.0,
@@ -502,7 +502,7 @@ struct CalculusEdgeCasesTests {
 
     @Test("Zero values (200 samples)")
     func zeroValues() {
-        let waveform = Waveform1D<Double,Double>.constant(value: 0.0, duration: 1.0, samplingRate: 200.0)
+        let waveform = Waveform1D<Double>.constant(value: 0.0, duration: 1.0, samplingRate: 200.0)
 
         let integrated = waveform.integrate()
         let derived = waveform.derivative()
@@ -514,7 +514,7 @@ struct CalculusEdgeCasesTests {
     @Test("High frequency sine wave (500 samples)")
     func highFrequencySine() {
         // High frequency requires adequate sampling
-        let waveform = Waveform1D<Double,Double>.sine(frequency: 50.0, duration: 1.0, samplingRate: 500.0)
+        let waveform = Waveform1D<Double>.sine(frequency: 50.0, duration: 1.0, samplingRate: 500.0)
 
         let derived = waveform.derivative()
         let integrated = waveform.integrate()
@@ -529,7 +529,7 @@ struct CalculusEdgeCasesTests {
 
     @Test("Multiple cycles of square wave (800 samples)")
     func multipleSquareCycles() {
-        let waveform = Waveform1D<Double,Double>.square(frequency: 10.0, duration: 1.0, samplingRate: 800.0)
+        let waveform = Waveform1D<Double>.square(frequency: 10.0, duration: 1.0, samplingRate: 800.0)
 
         let integrated = waveform.integrate()
 
@@ -547,7 +547,7 @@ struct PhysicalInterpretationTests {
     @Test("Velocity to position (kinematics, 600 samples)")
     func velocityToPosition() {
         // Constant velocity of 10 m/s for 1 second
-        let velocity = Waveform1D<Double,Double>.constant(value: 10.0, duration: 1.0, samplingRate: 600.0)
+        let velocity = Waveform1D<Double>.constant(value: 10.0, duration: 1.0, samplingRate: 600.0)
         let position = velocity.integrate()
 
         // Position should increase linearly to 10 meters
@@ -559,7 +559,7 @@ struct PhysicalInterpretationTests {
     @Test("Position to velocity (kinematics, 500 samples)")
     func positionToVelocity() {
         // Linear position: 0 to 10 meters over 1 second
-        let position = Waveform1D<Double,Double>.linearRamp(
+        let position = Waveform1D<Double>.linearRamp(
             startValue: 0.0,
             endValue: 10.0,
             duration: 1.0,
@@ -576,7 +576,7 @@ struct PhysicalInterpretationTests {
     @Test("Acceleration integration (gravity, 1000 samples)")
     func accelerationIntegration() {
         // Constant acceleration of 9.8 m/s² (gravity) for 1 second
-        let acceleration = Waveform1D<Double,Double>.constant(value: 9.8, duration: 1.0, samplingRate: 1000.0)
+        let acceleration = Waveform1D<Double>.constant(value: 9.8, duration: 1.0, samplingRate: 1000.0)
         let velocity = acceleration.integrate()
 
         // After 1 second, velocity should be ~9.8 m/s
@@ -587,7 +587,7 @@ struct PhysicalInterpretationTests {
     @Test("Oscillating force (harmonic motion, 800 samples)")
     func harmonicMotion() {
         // Force proportional to -x (Hooke's law approximation)
-        let force = Waveform1D<Double,Double>.sine(frequency: 1.0, duration: 2.0, samplingRate: 400.0)
+        let force = Waveform1D<Double>.sine(frequency: 1.0, duration: 2.0, samplingRate: 400.0)
 
         // This represents simplified harmonic oscillator
         let acceleration = force  // F = ma, assume m=1
@@ -607,7 +607,7 @@ struct PhysicalInterpretationTests {
     @Test("Power integration to energy (400 samples)")
     func powerToEnergy() {
         // Constant power of 100 W for 1 second
-        let power = Waveform1D<Double,Double>.constant(value: 100.0, duration: 1.0, samplingRate: 400.0)
+        let power = Waveform1D<Double>.constant(value: 100.0, duration: 1.0, samplingRate: 400.0)
         let energy = power.integrate()
 
         // Energy should be 100 J after 1 second

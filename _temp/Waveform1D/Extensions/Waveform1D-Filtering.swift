@@ -9,7 +9,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - filterType: Type of filter to apply
     ///   - order: Filter order (higher order = steeper rolloff)
     /// - Returns: Filtered waveform
-    public func filtered(with filterType: WaveformFilterType<U>, order: Int = 4) -> Waveform1D<T,U> {
+    public func filtered(with filterType: WaveformFilterType<U>, order: Int = 4) -> Waveform1D<T> {
         guard !values.isEmpty && order > 0 else { return self }
 
         switch filterType {
@@ -31,14 +31,14 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// Apply a simple moving average filter
     /// - Parameter windowSize: Size of the moving average window
     /// - Returns: Filtered waveform
-    public func movingAverageFilter(windowSize: Int) -> Waveform1D<T,U> {
+    public func movingAverageFilter(windowSize: Int) -> Waveform1D<T> {
         return filtered(with: .movingAverage(windowSize: windowSize))
     }
 
     /// Apply an exponential smoothing filter
     /// - Parameter alpha: Smoothing factor (0 < alpha <= 1, higher = less smoothing)
     /// - Returns: Filtered waveform
-    public func exponentialFilter(alpha: U) -> Waveform1D<T,U> {
+    public func exponentialFilter(alpha: U) -> Waveform1D<T> {
         return filtered(with: .exponential(alpha: alpha))
     }
 
@@ -47,7 +47,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - cutoffFrequency: Cutoff frequency in Hz
     ///   - order: Filter order
     /// - Returns: Filtered waveform
-    public func lowPassFilter(cutoffFrequency: U, order: Int = 4) -> Waveform1D<T,U> {
+    public func lowPassFilter(cutoffFrequency: U, order: Int = 4) -> Waveform1D<T> {
         return filtered(with: .lowPass(cutoffFrequency: cutoffFrequency), order: order)
     }
 
@@ -56,7 +56,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - cutoffFrequency: Cutoff frequency in Hz
     ///   - order: Filter order
     /// - Returns: Filtered waveform
-    public func highPassFilter(cutoffFrequency: U, order: Int = 4) -> Waveform1D<T,U> {
+    public func highPassFilter(cutoffFrequency: U, order: Int = 4) -> Waveform1D<T> {
         return filtered(with: .highPass(cutoffFrequency: cutoffFrequency), order: order)
     }
 
@@ -66,7 +66,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - highFrequency: Upper cutoff frequency in Hz
     ///   - order: Filter order
     /// - Returns: Filtered waveform
-    public func bandPassFilter(lowFrequency: U, highFrequency: U, order: Int = 4) -> Waveform1D<T,U> {
+    public func bandPassFilter(lowFrequency: U, highFrequency: U, order: Int = 4) -> Waveform1D<T> {
         return filtered(with: .bandPass(lowFrequency: lowFrequency, highFrequency: highFrequency), order: order)
     }
 
@@ -76,7 +76,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         type: WaveformFilterButterworthType,
         cutoffFrequency: U,
         order: Int
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         let nyquist = samplingFrequency / 2.0
         let normalizedCutoff = cutoffFrequency / nyquist
 
@@ -90,13 +90,13 @@ extension Waveform1D where T: BinaryFloatingPoint {
         return applyIIRFilter(coefficients: coefficients)
     }
 
-    private func applyBandPassFilter(lowFrequency: U, highFrequency: U, order: Int) -> Waveform1D<T,U> {
+    private func applyBandPassFilter(lowFrequency: U, highFrequency: U, order: Int) -> Waveform1D<T> {
         // Apply high-pass first, then low-pass
         let highPassed = highPassFilter(cutoffFrequency: lowFrequency, order: order)
         return highPassed.lowPassFilter(cutoffFrequency: highFrequency, order: order)
     }
 
-    private func applyBandStopFilter(lowFrequency: U, highFrequency: U, order: Int) -> Waveform1D<T,U> {
+    private func applyBandStopFilter(lowFrequency: U, highFrequency: U, order: Int) -> Waveform1D<T> {
         // Create band-pass filter and subtract from original
         let bandPass = bandPassFilter(lowFrequency: lowFrequency, highFrequency: highFrequency, order: order)
 
@@ -107,7 +107,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         return Waveform1D(values: filtered, dt: dt, t0: t0)
     }
 
-    private func applyMovingAverage(windowSize: Int) -> Waveform1D<T,U> {
+    private func applyMovingAverage(windowSize: Int) -> Waveform1D<T> {
         guard windowSize > 0 && windowSize <= values.count else { return self }
 
         var filtered: [T] = []
@@ -125,7 +125,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         return Waveform1D(values: filtered, dt: dt, t0: t0)
     }
 
-    private func applyExponentialFilter(alpha: U) -> Waveform1D<T,U> {
+    private func applyExponentialFilter(alpha: U) -> Waveform1D<T> {
         guard !values.isEmpty && alpha > 0 && alpha <= 1 else { return self }
 
         var filtered: [T] = []
@@ -206,7 +206,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         return WaveformFilterCoefficients(b: b, a: a)
     }
 
-    private func applyIIRFilter(coefficients: WaveformFilterCoefficients<T>) -> Waveform1D<T,U> {
+    private func applyIIRFilter(coefficients: WaveformFilterCoefficients<T>) -> Waveform1D<T> {
         guard !values.isEmpty else { return self }
 
         let b = coefficients.b
@@ -324,7 +324,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         windowSize: Int,
         polynomialOrder: Int,
         derivative: Int = 0
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         guard
             windowSize >= 3 && windowSize % 2 == 1 && polynomialOrder >= 0 && polynomialOrder < windowSize
                 && derivative >= 0 && derivative <= polynomialOrder
@@ -346,7 +346,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - windowSize: Size of the filter window (must be odd)
     ///   - polynomialOrder: Order of the fitting polynomial
     /// - Returns: Smoothed waveform
-    public func savitzkyGolaySmooth(windowSize: Int = 5, polynomialOrder: Int = 2) -> Waveform1D<T,U> {
+    public func savitzkyGolaySmooth(windowSize: Int = 5, polynomialOrder: Int = 2) -> Waveform1D<T> {
         return savitzkyGolayFilter(windowSize: windowSize, polynomialOrder: polynomialOrder, derivative: 0)
     }
 
@@ -355,7 +355,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - windowSize: Size of the filter window (must be odd)
     ///   - polynomialOrder: Order of the fitting polynomial
     /// - Returns: First derivative waveform
-    public func savitzkyGolayDerivative(windowSize: Int = 5, polynomialOrder: Int = 2) -> Waveform1D<T,U> {
+    public func savitzkyGolayDerivative(windowSize: Int = 5, polynomialOrder: Int = 2) -> Waveform1D<T> {
         let result = savitzkyGolayFilter(windowSize: windowSize, polynomialOrder: polynomialOrder, derivative: 1)
         // Scale by 1/dt to get proper derivative units
         let scaledValues = result.values.map { $0 / T(dt) }
@@ -367,7 +367,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - windowSize: Size of the filter window (must be odd)
     ///   - polynomialOrder: Order of the fitting polynomial (must be >= 2)
     /// - Returns: Second derivative waveform
-    public func savitzkyGolaySecondDerivative(windowSize: Int = 5, polynomialOrder: Int = 3) -> Waveform1D<T,U> {
+    public func savitzkyGolaySecondDerivative(windowSize: Int = 5, polynomialOrder: Int = 3) -> Waveform1D<T> {
         guard polynomialOrder >= 2 else { return self }
         let result = savitzkyGolayFilter(windowSize: windowSize, polynomialOrder: polynomialOrder, derivative: 2)
         // Scale by 1/dt² to get proper derivative units
@@ -385,7 +385,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         windowSize: Int,
         polynomialOrder: Int,
         weights: WaveformLocalWeightFunction = .uniform
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
         guard windowSize >= polynomialOrder + 1 && windowSize % 2 == 1 else { return self }
 
         var filtered: [T] = []
@@ -428,7 +428,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - lambda: Smoothing parameter (higher = more smoothing)
     ///   - order: Difference order (typically 2)
     /// - Returns: Smoothed waveform
-    public func whittakerHendersonFilter(lambda: U, order: Int = 2) -> Waveform1D<T,U> {
+    public func whittakerHendersonFilter(lambda: U, order: Int = 2) -> Waveform1D<T> {
         guard order > 0 && lambda > 0 && values.count > order else { return self }
 
         let smoothed = solveWhittakerSystem(
@@ -511,7 +511,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         return filterCoeffs
     }
 
-    private func applySavitzkyGolayFilter(coefficients: [T], windowSize: Int, derivative: Int) -> Waveform1D<T,U> {
+    private func applySavitzkyGolayFilter(coefficients: [T], windowSize: Int, derivative: Int) -> Waveform1D<T> {
         guard coefficients.count == windowSize else { return self }
 
         var filtered: [T] = []

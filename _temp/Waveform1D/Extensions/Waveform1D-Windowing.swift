@@ -2,12 +2,12 @@ import Foundation
 import FoundationTypes
 
 // MARK: - Window Functions
-extension Waveform1D where T: Numeric {
+extension Waveform1D where T: BinaryFloatingPoint {
 
     /// Apply a window function to the waveform
     /// - Parameter WaveformWindowType: The type of window to apply
     /// - Returns: New waveform with the window function applied
-    public func windowed(with WaveformWindowType: WaveformWindowType<U>) -> Waveform1D<T,U> {
+    public func windowed(with WaveformWindowType: WaveformWindowType<U>) -> Waveform1D<T> {
         guard !values.isEmpty else { return self }
 
         let windowCoefficients = Self.generateWindow(type: WaveformWindowType, length: values.count)
@@ -23,17 +23,17 @@ extension Waveform1D where T: Numeric {
     /// - Returns: Array of window coefficients
     public static func generateWindow(type: WaveformWindowType<U>, length: Int) -> [T] {
         guard length > 0 else { return [] }
-        guard length > 1 else { return [1.0] }
+        guard length > 1 else { return [T(1.0)] }
 
-        let n = Double(length)
+        let n = T(length)
 
         switch type {
         case .rectangular:
-            return Array(repeating: 1.0, count: length)
+            return Array(repeating: T(1.0), count: length)
 
         case .hanning:
             return (0..<length).map { i in
-                0.5 * (1.0 - cos(2.0 * .pi * Double(i) / (n - 1.0)))
+                0.5 * (1.0 - cos(2.0 * T.pi * T(i) / (n - 1.0)))
             }
 
         case .hamming:
@@ -98,26 +98,26 @@ extension Waveform1D where T: Numeric {
     /// Calculate the coherent gain of a window function
     /// - Parameter WaveformWindowType: The window function type
     /// - Returns: The coherent gain factor
-    public func windowCoherentGain(for WaveformWindowType: WaveformWindowType<U>) -> Double {
+    public func windowCoherentGain(for WaveformWindowType: WaveformWindowType<U>) -> T {
         let window = Self.generateWindow(type: WaveformWindowType, length: values.count)
-        return window.reduce(0.0, +) / Double(window.count)
+        return window.reduce(T(0.0), +) / T(window.count)
     }
 
     /// Calculate the processing gain of a window function
     /// - Parameter WaveformWindowType: The window function type
     /// - Returns: The processing gain factor
-    public func windowProcessingGain(for WaveformWindowType: WaveformWindowType<U>) -> Double {
+    public func windowProcessingGain(for WaveformWindowType: WaveformWindowType<U>) -> T {
         let window = Self.generateWindow(type: WaveformWindowType, length: values.count)
-        let sumSquares = window.reduce(0.0) { $0 + $1 * $1 }
-        return sqrt(sumSquares / Double(window.count))
+        let sumSquares = window.reduce(T(0.0)) { $0 + $1 * $1 }
+        return sqrt(sumSquares / T(window.count))
     }
 
     // MARK: - Private Helper Functions
 
     /// Modified Bessel function of the first kind, order 0
-    private static func modifiedBesselI0(_ x: Double) -> Double {
+    private static func modifiedBesselI0(_ x: T) -> T {
         let ax = abs(x)
-        var ans: Double
+        var ans: T
 
         if ax < 3.75 {
             let y = x / 3.75
@@ -129,13 +129,7 @@ extension Waveform1D where T: Numeric {
         } else {
             let y = 3.75 / ax
             ans =
-                (exp(ax) / sqrt(ax))
-                * (0.39894228 + y
-                    * (0.1328592e-1 + y
-                        * (0.225319e-2 + y
-                            * (-0.157565e-2 + y
-                                * (0.916281e-2 + y
-                                    * (-0.2057706e-1 + y * (0.2635537e-1 + y * (-0.1647633e-1 + y * 0.392377e-2))))))))
+                (exp(ax) / sqrt(ax)) * (0.39894228 + y * (0.1328592e-1 + y * (0.225319e-2 + y * (-0.157565e-2 + y  * (0.916281e-2 + y * (-0.2057706e-1 + y * (0.2635537e-1 + y * (-0.1647633e-1 + y * 0.392377e-2))))))))
         }
 
         return ans

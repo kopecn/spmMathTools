@@ -8,15 +8,7 @@ extension WaveformSpatialPose {
     /// Both waveforms must have the same sampling rate
     public mutating func extend(_ other: WaveformSpatialPose<T>) throws {
         // Compare dt with relative tolerance
-        let dtEqual: Bool
-        if self.dt == 0 && other.dt == 0 {
-            dtEqual = true
-        } else if self.dt == 0 || other.dt == 0 {
-            dtEqual = abs(self.dt - other.dt) < 1e-10
-        } else {
-            let relativeDifference = abs(self.dt - other.dt) / max(abs(self.dt), abs(other.dt))
-            dtEqual = relativeDifference < 1e-10
-        }
+        let dtEqual: Bool = self.dt == other.dt
 
         guard dtEqual else {
             throw WaveformError.incompatibleSamplingRates
@@ -59,7 +51,7 @@ extension WaveformSpatialPose {
 
         // Adjust t0 if it exists (shift back by dt)
         if let currentT0 = self.t0 {
-            self.t0 = currentT0.addingTimeInterval(add: -dt)
+            self.t0 = currentT0 - dt
         }
     }
 
@@ -74,7 +66,7 @@ extension WaveformSpatialPose {
 
         // Adjust t0 if it exists (shift back by dt * count)
         if let currentT0 = self.t0 {
-            self.t0 = currentT0.addingTimeInterval(add: -dt * T(poses.count))
+            self.t0 = currentT0 - dt * poses.count
         }
     }
 
@@ -93,7 +85,7 @@ extension WaveformSpatialPose {
 
         // Adjust t0 if inserting at the beginning
         if index == 0, let currentT0 = self.t0 {
-            self.t0 = currentT0.addingTimeInterval(add: -dt)
+            self.t0 = currentT0 - dt
         }
     }
 
@@ -114,7 +106,7 @@ extension WaveformSpatialPose {
 
         // Adjust t0 if inserting at the beginning
         if index == 0, let currentT0 = self.t0 {
-            self.t0 = currentT0.addingTimeInterval(add: -dt * T(poses.count))
+            self.t0 = currentT0 - dt * poses.count
         }
     }
 
@@ -149,7 +141,7 @@ extension WaveformSpatialPose {
     /// - Returns: The removed SpatialPose
     /// - Note: If removing at index 0, t0 is adjusted forward by dt
     @discardableResult
-    public mutating func remove(at index: Int) -> (position: Position<T>, quaternion: Quaternion<T>) {
+    public mutating func remove(at index: Int) -> SpatialPose<T> {
         precondition(index >= 0 && index < positions.count, "Index out of bounds for positions")
         precondition(index >= 0 && index < quaternions.count, "Index out of bounds for quaternions")
 
@@ -158,10 +150,18 @@ extension WaveformSpatialPose {
 
         // Adjust t0 if removing the first element
         if index == 0, let currentT0 = self.t0 {
-            self.t0 = currentT0.addingTimeInterval(add: dt)
+            self.t0 = currentT0 + dt
         }
 
-        return (position: removedPosition, quaternion: removedQuaternion)
+        return SpatialPose(position: removedPosition, rotation: removedQuaternion)
+    }
+
+    @discardableResult
+    public mutating func safelyRemoveElement(at index: Int) -> SpatialPose<T>? {
+        if index >= 0 && index < positions.count && index < quaternions.count {
+            return self.remove(at: index)
+        }
+        return nil
     }
 
     /// Remove all poses
@@ -200,5 +200,10 @@ extension WaveformSpatialPose {
             positions[index] = newValue.position
             quaternions[index] = newValue.quaternion
         }
+    }
+
+    public subscript(safe index: Int) -> SpatialPose<T>? {
+        let isValidIndex = index >= 0 && index < positions.count && index < quaternions.count
+        return isValidIndex ? self[index] : nil
     }
 }

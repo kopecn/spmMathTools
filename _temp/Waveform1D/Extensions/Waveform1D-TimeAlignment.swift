@@ -11,10 +11,10 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - maxLag: Maximum lag to search for optimal alignment (in samples)
     /// - Returns: Aligned waveform
     public func aligned(
-        to reference: Waveform1D<T,U>,
+        to reference: Waveform1D<T>,
         method: WaveformAlignmentMethod = .crossCorrelation,
         maxLag: Int? = nil
-    ) -> Waveform1D<T,U> {
+    ) -> Waveform1D<T> {
 
         switch method {
         case .crossCorrelation:
@@ -38,16 +38,16 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - resampleToCommonRate: Whether to resample all to common sampling rate
     /// - Returns: Array of synchronized waveforms
     public static func synchronize(
-        _ waveforms: [Waveform1D<T,U>],
-        to reference: Waveform1D<T,U>? = nil,
+        _ waveforms: [Waveform1D<T>],
+        to reference: Waveform1D<T>? = nil,
         method: WaveformAlignmentMethod = .crossCorrelation,
         resampleToCommonRate: Bool = true
-    ) -> [Waveform1D<T,U>] {
+    ) -> [Waveform1D<T>] {
 
         guard !waveforms.isEmpty else { return [] }
 
         let referenceWaveform = reference ?? waveforms[0]
-        var synchronized: [Waveform1D<T,U>] = []
+        var synchronized: [Waveform1D<T>] = []
 
         for waveform in waveforms {
             var alignedWaveform = waveform
@@ -71,7 +71,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - other: Other waveform to compare with
     ///   - maxLag: Maximum lag to search (in samples)
     /// - Returns: Time lag information
-    public func timeLag(to other: Waveform1D<T,U>, maxLag: Int? = nil) -> WaveformTimeLag<T>? {
+    public func timeLag(to other: Waveform1D<T>, maxLag: Int? = nil) -> WaveformTimeLag<T>? {
         let searchRange = maxLag.map { -$0..<$0 }
 
         guard let correlation = findMaxCorrelation(with: other, searchRange: searchRange) else {
@@ -89,7 +89,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// Trim waveforms to their common time overlap
     /// - Parameter waveforms: Array of waveforms to trim
     /// - Returns: Array of trimmed waveforms with common time base
-    public static func trimToCommonTimeBase(_ waveforms: [Waveform1D<T,U>]) -> [Waveform1D<T,U>] {
+    public static func trimToCommonTimeBase(_ waveforms: [Waveform1D<T>]) -> [Waveform1D<T>] {
         guard waveforms.count > 1 else { return waveforms }
 
         // Find common time range
@@ -122,25 +122,27 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
     // MARK: - Private Alignment Methods
 
-    private func alignByCrossCorrelation(to reference: Waveform1D<T,U>, maxLag: Int?) -> Waveform1D<T,U> {
+    private func alignByCrossCorrelation(to reference: Waveform1D<T>, maxLag: Int?) -> Waveform1D<T> {
         guard let lag = timeLag(to: reference, maxLag: maxLag) else { return self }
 
         return alignByManualOffset(lag.lagTime)
     }
 
-    private func alignByTimeStamp(to reference: Waveform1D<T,U>) -> Waveform1D<T,U> {
+    private func alignByTimeStamp(to reference: Waveform1D<T>) -> Waveform1D<T> {
         guard let referenceT0 = reference.t0, let selfT0 = t0 else { return self }
 
         let timeOffset = selfT0.timeIntervalSince(referenceT0)
         return alignByManualOffset(-timeOffset)
     }
 
-    private func alignByManualOffset(_ offsetSeconds: TimeInterval) -> Waveform1D<T,U> {
-        let newT0 = t0?.addingTimeInterval(add: offsetSeconds)
-        return Waveform1D(values: values, dt: dt, t0: newT0)
+    private func alignByManualOffset(_ offsetSeconds: TimeInterval) -> Waveform1D<T> {
+        guard let t0 = t0 else { 
+            return Waveform1D(values: values, dt: dt)
+        }
+        return Waveform1D(values: values, dt: dt, t0: t0 + offsetSeconds)
     }
 
-    private func alignByPeaks(to reference: Waveform1D<T,U>) -> Waveform1D<T,U> {
+    private func alignByPeaks(to reference: Waveform1D<T>) -> Waveform1D<T> {
         // Find the most prominent peak in each waveform
         let selfPeaks = detectPeaks(minDistance: max(1, values.count / 20))
         let refPeaks = reference.detectPeaks(minDistance: max(1, reference.values.count / 20))
@@ -159,7 +161,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         return alignByManualOffset(timeOffset)
     }
 
-    private func alignByEnergy(to reference: Waveform1D<T,U>, maxLag: Int?) -> Waveform1D<T,U> {
+    private func alignByEnergy(to reference: Waveform1D<T>, maxLag: Int?) -> Waveform1D<T> {
         // Create energy envelopes
         let selfEnergy = amplitudeEnvelope(method: .rms(windowSize: max(10, values.count / 100)))
         let refEnergy = reference.amplitudeEnvelope(method: .rms(windowSize: max(10, reference.values.count / 100)))
@@ -190,14 +192,14 @@ extension Waveform1D where T: BinaryFloatingPoint {
         duration windowduration: T,
         overlap: Double = 0.0,
         padding: WaveformPaddingStrategy = .none
-    ) -> [Waveform1D<T,U>] {
+    ) -> [Waveform1D<T>] {
 
         guard windowDuration > 0 && windowDuration <= duration else { return [] }
 
         let windowSamples = Int(windowDuration / dt)
         let stepSamples = Int(Double(windowSamples) * (1.0 - max(0.0, min(0.99, overlap))))
 
-        var windows: [Waveform1D<T,U>] = []
+        var windows: [Waveform1D<T>] = []
         var startIndex = 0
 
         while startIndex < values.count {
@@ -253,7 +255,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func timeSegments(
         duration segmentduration: T,
         discardIncomplete: Bool = false
-    ) -> [Waveform1D<T,U>] {
+    ) -> [Waveform1D<T>] {
 
         let padding: WaveformPaddingStrategy = discardIncomplete ? .none : .lastValue
         return timeWindows(duration: segmentDuration, overlap: 0.0, padding: padding)
@@ -266,7 +268,7 @@ extension Waveform1D where T: BinaryInteger {
     /// Simple time alignment for integer waveforms using timestamps
     /// - Parameter reference: Reference waveform to align to
     /// - Returns: Aligned waveform
-    public func aligned(to reference: Waveform1D<T,U>) -> Waveform1D<T,U> {
+    public func aligned(to reference: Waveform1D<T>) -> Waveform1D<T> {
         guard let referenceT0 = reference.t0, let selfT0 = t0 else { return self }
 
         let timeOffset = selfT0.timeIntervalSince(referenceT0)
@@ -283,14 +285,14 @@ extension Waveform1D where T: BinaryInteger {
     public func timeWindows(
         duration windowduration: T,
         overlap: Double = 0.0
-    ) -> [Waveform1D<T,U>] {
+    ) -> [Waveform1D<T>] {
 
         guard windowDuration > 0 && windowDuration <= duration else { return [] }
 
         let windowSamples = Int(windowDuration / dt)
         let stepSamples = Int(Double(windowSamples) * (1.0 - max(0.0, min(0.99, overlap))))
 
-        var windows: [Waveform1D<T,U>] = []
+        var windows: [Waveform1D<T>] = []
         var startIndex = 0
 
         while startIndex + windowSamples <= values.count {

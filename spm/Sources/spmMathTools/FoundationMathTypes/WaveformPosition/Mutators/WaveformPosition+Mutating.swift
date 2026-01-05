@@ -9,15 +9,7 @@ extension WaveformPosition {
     /// Both waveforms must have the same sampling rate
     public mutating func extend(_ other: WaveformPosition<T>) throws {
         // Compare dt with relative tolerance
-        let dtEqual: Bool
-        if self.dt == 0 && other.dt == 0 {
-            dtEqual = true
-        } else if self.dt == 0 || other.dt == 0 {
-            dtEqual = abs(self.dt - other.dt) < 1e-10
-        } else {
-            let relativeDifference = abs(self.dt - other.dt) / max(abs(self.dt), abs(other.dt))
-            dtEqual = relativeDifference < 1e-10
-        }
+        let dtEqual: Bool = self.dt == other.dt
 
         guard dtEqual else {
             throw WaveformError.incompatibleSamplingRates
@@ -54,7 +46,7 @@ extension WaveformPosition {
 
         // Adjust t0 if it exists (shift back by dt)
         if let currentT0 = self.t0 {
-            self.t0 = currentT0.addingTimeInterval(add: -dt)
+            self.t0 = currentT0 - dt
         }
     }
 
@@ -66,7 +58,7 @@ extension WaveformPosition {
 
         // Adjust t0 if it exists (shift back by dt * count)
         if let currentT0 = self.t0 {
-            self.t0 = currentT0.addingTimeInterval(add: -dt * T(positions.count))
+            self.t0 = currentT0 - dt * positions.count
         }
     }
 
@@ -83,7 +75,7 @@ extension WaveformPosition {
 
         // Adjust t0 if inserting at the beginning
         if index == 0, let currentT0 = self.t0 {
-            self.t0 = currentT0.addingTimeInterval(add: -dt)
+            self.t0 = currentT0 - dt
         }
     }
 
@@ -100,7 +92,7 @@ extension WaveformPosition {
 
         // Adjust t0 if inserting at the beginning
         if index == 0, let currentT0 = self.t0 {
-            self.t0 = currentT0.addingTimeInterval(add: -dt * T(positions.count))
+            self.t0 = currentT0 - dt * positions.count
         }
     }
 
@@ -135,10 +127,18 @@ extension WaveformPosition {
 
         // Adjust t0 if removing the first element
         if index == 0, let currentT0 = self.t0 {
-            self.t0 = currentT0.addingTimeInterval(add: dt)
+            self.t0 = currentT0 + dt
         }
 
         return removedPosition
+    }
+
+    @discardableResult
+    public mutating func safelyRemoveElement(at index: Int) -> Position<T>? {
+        if index >= 0 && index < values.count {
+            return self.remove(at: index)
+        }
+        return nil
     }
 
     /// Remove all positions
@@ -183,5 +183,10 @@ extension WaveformPosition {
             precondition(index >= 0 && index < values.count, "Index out of bounds")
             values[index] = newValue
         }
+    }
+
+    public subscript(safe index: Int) -> Position<T>? {
+        let isValidIndex = index >= 0 && index < values.count
+        return isValidIndex ? self[index] : nil
     }
 }
