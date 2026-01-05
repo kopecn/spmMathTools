@@ -164,10 +164,7 @@ extension Waveform1D where T: SignedNumeric & Comparable {
             return U(index1) + 0.5  // Midpoint if values are too close
         }
 
-        // FIXME: - This is broken
-        // let fraction = -U(value1) / U(denominator)
-        let fraction = 0.0
-        // FIXME: - This is broken
+        let fraction = -U(value1) / U(denominator)
         return U(index1) + U(max(0.0, min(1.0, fraction)))
     }
 }

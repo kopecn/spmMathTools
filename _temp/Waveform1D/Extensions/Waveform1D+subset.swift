@@ -22,10 +22,10 @@ extension Waveform1D {
         guard let t0 = self.t0 else { return nil }
         guard startDate <= endDate else { return nil }
 
-        // Convert PrecisionTimeInterval to U (BinaryFloatingPoint)
+        // Convert PrecisionTimeInterval to T (not U)
         let startInterval = startDate - t0
-        let startTime = {
-            let seconds = U(startInterval.seconds) + U(startInterval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
+        let startTime: T = {
+            let seconds = T(startInterval.seconds) + T(startInterval.attoseconds) / T(PrecisionTimeInterval.attosecondsPerSecond)
             switch startInterval.sign {
             case .positive: return seconds
             case .negative: return -seconds
@@ -34,8 +34,8 @@ extension Waveform1D {
         }()
 
         let endInterval = endDate - t0
-        let endTime = {
-            let seconds = U(endInterval.seconds) + U(endInterval.attoseconds) / U(PrecisionTimeInterval.attosecondsPerSecond)
+        let endTime: T = {
+            let seconds = T(endInterval.seconds) + T(endInterval.attoseconds) / T(PrecisionTimeInterval.attosecondsPerSecond)
             switch endInterval.sign {
             case .positive: return seconds
             case .negative: return -seconds
@@ -74,16 +74,16 @@ extension Waveform1D {
         guard !values.isEmpty else { return nil }
         guard startTime <= endTime else { return nil }
 
-        let adjustedStartTime: T
-        let adjustedEndTime: T
+        var adjustedStartTime: T = startTime
+        var adjustedEndTime: T = endTime
 
         switch WaveformTimeReference {
         case .waveformStart:
-            adjustedStartTime = startTime
-            adjustedEndTime = endTime
+            // already set above
+            break
         case .epoch:
             guard let t0 = self.t0 else { return nil }
-            // Convert t0's interval from epoch to U
+            // Convert t0's interval from epoch to T
             let t0Seconds = T(t0.interval.seconds) + T(t0.interval.attoseconds) / T(PrecisionTimeInterval.attosecondsPerSecond)
             let t0Interval: T
             switch t0.interval.sign {
@@ -95,7 +95,7 @@ extension Waveform1D {
             adjustedEndTime = endTime - t0Interval
         }
 
-        let waveformDuration = U(values.count - 1) * dt
+        let waveformDuration = T(values.count - 1) * dt
 
         // Check if range is completely outside waveform bounds
         if adjustedEndTime < 0 || adjustedStartTime > waveformDuration {
