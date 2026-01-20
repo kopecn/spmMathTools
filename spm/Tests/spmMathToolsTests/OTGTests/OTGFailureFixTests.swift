@@ -9,7 +9,7 @@ final class OTGFailureFixTests: XCTestCase {
     // MARK: - Helper Functions
 
     /// Validates that all time intervals in the trajectory are non-negative
-    func validateNoNegativeTimeIntervals(_ profile: Profile, file: StaticString = #file, line: UInt = #line) {
+    func validateNoNegativeTimeIntervals(_ profile: Profile, file: StaticString = #filePath, line: UInt = #line) {
         for i in 0..<7 {
             XCTAssertGreaterThanOrEqual(
                 profile.t[i],
@@ -27,7 +27,7 @@ final class OTGFailureFixTests: XCTestCase {
         _ trajectory: Trajectory,
         maxAcc: Double,
         sampleCount: Int = 100,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line
     ) {
         let duration = trajectory.getDuration()
@@ -52,7 +52,7 @@ final class OTGFailureFixTests: XCTestCase {
                 acc,
                 maxAcc + 0.001,  // Small tolerance for numerical precision
                 "Acceleration \(acc) exceeds limit \(maxAcc) at time t=\(t)",
-                file: (file),
+                file: file,
                 line: line
             )
         }
@@ -64,7 +64,7 @@ final class OTGFailureFixTests: XCTestCase {
         _ trajectory: Trajectory,
         maxVel: Double,
         sampleCount: Int = 100,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line
     ) {
         let duration = trajectory.getDuration()
@@ -89,7 +89,7 @@ final class OTGFailureFixTests: XCTestCase {
                 vel,
                 maxVel + 0.001,  // Small tolerance for numerical precision
                 "Velocity \(vel) exceeds limit \(maxVel) at time t=\(t)",
-                file: (file),
+                file: file,
                 line: line
             )
         }

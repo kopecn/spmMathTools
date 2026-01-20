@@ -18,7 +18,7 @@ final class OTGComprehensiveTests: XCTestCase {
     /// Validates that all time intervals in the trajectory are non-negative
     func validateNoNegativeTimeIntervals(
         _ profile: Profile,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line
     ) {
         for i in 0..<7 {
@@ -38,7 +38,7 @@ final class OTGComprehensiveTests: XCTestCase {
         _ trajectory: Trajectory,
         maxAcc: Double,
         sampleCount: Int = 100,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line
     ) {
         let duration = trajectory.getDuration()
@@ -75,7 +75,7 @@ final class OTGComprehensiveTests: XCTestCase {
         _ trajectory: Trajectory,
         maxVel: Double,
         sampleCount: Int = 100,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line
     ) {
         let duration = trajectory.getDuration()
@@ -112,7 +112,7 @@ final class OTGComprehensiveTests: XCTestCase {
         targetPosition: Double,
         targetVelocity: Double,
         targetAcceleration: Double,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line
     ) {
         let duration = trajectory.getDuration()
@@ -163,7 +163,7 @@ final class OTGComprehensiveTests: XCTestCase {
     func validateTrajectory(
         _ trajectory: Trajectory,
         input: InputParameter,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line
     ) {
         let profile = trajectory.getProfiles()[0][0]
