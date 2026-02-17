@@ -11,7 +11,7 @@ struct AutoCorrelationTests {
     @Test("Basic auto-correlation")
     func basicAutoCorrelation() {
         let values = [1.0, 2.0, 3.0, 2.0, 1.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let autoCorr = waveform.autoCorrelation()
 
@@ -27,7 +27,7 @@ struct AutoCorrelationTests {
         let values = [
             4996.0, 4137, 3203, 3403, 4831, 4931, 4753, 4381, 4673,
         ]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let autoCorr = waveform.autoCorrelation(maxLag: 5)
 
@@ -40,7 +40,7 @@ struct AutoCorrelationTests {
 
     @Test("Auto-correlation of sine wave")
     func autoCorrelationSineWave() {
-        let waveform = Waveform1D<Double,Double>.sine(frequency: 1.0, duration: 2.0, samplingRate: 100.0)
+        let waveform = Waveform1D<Double>.sine(frequency: 1.0, duration: 2.0, samplingRate: 100.0)
         let autoCorr = waveform.autoCorrelation(maxLag: 50)
 
         #expect(autoCorr.values.count == 51)  // 0 to 50 lags
@@ -58,7 +58,7 @@ struct AutoCorrelationTests {
     @Test("Auto-correlation with custom max lag")
     func autoCorrelationCustomMaxLag() {
         let values = Array(0..<20).map { Double($0) }
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let autoCorr = waveform.autoCorrelation(maxLag: 5)
 
@@ -68,7 +68,7 @@ struct AutoCorrelationTests {
     @Test("Auto-correlation normalized vs non-normalized")
     func autoCorrelationNormalization() {
         let values = [1.0, 4.0, 2.0, 3.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let normalizedCorr = waveform.autoCorrelation(normalized: true)
         let unnormalizedCorr = waveform.autoCorrelation(normalized: false)
@@ -81,12 +81,11 @@ struct AutoCorrelationTests {
     @Test("Auto-correlation preserves metadata")
     func autoCorrelationMetadata() {
         let values = [1.0, 2.0, 3.0, 4.0]
-        let dt = 0.25
-        let waveform = Waveform1D(values: values, dt: dt)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.25)
 
         let autoCorr = waveform.autoCorrelation()
 
-        #expect(autoCorr.dt == dt)
+        #expect(autoCorr.dt == PrecisionTimeInterval(seconds: 0.25))
         #expect(autoCorr.t0 == nil)
     }
 }
@@ -99,8 +98,8 @@ struct CrossCorrelationTests {
     func basicCrossCorrelation() {
         let values1 = [1.0, 2.0, 3.0]
         let values2 = [1.0, 1.0, 1.0]
-        let waveform1 = Waveform1D(values: values1, dt: 0.1)
-        let waveform2 = Waveform1D(values: values2, dt: 0.1)
+        let waveform1 = Waveform1D(values: values1, dtSeconds: 0.1)
+        let waveform2 = Waveform1D(values: values2, dtSeconds: 0.1)
 
         let crossCorr = waveform1.crossCorrelation(with: waveform2, mode: .full)
 
@@ -112,8 +111,8 @@ struct CrossCorrelationTests {
     @Test("Cross-correlation of identical signals")
     func crossCorrelationIdentical() {
         let values = [1.0, 2.0, 3.0, 2.0, 1.0]
-        let waveform1 = Waveform1D(values: values, dt: 0.1)
-        let waveform2 = Waveform1D(values: values, dt: 0.1)
+        let waveform1 = Waveform1D(values: values, dtSeconds: 0.1)
+        let waveform2 = Waveform1D(values: values, dtSeconds: 0.1)
 
         let crossCorr = waveform1.crossCorrelation(with: waveform2, mode: .full, normalized: true)
 
@@ -130,8 +129,8 @@ struct CrossCorrelationTests {
         let baseSignal = [0.0, 1.0, 2.0, 1.0, 0.0]
         let shiftedSignal = [1.0, 2.0, 1.0, 0.0, 0.0]  // Shifted left by 1
 
-        let waveform1 = Waveform1D(values: baseSignal, dt: 0.1)
-        let waveform2 = Waveform1D(values: shiftedSignal, dt: 0.1)
+        let waveform1 = Waveform1D(values: baseSignal, dtSeconds: 0.1)
+        let waveform2 = Waveform1D(values: shiftedSignal, dtSeconds: 0.1)
 
         let crossCorr = waveform1.crossCorrelation(with: waveform2, mode: .full, normalized: true)
 
@@ -147,8 +146,8 @@ struct CrossCorrelationTests {
 
     @Test("Cross-correlation with sine waves")
     func crossCorrelationSineWaves() {
-        let waveform1 = Waveform1D<Double,Double>.sine(frequency: 2.0, duration: 1.0, samplingRate: 100.0)
-        let waveform2 = Waveform1D<Double,Double>.sine(
+        let waveform1 = Waveform1D<Double>.sine(frequency: 2.0, duration: 1.0, samplingRate: 100.0)
+        let waveform2 = Waveform1D<Double>.sine(
             frequency: 2.0,
             phase: Double.pi / 2,
             duration: 1.0,
@@ -174,8 +173,8 @@ struct CorrelationModesTests {
     func fullCorrelationMode() {
         let values1 = [1.0, 2.0, 3.0]
         let values2 = [1.0, 1.0]
-        let waveform1 = Waveform1D(values: values1, dt: 0.1)
-        let waveform2 = Waveform1D(values: values2, dt: 0.1)
+        let waveform1 = Waveform1D(values: values1, dtSeconds: 0.1)
+        let waveform2 = Waveform1D(values: values2, dtSeconds: 0.1)
 
         let crossCorr = waveform1.crossCorrelation(with: waveform2, mode: .full)
 
@@ -187,8 +186,8 @@ struct CorrelationModesTests {
     func validCorrelationMode() {
         let values1 = [1.0, 2.0, 3.0, 4.0, 5.0]
         let values2 = [1.0, 1.0, 1.0]
-        let waveform1 = Waveform1D(values: values1, dt: 0.1)
-        let waveform2 = Waveform1D(values: values2, dt: 0.1)
+        let waveform1 = Waveform1D(values: values1, dtSeconds: 0.1)
+        let waveform2 = Waveform1D(values: values2, dtSeconds: 0.1)
 
         let crossCorr = waveform1.crossCorrelation(with: waveform2, mode: .valid)
 
@@ -200,8 +199,8 @@ struct CorrelationModesTests {
     func sameCorrelationMode() {
         let values1 = [1.0, 2.0, 3.0, 4.0]
         let values2 = [1.0, 1.0]
-        let waveform1 = Waveform1D(values: values1, dt: 0.1)
-        let waveform2 = Waveform1D(values: values2, dt: 0.1)
+        let waveform1 = Waveform1D(values: values1, dtSeconds: 0.1)
+        let waveform2 = Waveform1D(values: values2, dtSeconds: 0.1)
 
         let crossCorr = waveform1.crossCorrelation(with: waveform2, mode: .same)
 
@@ -213,8 +212,8 @@ struct CorrelationModesTests {
     func validModeIncompatibleLengths() {
         let values1 = [1.0, 2.0]
         let values2 = [1.0, 1.0, 1.0, 1.0]  // Longer than first signal
-        let waveform1 = Waveform1D(values: values1, dt: 0.1)
-        let waveform2 = Waveform1D(values: values2, dt: 0.1)
+        let waveform1 = Waveform1D(values: values1, dtSeconds: 0.1)
+        let waveform2 = Waveform1D(values: values2, dtSeconds: 0.1)
 
         let crossCorr = waveform1.crossCorrelation(with: waveform2, mode: .valid)
 
@@ -229,8 +228,8 @@ struct MaxCorrelationTests {
     @Test("Find max correlation with identical signals")
     func findMaxCorrelationIdentical() {
         let values = [1.0, 3.0, 2.0, 4.0, 1.0]
-        let waveform1 = Waveform1D(values: values, dt: 0.1)
-        let waveform2 = Waveform1D(values: values, dt: 0.1)
+        let waveform1 = Waveform1D(values: values, dtSeconds: 0.1)
+        let waveform2 = Waveform1D(values: values, dtSeconds: 0.1)
 
         let result = waveform1.findMaxCorrelation(with: waveform2)
 
@@ -245,8 +244,8 @@ struct MaxCorrelationTests {
         let original = [0.0, 0.0, 1.0, 2.0, 1.0, 0.0, 0.0]
         let shifted = [0.0, 1.0, 2.0, 1.0, 0.0, 0.0, 0.0]  // Shifted left by 1
 
-        let waveform1 = Waveform1D(values: original, dt: 0.2)
-        let waveform2 = Waveform1D(values: shifted, dt: 0.2)
+        let waveform1 = Waveform1D(values: original, dtSeconds: 0.2)
+        let waveform2 = Waveform1D(values: shifted, dtSeconds: 0.2)
 
         let result = waveform1.findMaxCorrelation(with: waveform2)
 
@@ -260,14 +259,14 @@ struct MaxCorrelationTests {
     func findMaxCorrelationSearchRange() {
         let values1 = [1.0, 2.0, 3.0, 4.0, 5.0]
         let values2 = [3.0, 4.0, 5.0]
-        let waveform1 = Waveform1D(values: values1, dt: 0.1)
-        let waveform2 = Waveform1D(values: values2, dt: 0.1)
+        let waveform1 = Waveform1D(values: values1, dtSeconds: 0.1)
+        let waveform2 = Waveform1D(values: values2, dtSeconds: 0.1)
 
         let result = waveform1.findMaxCorrelation(with: waveform2, searchRange: 1..<4)
 
         #expect(result != nil)
         // Verify the result is within the search range
-        let crossCorr = waveform1.crossCorrelation(with: waveform2, mode: .full)!
+        let _ = waveform1.crossCorrelation(with: waveform2, mode: .full)!
         let actualLag = result!.lagSamples + (values2.count - 1)
         #expect(actualLag >= 1 && actualLag < 4)
     }
@@ -275,8 +274,8 @@ struct MaxCorrelationTests {
     @Test("Find max correlation with invalid search range")
     func findMaxCorrelationInvalidRange() {
         let values = [1.0, 2.0, 3.0]
-        let waveform1 = Waveform1D(values: values, dt: 0.1)
-        let waveform2 = Waveform1D(values: values, dt: 0.1)
+        let waveform1 = Waveform1D(values: values, dtSeconds: 0.1)
+        let waveform2 = Waveform1D(values: values, dtSeconds: 0.1)
 
         let result = waveform1.findMaxCorrelation(with: waveform2, searchRange: 10..<20)
 
@@ -290,18 +289,18 @@ struct CorrelationEdgeCasesTests {
 
     @Test("Auto-correlation with empty signal")
     func autoCorrelationEmpty() {
-        let waveform = Waveform1D(values: [Double](), dt: 0.1)
+        let waveform = Waveform1D(values: [Double](), dtSeconds: 0.1)
 
         let autoCorr = waveform.autoCorrelation()
 
         #expect(autoCorr.values.isEmpty)
-        #expect(autoCorr.dt == 0.1)
+        #expect(autoCorr.dt == PrecisionTimeInterval(seconds: 0.1))
     }
 
     @Test("Cross-correlation with empty signals")
     func crossCorrelationEmpty() {
-        let waveform1 = Waveform1D(values: [Double](), dt: 0.1)
-        let waveform2 = Waveform1D(values: [1.0, 2.0], dt: 0.1)
+        let waveform1 = Waveform1D(values: [Double](), dtSeconds: 0.1)
+        let waveform2 = Waveform1D(values: [1.0, 2.0], dtSeconds: 0.1)
 
         let crossCorr1 = waveform1.crossCorrelation(with: waveform2)
         let crossCorr2 = waveform2.crossCorrelation(with: waveform1)
@@ -312,7 +311,7 @@ struct CorrelationEdgeCasesTests {
 
     @Test("Auto-correlation with single value")
     func autoCorrelationSingle() {
-        let waveform = Waveform1D(values: [5.0], dt: 0.1)
+        let waveform = Waveform1D(values: [5.0], dtSeconds: 0.1)
 
         let autoCorr = waveform.autoCorrelation()
 
@@ -322,8 +321,8 @@ struct CorrelationEdgeCasesTests {
 
     @Test("Cross-correlation with single values")
     func crossCorrelationSingle() {
-        let waveform1 = Waveform1D(values: [3.0], dt: 0.1)
-        let waveform2 = Waveform1D(values: [2.0], dt: 0.1)
+        let waveform1 = Waveform1D(values: [3.0], dtSeconds: 0.1)
+        let waveform2 = Waveform1D(values: [2.0], dtSeconds: 0.1)
 
         let crossCorr = waveform1.crossCorrelation(with: waveform2, mode: .full)
 
@@ -333,7 +332,7 @@ struct CorrelationEdgeCasesTests {
 
     @Test("Auto-correlation with constant signal")
     func autoCorrelationConstant() {
-        let waveform = Waveform1D(values: [5.0, 5.0, 5.0, 5.0], dt: 0.1)
+        let waveform = Waveform1D(values: [5.0, 5.0, 5.0, 5.0], dtSeconds: 0.1)
 
         let autoCorr = waveform.autoCorrelation(normalized: true)
 
@@ -346,8 +345,8 @@ struct CorrelationEdgeCasesTests {
 
     @Test("Cross-correlation with zero variance signal")
     func crossCorrelationZeroVariance() {
-        let waveform1 = Waveform1D(values: [1.0, 2.0, 3.0], dt: 0.1)
-        let waveform2 = Waveform1D(values: [5.0, 5.0, 5.0], dt: 0.1)
+        let waveform1 = Waveform1D(values: [1.0, 2.0, 3.0], dtSeconds: 0.1)
+        let waveform2 = Waveform1D(values: [5.0, 5.0, 5.0], dtSeconds: 0.1)
 
         let crossCorr = waveform1.crossCorrelation(with: waveform2, normalized: true)
 
@@ -357,7 +356,7 @@ struct CorrelationEdgeCasesTests {
 
     @Test("Auto-correlation with zero values")
     func autoCorrelationZeros() {
-        let waveform = Waveform1D(values: [0.0, 0.0, 0.0, 0.0], dt: 0.1)
+        let waveform = Waveform1D(values: [0.0, 0.0, 0.0, 0.0], dtSeconds: 0.1)
 
         let autoCorr = waveform.autoCorrelation()
 
@@ -375,7 +374,7 @@ struct CorrelationMathematicalPropertiesTests {
     @Test("Auto-correlation symmetry property")
     func autoCorrelationSymmetry() {
         let values = [1.0, 3.0, 2.0, 4.0, 1.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         // Create a symmetric auto-correlation by computing both directions
         let fullAutoCorr = waveform.crossCorrelation(with: waveform, mode: .full, normalized: true)!
@@ -393,7 +392,7 @@ struct CorrelationMathematicalPropertiesTests {
     @Test("Cross-correlation maximum at zero lag for identical signals")
     func crossCorrelationMaxAtZeroLag() {
         let values = [1.0, 4.0, 2.0, 3.0, 1.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let crossCorr = waveform.crossCorrelation(with: waveform, mode: .full, normalized: true)!
 
@@ -407,8 +406,8 @@ struct CorrelationMathematicalPropertiesTests {
     func normalizedCorrelationBounds() {
         let values1 = [1.0, 3.0, 2.0, 4.0, 1.0]
         let values2 = [2.0, 1.0, 3.0, 1.0, 2.0]
-        let waveform1 = Waveform1D(values: values1, dt: 0.1)
-        let waveform2 = Waveform1D(values: values2, dt: 0.1)
+        let waveform1 = Waveform1D(values: values1, dtSeconds: 0.1)
+        let waveform2 = Waveform1D(values: values2, dtSeconds: 0.1)
 
         let crossCorr = waveform1.crossCorrelation(with: waveform2, normalized: true)!
 
@@ -422,7 +421,7 @@ struct CorrelationMathematicalPropertiesTests {
     @Test("Auto-correlation at zero lag equals signal energy")
     func autoCorrelationZeroLagEnergy() {
         let values = [1.0, 2.0, 3.0, 2.0, 1.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let autoCorr = waveform.autoCorrelation(normalized: false)
         let signalEnergy = values.map { $0 * $0 }.reduce(0.0, +)
@@ -438,7 +437,7 @@ struct CorrelationFloatingPointTypesTests {
     @Test("Auto-correlation with Float")
     func autoCorrelationFloat() {
         let values: [Float] = [1.0, 2.0, 3.0, 2.0, 1.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let autoCorr = waveform.autoCorrelation()
 
@@ -450,8 +449,8 @@ struct CorrelationFloatingPointTypesTests {
     func crossCorrelationFloat() {
         let values1: [Float] = [1.0, 2.0, 3.0]
         let values2: [Float] = [1.0, 1.0, 1.0]
-        let waveform1 = Waveform1D(values: values1, dt: 0.1)
-        let waveform2 = Waveform1D(values: values2, dt: 0.1)
+        let waveform1 = Waveform1D(values: values1, dtSeconds: 0.1)
+        let waveform2 = Waveform1D(values: values2, dtSeconds: 0.1)
 
         let crossCorr = waveform1.crossCorrelation(with: waveform2)
 
@@ -462,8 +461,8 @@ struct CorrelationFloatingPointTypesTests {
     @Test("Find max correlation with Float")
     func findMaxCorrelationFloat() {
         let values: [Float] = [1.0, 2.0, 3.0, 2.0, 1.0]
-        let waveform1 = Waveform1D(values: values, dt: 0.1)
-        let waveform2 = Waveform1D(values: values, dt: 0.1)
+        let waveform1 = Waveform1D(values: values, dtSeconds: 0.1)
+        let waveform2 = Waveform1D(values: values, dtSeconds: 0.1)
 
         let result = waveform1.findMaxCorrelation(with: waveform2)
 
@@ -480,7 +479,7 @@ struct CorrelationPerformanceTests {
     @Test("Auto-correlation performance with large dataset", .timeLimit(.minutes(1)))
     func autoCorrelationPerformance() {
         let values = (0..<5000).map { i in sin(Double(i) * 0.01) }
-        let waveform = Waveform1D(values: values, dt: 0.01)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.01)
 
         let autoCorr = waveform.autoCorrelation(maxLag: 1000)
 
@@ -492,8 +491,8 @@ struct CorrelationPerformanceTests {
     func crossCorrelationPerformance() {
         let values1 = (0..<2000).map { i in sin(Double(i) * 0.02) }
         let values2 = (0..<1000).map { i in cos(Double(i) * 0.02) }
-        let waveform1 = Waveform1D(values: values1, dt: 0.01)
-        let waveform2 = Waveform1D(values: values2, dt: 0.01)
+        let waveform1 = Waveform1D(values: values1, dtSeconds: 0.01)
+        let waveform2 = Waveform1D(values: values2, dtSeconds: 0.01)
 
         let crossCorr = waveform1.crossCorrelation(with: waveform2, mode: .valid)
 
@@ -506,8 +505,8 @@ struct CorrelationPerformanceTests {
         let baseSignal = (0..<1000).map { i in sin(Double(i) * 0.05) + 0.1 * Double.random(in: -1...1) }
         let shiftedSignal = Array(baseSignal[50...]) + Array(repeating: 0.0, count: 50)
 
-        let waveform1 = Waveform1D(values: baseSignal, dt: 0.01)
-        let waveform2 = Waveform1D(values: shiftedSignal, dt: 0.01)
+        let waveform1 = Waveform1D(values: baseSignal, dtSeconds: 0.01)
+        let waveform2 = Waveform1D(values: shiftedSignal, dtSeconds: 0.01)
 
         let result = waveform1.findMaxCorrelation(with: waveform2)
 
@@ -523,7 +522,7 @@ struct CorrelationApplicationTests {
     @Test("Signal delay detection")
     func signalDelayDetection() {
         // Create a reference signal and a delayed version
-        let reference = Waveform1D<Double,Double>.triangle(frequency: 5.0, duration: 1.0, samplingRate: 100.0)
+        let reference = Waveform1D<Double>.triangle(frequency: 5.0, duration: 1.0, samplingRate: 100.0)
 
         // Create delayed signal by padding with zeros
         let delayInSamples = 10
@@ -539,7 +538,7 @@ struct CorrelationApplicationTests {
 
     @Test("Periodic signal correlation")
     func periodicSignalCorrelation() {
-        let waveform1 = Waveform1D<Double,Double>.sine(frequency: 2.0, duration: 2.0, samplingRate: 50.0)
+        let waveform1 = Waveform1D<Double>.sine(frequency: 2.0, duration: 2.0, samplingRate: 50.0)
 
         let autoCorr = waveform1.autoCorrelation(maxLag: 50)
 
@@ -561,7 +560,7 @@ struct CorrelationApplicationTests {
     func noiseCorrelationProperties() {
         // Generate white noise
         let noiseValues = (0..<200).map { _ in Double.random(in: -1...1) }
-        let noiseWaveform = Waveform1D(values: noiseValues, dt: 0.01)
+        let noiseWaveform = Waveform1D(values: noiseValues, dtSeconds: 0.01)
 
         let autoCorr = noiseWaveform.autoCorrelation(maxLag: 50, normalized: true)
 
@@ -578,7 +577,7 @@ struct CorrelationApplicationTests {
     @Test("Mixed signal correlation")
     func mixedSignalCorrelation() {
         // Create a signal with both sine and noise components
-        let pure = Waveform1D<Double,Double>.sine(frequency: 3.0, duration: 1.0, samplingRate: 100.0)
+        let pure = Waveform1D<Double>.sine(frequency: 3.0, duration: 1.0, samplingRate: 100.0)
         let noise = (0..<100).map { _ in 0.2 * Double.random(in: -1...1) }
         let mixed = pure.values.enumerated().map { index, value in value + noise[index] }
         let mixedWaveform = Waveform1D(values: mixed, dt: pure.dt)

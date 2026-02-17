@@ -5,13 +5,13 @@ import FoundationTypes
 extension Waveform1D where T: BinaryFloatingPoint {
 
     /// Apply a window function to the waveform
-    /// - Parameter WaveformWindowType: The type of window to apply
+    /// - Parameter windowType: The type of window to apply
     /// - Returns: New waveform with the window function applied
-    public func windowed(with WaveformWindowType: WaveformWindowType<U>) -> Waveform1D<T> {
+    public func windowed(with windowType: WaveformWindowType) -> Waveform1D<T> {
         guard !values.isEmpty else { return self }
 
-        let windowCoefficients = Self.generateWindow(type: WaveformWindowType, length: values.count)
-        let windowedValues = zip(values, windowCoefficients).map { $0 * T($1) }
+        let windowCoefficients = Self.generateWindow(type: windowType, length: values.count)
+        let windowedValues = zip(values, windowCoefficients).map { $0 * $1 }
 
         return Waveform1D(values: windowedValues, dt: dt, t0: t0)
     }
@@ -21,11 +21,11 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - type: The window function type
     ///   - length: The number of samples in the window
     /// - Returns: Array of window coefficients
-    public static func generateWindow(type: WaveformWindowType<U>, length: Int) -> [T] {
+    public static func generateWindow(type: WaveformWindowType, length: Int) -> [T] {
         guard length > 0 else { return [] }
         guard length > 1 else { return [T(1.0)] }
 
-        let n = T(length)
+        let n = Double(length)
 
         switch type {
         case .rectangular:
@@ -33,81 +33,88 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
         case .hanning:
             return (0..<length).map { i in
-                0.5 * (1.0 - cos(2.0 * T.pi * T(i) / (n - 1.0)))
+                T(0.5 * (1.0 - cos(2.0 * .pi * Double(i) / (n - 1.0))))
             }
 
         case .hamming:
             return (0..<length).map { i in
-                0.54 - 0.46 * cos(2.0 * .pi * Double(i) / (n - 1.0))
+                T(0.54 - 0.46 * cos(2.0 * .pi * Double(i) / (n - 1.0)))
             }
 
         case .blackman:
             return (0..<length).map { i in
                 let factor = 2.0 * .pi * Double(i) / (n - 1.0)
-                return 0.42 - 0.5 * cos(factor) + 0.08 * cos(2.0 * factor)
+                return T(0.42 - 0.5 * cos(factor) + 0.08 * cos(2.0 * factor))
             }
 
         case .blackmanHarris:
             return (0..<length).map { i in
                 let factor = 2.0 * .pi * Double(i) / (n - 1.0)
-                return 0.35875 - 0.48829 * cos(factor) + 0.14128 * cos(2.0 * factor) - 0.01168 * cos(3.0 * factor)
+                let a = 0.35875 - 0.48829 * cos(factor)
+                let b = 0.14128 * cos(2.0 * factor) - 0.01168 * cos(3.0 * factor)
+                return T(a + b)
             }
 
         case .kaiser(let beta):
+            // NOTE: beta is PrecisionTimeInterval — extract as Double
+            // This is a design issue in the support type; beta is semantically unitless
+            let betaValue = beta.secondsAsDouble
             let alpha = (n - 1.0) / 2.0
-            let i0Beta = modifiedBesselI0(beta)
+            let i0Beta = modifiedBesselI0(betaValue)
 
             return (0..<length).map { i in
                 let x = (Double(i) - alpha) / alpha
-                let arg = beta * sqrt(1.0 - x * x)
-                return modifiedBesselI0(arg) / i0Beta
+                let arg = betaValue * sqrt(1.0 - x * x)
+                return T(modifiedBesselI0(arg) / i0Beta)
             }
 
         case .tukey(let r):
-            let clampedR = max(0.0, min(1.0, r))
+            // NOTE: r is PrecisionTimeInterval — extract as Double
+            // This is a design issue in the support type; taper ratio is semantically unitless
+            let clampedR = max(0.0, min(1.0, r.secondsAsDouble))
 
             return (0..<length).map { i in
                 let x = Double(i) / (n - 1.0)
 
                 if x < clampedR / 2.0 {
                     // Taper up
-                    return 0.5 * (1.0 + cos(.pi * (2.0 * x / clampedR - 1.0)))
+                    return T(0.5 * (1.0 + cos(.pi * (2.0 * x / clampedR - 1.0))))
                 } else if x > 1.0 - clampedR / 2.0 {
                     // Taper down
-                    return 0.5 * (1.0 + cos(.pi * (2.0 * (x - 1.0 + clampedR / 2.0) / clampedR)))
+                    return T(0.5 * (1.0 + cos(.pi * (2.0 * (x - 1.0 + clampedR / 2.0) / clampedR))))
                 } else {
                     // Flat top
-                    return 1.0
+                    return T(1.0)
                 }
             }
 
         case .bartlett:
             return (0..<length).map { i in
                 let x = Double(i) / (n - 1.0)
-                return 1.0 - 2.0 * abs(x - 0.5)
+                return T(1.0 - 2.0 * abs(x - 0.5))
             }
 
         case .welch:
             return (0..<length).map { i in
                 let x = (Double(i) - (n - 1.0) / 2.0) / ((n - 1.0) / 2.0)
-                return 1.0 - x * x
+                return T(1.0 - x * x)
             }
         }
     }
 
     /// Calculate the coherent gain of a window function
-    /// - Parameter WaveformWindowType: The window function type
+    /// - Parameter windowType: The window function type
     /// - Returns: The coherent gain factor
-    public func windowCoherentGain(for WaveformWindowType: WaveformWindowType<U>) -> T {
-        let window = Self.generateWindow(type: WaveformWindowType, length: values.count)
+    public func windowCoherentGain(for windowType: WaveformWindowType) -> T {
+        let window = Self.generateWindow(type: windowType, length: values.count)
         return window.reduce(T(0.0), +) / T(window.count)
     }
 
     /// Calculate the processing gain of a window function
-    /// - Parameter WaveformWindowType: The window function type
+    /// - Parameter windowType: The window function type
     /// - Returns: The processing gain factor
-    public func windowProcessingGain(for WaveformWindowType: WaveformWindowType<U>) -> T {
-        let window = Self.generateWindow(type: WaveformWindowType, length: values.count)
+    public func windowProcessingGain(for windowType: WaveformWindowType) -> T {
+        let window = Self.generateWindow(type: windowType, length: values.count)
         let sumSquares = window.reduce(T(0.0)) { $0 + $1 * $1 }
         return sqrt(sumSquares / T(window.count))
     }
@@ -115,23 +122,25 @@ extension Waveform1D where T: BinaryFloatingPoint {
     // MARK: - Private Helper Functions
 
     /// Modified Bessel function of the first kind, order 0
-    private static func modifiedBesselI0(_ x: T) -> T {
+    private static func modifiedBesselI0(_ x: Double) -> Double {
         let ax = abs(x)
-        var ans: T
 
         if ax < 3.75 {
             let y = x / 3.75
             let y2 = y * y
-            ans =
-                1.0 + y2
+            return 1.0 + y2
                 * (3.5156229 + y2
                     * (3.0899424 + y2 * (1.2067492 + y2 * (0.2659732 + y2 * (0.360768e-1 + y2 * 0.45813e-2)))))
         } else {
             let y = 3.75 / ax
-            ans =
-                (exp(ax) / sqrt(ax)) * (0.39894228 + y * (0.1328592e-1 + y * (0.225319e-2 + y * (-0.157565e-2 + y  * (0.916281e-2 + y * (-0.2057706e-1 + y * (0.2635537e-1 + y * (-0.1647633e-1 + y * 0.392377e-2))))))))
+            return (exp(ax) / sqrt(ax))
+                * (0.39894228 + y
+                    * (0.1328592e-1 + y
+                        * (0.225319e-2 + y
+                            * (-0.157565e-2 + y
+                                * (0.916281e-2 + y
+                                    * (-0.2057706e-1 + y
+                                        * (0.2635537e-1 + y * (-0.1647633e-1 + y * 0.392377e-2))))))))
         }
-
-        return ans
     }
 }

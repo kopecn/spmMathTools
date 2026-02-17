@@ -22,26 +22,8 @@ extension Waveform1D {
         guard let t0 = self.t0 else { return nil }
         guard startDate <= endDate else { return nil }
 
-        // Convert PrecisionTimeInterval to T (not U)
-        let startInterval = startDate - t0
-        let startTime: T = {
-            let seconds = T(startInterval.seconds) + T(startInterval.attoseconds) / T(PrecisionTimeInterval.attosecondsPerSecond)
-            switch startInterval.sign {
-            case .positive: return seconds
-            case .negative: return -seconds
-            case .zero: return 0
-            }
-        }()
-
-        let endInterval = endDate - t0
-        let endTime: T = {
-            let seconds = T(endInterval.seconds) + T(endInterval.attoseconds) / T(PrecisionTimeInterval.attosecondsPerSecond)
-            switch endInterval.sign {
-            case .positive: return seconds
-            case .negative: return -seconds
-            case .zero: return 0
-            }
-        }()
+        let startTime: Double = (startDate - t0).secondsAsDouble
+        let endTime: Double = (endDate - t0).secondsAsDouble
 
         return subset(
             fromTime: startTime,
@@ -55,16 +37,16 @@ extension Waveform1D {
 
     /// Extract a subset of the waveform using a time range
     /// - Parameters:
-    ///   - startTime: Start time for the subset
-    ///   - endTime: End time for the subset
+    ///   - startTime: Start time for the subset (in seconds)
+    ///   - endTime: End time for the subset (in seconds)
     ///   - paddingBefore: Number of samples to pad before start with first value
     ///   - paddingAfter: Number of samples to pad after end with last value
     ///   - retainT0: If true, keeps original t0. If false, sets t0 to nil
     ///   - WaveformTimeReference: Whether time is relative to waveform start or Unix epoch
     /// - Returns: New waveform subset or nil if time range is outside waveform bounds
     public func subset(
-        fromTime startTime: T,
-        toTime endTime: T,
+        fromTime startTime: Double,
+        toTime endTime: Double,
         paddingBefore: Int = 0,
         paddingAfter: Int = 0,
         retainT0: Bool = true,
@@ -74,49 +56,36 @@ extension Waveform1D {
         guard !values.isEmpty else { return nil }
         guard startTime <= endTime else { return nil }
 
-        var adjustedStartTime: T = startTime
-        var adjustedEndTime: T = endTime
+        var adjustedStartTime: Double = startTime
+        var adjustedEndTime: Double = endTime
 
         switch WaveformTimeReference {
         case .waveformStart:
-            // already set above
             break
         case .epoch:
             guard let t0 = self.t0 else { return nil }
-            // Convert t0's interval from epoch to T
-            let t0Seconds = T(t0.interval.seconds) + T(t0.interval.attoseconds) / T(PrecisionTimeInterval.attosecondsPerSecond)
-            let t0Interval: T
-            switch t0.interval.sign {
-            case .positive: t0Interval = t0Seconds
-            case .negative: t0Interval = -t0Seconds
-            case .zero: t0Interval = 0
-            }
+            let t0Interval: Double = t0.interval.secondsAsDouble
             adjustedStartTime = startTime - t0Interval
             adjustedEndTime = endTime - t0Interval
         }
 
-        let waveformDuration = T(values.count - 1) * dt
+        let dtSeconds = dt.secondsAsDouble
+        let waveformDuration = Double(values.count - 1) * dtSeconds
 
-        // Check if range is completely outside waveform bounds
         if adjustedEndTime < 0 || adjustedStartTime > waveformDuration {
             return nil
         }
 
-        // Calculate nearest sample indices
-        let startIndex = Int(round(adjustedStartTime / dt))
-        let endIndex = Int(round(adjustedEndTime / dt))
+        let startIndex = Int(round(adjustedStartTime / dtSeconds))
+        let endIndex = Int(round(adjustedEndTime / dtSeconds))
 
-        // Clamp indices to valid range
         let clampedStartIndex = max(0, min(startIndex, values.count - 1))
         let clampedEndIndex = max(0, min(endIndex, values.count - 1))
 
-        // Ensure we have a valid range
         guard clampedStartIndex <= clampedEndIndex else { return nil }
 
-        // Extract subset values
         var subsetValues = Array(values[clampedStartIndex...clampedEndIndex])
 
-        // Add padding if requested
         if paddingBefore > 0, let firstValue = subsetValues.first {
             let paddingValues = Array(repeating: firstValue, count: paddingBefore)
             subsetValues = paddingValues + subsetValues
@@ -127,11 +96,10 @@ extension Waveform1D {
             subsetValues = subsetValues + paddingValues
         }
 
-        // Calculate new t0 if retaining
         let newT0: PrecisionTimestamp?
         if retainT0, let originalT0 = self.t0 {
-            let timeOffset = T(clampedStartIndex - paddingBefore) * dt
-            newT0 = originalT0 + timeOffset
+            let timeOffset = Double(clampedStartIndex - paddingBefore) * dtSeconds
+            newT0 = originalT0.addingTimeInterval(add: timeOffset)
         } else {
             newT0 = nil
         }

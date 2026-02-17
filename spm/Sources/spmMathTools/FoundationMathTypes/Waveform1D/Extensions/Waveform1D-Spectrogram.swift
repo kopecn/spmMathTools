@@ -2,7 +2,7 @@ import Foundation
 import FoundationTypes
 
 // MARK: - Spectrogram and Time-Frequency Analysis
-extension Waveform1D where T: BinaryFloatingPoint {
+extension Waveform1D where T: BinaryFloatingPoint & SIMDScalar {
 
     /// Compute the spectrogram using Short-Time Fourier Transform (STFT)
     /// - Parameters:
@@ -15,10 +15,10 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func spectrogram(
         windowSize: Int = 256,
         hopSize: Int? = nil,
-        windowType: WaveformWindowType<U> = .hanning,
+        windowType: WaveformWindowType = .hanning,
         scaling: WaveformSpectrogramScaling = .magnitude,
         frequencyRange: WaveformFrequencyRange<T>? = nil
-    ) -> WaveformSpectrogram<T,U>? {
+    ) -> WaveformSpectrogram<T>? {
 
         guard !values.isEmpty && windowSize > 0 && windowSize <= values.count else { return nil }
 
@@ -29,12 +29,12 @@ extension Waveform1D where T: BinaryFloatingPoint {
         let numFrames = max(1, (values.count - windowSize) / actualHopSize + 1)
 
         // Generate window coefficients
-        let window = generateWindow(type: windowType, length: windowSize)
+        let window = Self.generateWindow(type: windowType, length: windowSize)
 
         // Calculate frequency bins
         let frequencyBins = calculateFrequencyBins(windowSize: windowSize)
         let (startBin, endBin) = getFrequencyBinRange(frequencyBins: frequencyBins, range: frequencyRange)
-        let selectedFrequencies = Array(frequencyBins[startBin..<endBin])
+        let selectedFrequencies = Array(frequencyBins[startBin..<endBin]).map { Double($0) }
 
         // Initialize spectrogram matrix
         var spectrogramData: [[T]] = Array(
@@ -42,17 +42,24 @@ extension Waveform1D where T: BinaryFloatingPoint {
             count: numFrames
         )
 
-        // Calculate time frames
-        var timeFrames: [TimeInterval] = []
+        // Calculate time frames as PrecisionTimestamps
+        var timeFrames: [PrecisionTimestamp] = []
 
         // Process each time frame
         for frameIndex in 0..<numFrames {
             let startSample = frameIndex * actualHopSize
-            let endSample = min(startSample + windowSize, values.count)
 
             // Calculate time for this frame (center of window)
-            let frameTime = TimeInterval(startSample + windowSize / 2) * dt
-            timeFrames.append(frameTime)
+            let centerSample = startSample + windowSize / 2
+            if let t0 = t0 {
+                timeFrames.append(t0 + dt * centerSample)
+            } else {
+                // Use epoch-based timestamp if no t0
+                let frameInterval = dt * centerSample
+                timeFrames.append(PrecisionTimestamp(interval: frameInterval))
+            }
+
+            let endSample = min(startSample + windowSize, values.count)
 
             // Extract and pad segment if necessary
             var segment = Array(values[startSample..<endSample])
@@ -62,7 +69,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
             }
 
             // Apply window function
-            let windowedSegment = zip(segment, window).map { T($0.0) * T($0.1) }
+            let windowedSegment = zip(segment, window).map { $0 * $1 }
 
             // Perform FFT
             if let fftResult = performSTFT(windowedSegment) {
@@ -80,6 +87,8 @@ extension Waveform1D where T: BinaryFloatingPoint {
             }
         }
 
+        let sampRate: Double = samplingFrequencyInHz()
+
         return WaveformSpectrogram(
             timeFrames: timeFrames,
             frequencies: selectedFrequencies,
@@ -88,7 +97,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
             hopSize: actualHopSize,
             windowType: windowType,
             scaling: scaling,
-            samplingRate: samplingFrequency,
+            samplingRate: sampRate,
             originalDuration: duration
         )
     }
@@ -107,13 +116,14 @@ extension Waveform1D where T: BinaryFloatingPoint {
         numMelBins: Int = 80,
         minFreq: Double = 0.0,
         maxFreq: Double? = nil
-    ) -> WaveformMelSpectrogram<T>? {
+    ) -> WaveformMelSpectrogram? {
 
-        let actualMaxFreq = maxFreq ?? nyquistFrequency
+        let nyquist: Double = nyquistFrequencyInHz()
+        let actualMaxFreq = maxFreq ?? nyquist
 
         // First compute regular spectrogram
         guard
-            let spectrogram = self.spectrogram(
+            let spec = self.spectrogram(
                 windowSize: windowSize,
                 hopSize: hopSize,
                 scaling: .powerSpectralDensity
@@ -123,22 +133,22 @@ extension Waveform1D where T: BinaryFloatingPoint {
         // Create mel filter bank
         let melFilters = createMelFilterBank(
             numBins: numMelBins,
-            frequencyBins: spectrogram.frequencies.map { Double($0) },
+            frequencyBins: spec.frequencies,
             minFreq: minFreq,
             maxFreq: actualMaxFreq
         )
 
         // Apply mel filters to spectrogram
-        var melData: [[T]] = []
+        var melData: [[Double]] = []
 
-        for timeFrame in spectrogram.data {
-            var melFrame: [T] = []
+        for timeFrame in spec.data {
+            var melFrame: [Double] = []
 
             for melFilter in melFilters {
-                var melValue = T.zero
+                var melValue = 0.0
                 for (freqIndex, filterValue) in melFilter.enumerated() {
                     if freqIndex < timeFrame.count {
-                        melValue += timeFrame[freqIndex] * T(filterValue)
+                        melValue += Double(timeFrame[freqIndex]) * filterValue
                     }
                 }
                 melFrame.append(melValue)
@@ -148,21 +158,23 @@ extension Waveform1D where T: BinaryFloatingPoint {
         }
 
         // Create mel frequency axis
-        let melFrequencies = (0..<numMelBins).map { i in
+        let melFrequencies = (0..<numMelBins).map { i -> Double in
             let melMin = hzToMel(minFreq)
             let melMax = hzToMel(actualMaxFreq)
             let mel = melMin + (melMax - melMin) * Double(i) / Double(numMelBins - 1)
-            return T(melToHz(mel))
+            return melToHz(mel)
         }
 
+        let sampRate: Double = samplingFrequencyInHz()
+
         return WaveformMelSpectrogram(
-            timeFrames: spectrogram.timeFrames,
+            timeFrames: spec.timeFrames,
             melFrequencies: melFrequencies,
             data: melData,
             windowSize: windowSize,
             hopSize: hopSize ?? (windowSize / 4),
             numMelBins: numMelBins,
-            samplingRate: samplingFrequency
+            samplingRate: PrecisionTimeInterval(seconds: sampRate)
         )
     }
 
@@ -171,14 +183,14 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - windowSize: Analysis window size
     ///   - hopSize: Hop size between windows
     /// - Returns: Instantaneous frequency matrix
-    public func instantaneousFrequency(
+    public func spectrogramInstantaneousFrequency(
         windowSize: Int = 256,
         hopSize: Int? = nil
     ) -> WaveformInstantaneousFrequency<T>? {
 
         // Compute spectrograms with phase information
         guard
-            let spectrogram = self.spectrogram(
+            let spec = self.spectrogram(
                 windowSize: windowSize,
                 hopSize: hopSize,
                 scaling: .complex
@@ -186,8 +198,8 @@ extension Waveform1D where T: BinaryFloatingPoint {
         else { return nil }
 
         let actualHopSize = hopSize ?? (windowSize / 4)
-        let numFrames = spectrogram.timeFrames.count
-        let numFreqs = spectrogram.frequencies.count
+        let numFrames = spec.timeFrames.count
+        let numFreqs = spec.frequencies.count
 
         var instFreqData: [[T]] = Array(
             repeating: Array(repeating: T.zero, count: numFreqs),
@@ -195,10 +207,11 @@ extension Waveform1D where T: BinaryFloatingPoint {
         )
 
         // Calculate instantaneous frequency from phase derivatives
+        let dtSeconds = T(dt.secondsAsDouble)
         for frameIndex in 1..<numFrames {
             for freqIndex in 0..<numFreqs {
-                let currentPhase = getPhaseFromComplex(spectrogram.data[frameIndex][freqIndex])
-                let previousPhase = getPhaseFromComplex(spectrogram.data[frameIndex - 1][freqIndex])
+                let currentPhase = getPhaseFromComplex(spec.data[frameIndex][freqIndex])
+                let previousPhase = getPhaseFromComplex(spec.data[frameIndex - 1][freqIndex])
 
                 // Unwrap phase difference
                 var phaseDiff = currentPhase - previousPhase
@@ -206,16 +219,21 @@ extension Waveform1D where T: BinaryFloatingPoint {
                 while phaseDiff < -T.pi { phaseDiff += T(2.0 * Double.pi) }
 
                 // Convert to instantaneous frequency
-                let deltaT = T(actualHopSize) * T(dt)
-                let instFreq = spectrogram.frequencies[freqIndex] + phaseDiff / (T(2.0 * Double.pi) * deltaT)
+                let deltaT = T(actualHopSize) * dtSeconds
+                let instFreq = T(spec.frequencies[freqIndex]) + phaseDiff / (T(2.0 * Double.pi) * deltaT)
 
                 instFreqData[frameIndex - 1][freqIndex] = instFreq
             }
         }
 
+        // Convert timeFrames from PrecisionTimestamp to T (seconds offset)
+        let timeFrameValues: [T] = spec.timeFrames.dropLast().map { ts in
+            T(ts.interval.secondsAsDouble)
+        }
+
         return WaveformInstantaneousFrequency(
-            timeFrames: Array(spectrogram.timeFrames.dropLast()),
-            frequencies: spectrogram.frequencies,
+            timeFrames: timeFrameValues,
+            frequencies: spec.frequencies.map { T($0) },
             instantaneousFrequencies: instFreqData
         )
     }
@@ -223,45 +241,43 @@ extension Waveform1D where T: BinaryFloatingPoint {
     // MARK: - Private Helper Methods
 
     private func performSTFT(_ windowedSegment: [T]) -> (magnitudes: [T], phases: [T])? {
-        // Convert to doubles for FFT processing
-        let doubleSegment = windowedSegment.map { Double($0) }
-
         // Create complex array for FFT
-        var complex = doubleSegment.map { Complex<T>(real: T($0), imaginary: T.zero) }
+        var complex = windowedSegment.map { Complex<T>(real: $0, imaginary: T.zero) }
 
         // Pad to next power of 2
-        let fftSize = nextPowerOfTwo(complex.count)
+        let fftSize = spectrogramNextPowerOfTwo(complex.count)
         while complex.count < fftSize {
             complex.append(Complex<T>(real: T.zero, imaginary: T.zero))
         }
 
-        // Perform FFT (reuse from FFT extension)
+        // Perform FFT
         fft_cooleyTukey(&complex)
 
         // Extract magnitudes and phases (only positive frequencies)
         let nyquistBin = fftSize / 2
-        let magnitudes = (0..<nyquistBin).map { T(complex[$0].magnitude) }
-        let phases = (0..<nyquistBin).map { T(complex[$0].phase) }
+        let magnitudes = (0..<nyquistBin).map { complexMagnitude(complex[$0]) }
+        let phases = (0..<nyquistBin).map { complexPhase(complex[$0]) }
 
         return (magnitudes, phases)
     }
 
     private func calculateFrequencyBins(windowSize: Int) -> [T] {
-        let fftSize = nextPowerOfTwo(windowSize)
+        let fftSize = spectrogramNextPowerOfTwo(windowSize)
         let nyquistBin = fftSize / 2
+        let sampRate = 1.0 / dt.secondsAsDouble
 
         return (0..<nyquistBin).map { i in
-            T(Double(i) * samplingFrequency / Double(fftSize))
+            T(Double(i) * sampRate / Double(fftSize))
         }
     }
 
-    private func getFrequencyBinRange(frequencyBins: [T], range: WaveformFrequencyRange?) -> (start: Int, end: Int) {
+    private func getFrequencyBinRange(frequencyBins: [T], range: WaveformFrequencyRange<T>?) -> (start: Int, end: Int) {
         guard let range = range else {
             return (0, frequencyBins.count)
         }
 
-        let startBin = frequencyBins.firstIndex { $0 >= T(range.minFreq) } ?? 0
-        let endBin = frequencyBins.lastIndex { $0 <= T(range.maxFreq) }?.advanced(by: 1) ?? frequencyBins.count
+        let startBin = frequencyBins.firstIndex { $0 >= range.minFreq } ?? 0
+        let endBin = frequencyBins.lastIndex { $0 <= range.maxFreq }?.advanced(by: 1) ?? frequencyBins.count
 
         return (startBin, min(endBin, frequencyBins.count))
     }
@@ -316,9 +332,11 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
             for (freqIndex, freq) in frequencyBins.enumerated() {
                 if freq >= leftHz && freq <= centerHz {
-                    filter[freqIndex] = (freq - leftHz) / (centerHz - leftHz)
+                    let denom = centerHz - leftHz
+                    filter[freqIndex] = denom > 0 ? (freq - leftHz) / denom : 0.0
                 } else if freq > centerHz && freq <= rightHz {
-                    filter[freqIndex] = (rightHz - freq) / (rightHz - centerHz)
+                    let denom = rightHz - centerHz
+                    filter[freqIndex] = denom > 0 ? (rightHz - freq) / denom : 0.0
                 }
             }
 
@@ -336,45 +354,41 @@ extension Waveform1D where T: BinaryFloatingPoint {
         return 700.0 * (pow(10.0, mel / 2595.0) - 1.0)
     }
 
-    // Reuse from FFT extension
-    private func nextPowerOfTwo(_ n: Int) -> Int {
+    private func spectrogramNextPowerOfTwo(_ n: Int) -> Int {
         guard n > 1 else { return 1 }
         return 1 << Int(ceil(log2(Double(n))))
-    }
-
-    // Reuse from existing windowing functionality
-    private func generateWindow(type: WaveformWindowType, length: Int) -> [Double] {
-        // This would call the existing generateWindow function from the windowing extension
-        return Waveform1D<Double,Double>.generateWindow(type: type, length: length)
     }
 }
 
 // MARK: - Spectrogram Analysis and Utilities
-extension Waveform1D where T: BinaryFloatingPoint {
+extension Waveform1D where T: BinaryFloatingPoint & SIMDScalar {
 
     /// Extract spectral features from spectrogram
     /// - Parameter spectrogram: Input spectrogram
     /// - Returns: Spectral features including centroid, rolloff, etc.
-    public static func extractSpectralFeatures(from spectrogram: WaveformSpectrogram<T>) -> WaveformSpectralFeatures<T>
-    {
-        var spectralCentroids: [T] = []
-        var spectralRolloffs: [T] = []
-        var spectralFluxes: [T] = []
+    // TODO: WaveformSpectralFeatures uses PrecisionTimestamp for centroids and PrecisionTimeInterval
+    // for rolloffs, which is semantically incorrect for spectral values. This is a design issue
+    // in the support type. For now we convert to match the type definition.
+    public static func extractSpectralFeatures(from spectrogram: WaveformSpectrogram<T>) -> WaveformSpectralFeatures {
+        var spectralCentroids: [PrecisionTimestamp] = []
+        var spectralRolloffs: [PrecisionTimeInterval] = []
+        var spectralFluxes: [Double] = []
 
         for (timeIndex, timeFrame) in spectrogram.data.enumerated() {
             // Spectral centroid
             let totalEnergy = timeFrame.reduce(T.zero, +)
             if totalEnergy > T.zero {
-                let weightedSum = zip(timeFrame, spectrogram.frequencies).reduce(T.zero) { $0 + $1.0 * $1.1 }
-                spectralCentroids.append(weightedSum / totalEnergy)
+                let weightedSum = zip(timeFrame, spectrogram.frequencies).reduce(0.0) { $0 + Double($1.0) * $1.1 }
+                let centroidHz = weightedSum / Double(totalEnergy)
+                spectralCentroids.append(PrecisionTimestamp(interval: PrecisionTimeInterval(seconds: centroidHz)))
             } else {
-                spectralCentroids.append(T.zero)
+                spectralCentroids.append(PrecisionTimestamp(interval: .zero))
             }
 
             // Spectral rolloff (95% energy point)
             let rolloffThreshold = totalEnergy * T(0.95)
             var cumulativeEnergy = T.zero
-            var rolloffFreq = spectrogram.frequencies.last ?? T.zero
+            var rolloffFreq = spectrogram.frequencies.last ?? 0.0
 
             for (freqIndex, energy) in timeFrame.enumerated() {
                 cumulativeEnergy += energy
@@ -383,18 +397,18 @@ extension Waveform1D where T: BinaryFloatingPoint {
                     break
                 }
             }
-            spectralRolloffs.append(rolloffFreq)
+            spectralRolloffs.append(PrecisionTimeInterval(seconds: rolloffFreq))
 
             // Spectral flux (change from previous frame)
             if timeIndex > 0 {
                 let previousFrame = spectrogram.data[timeIndex - 1]
-                let flux = zip(timeFrame, previousFrame).reduce(T.zero) { sum, pair in
-                    let diff = pair.0 - pair.1
-                    return sum + max(T.zero, diff)
+                let flux = zip(timeFrame, previousFrame).reduce(0.0) { sum, pair in
+                    let diff = Double(pair.0) - Double(pair.1)
+                    return sum + max(0.0, diff)
                 }
                 spectralFluxes.append(flux)
             } else {
-                spectralFluxes.append(T.zero)
+                spectralFluxes.append(0.0)
             }
         }
 

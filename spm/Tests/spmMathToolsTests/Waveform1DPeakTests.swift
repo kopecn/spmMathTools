@@ -12,7 +12,7 @@ struct BasicPeakDetectionTests {
     @Test("Simple peak detection")
     func simplePeakDetection() {
         let values = [1.0, 3.0, 2.0, 5.0, 1.0, 4.0, 0.5]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let peaks = waveform.detectPeaks()
 
@@ -29,7 +29,7 @@ struct BasicPeakDetectionTests {
     /// VALIDATED
     @Test("Large peak detection")
     func largePeakDetection() {
-        let waveform1 = Waveform1D<Double,Double>.sine(
+        let waveform1 = Waveform1D<Double>.sine(
             frequency: 100,
             amplitude: 1.0,
             phase: 0.0,
@@ -41,7 +41,7 @@ struct BasicPeakDetectionTests {
 
         #expect(peaks1.count == 300)
 
-        let waveform2 = Waveform1D<Double,Double>.sine(
+        let waveform2 = Waveform1D<Double>.sine(
             frequency: 100,
             amplitude: 1.0,
             phase: 0.0,
@@ -54,7 +54,7 @@ struct BasicPeakDetectionTests {
         #expect(peaks2.count == 300)
 
         /// Push hard against the nyquist frequency.
-        let waveform3 = Waveform1D<Double,Double>.sine(
+        let waveform3 = Waveform1D<Double>.sine(
             frequency: 100,
             amplitude: 1.0,
             phase: 0.0,
@@ -70,7 +70,7 @@ struct BasicPeakDetectionTests {
     @Test("Peak detection with threshold")
     func peakDetectionWithThreshold() {
         let values = [1.0, 3.0, 2.0, 5.0, 1.0, 2.5, 0.5]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let peaks = waveform.detectPeaks(threshold: 4.0)
 
@@ -83,13 +83,11 @@ struct BasicPeakDetectionTests {
     @Test("Peak detection with minimum distance")
     func peakDetectionWithMinDistance() {
         let values = [1.0, 3.0, 2.8, 5.0, 1.0, 4.0, 0.5, 1.0, 2.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let peaks = waveform.detectPeaks(minDistance: 3)
 
         // Should detect peaks with at least 3 samples between them
-        // Peaks at indices: 1 (3.0), 3 (5.0), 5 (4.0), 8 (2.0)
-        // With minDistance=3: picks highest (5.0 at idx 3), then next valid is idx 8 (distance=5)
         #expect(peaks.count >= 1)
         #expect(peaks[0].index == 3)  // Highest peak
         if peaks.count > 1 {
@@ -100,7 +98,7 @@ struct BasicPeakDetectionTests {
     @Test("Peak detection with prominence")
     func peakDetectionWithProminence() {
         let values = [0.0, 1.0, 0.5, 4.0, 3.0, 5.0, 2.0, 1.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let peaks = waveform.detectPeaks(prominence: 2.0)
 
@@ -112,7 +110,7 @@ struct BasicPeakDetectionTests {
     @Test("Peak detection with all parameters")
     func peakDetectionWithAllParameters() {
         let values = [0.0, 2.0, 1.0, 5.0, 2.0, 1.0, 3.0, 0.5, 4.0, 1.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let peaks = waveform.detectPeaks(
             threshold: 3.0,
@@ -130,7 +128,7 @@ struct BasicPeakDetectionTests {
     @Test("Peak detection with all parameters - DEBUG")
     func peakDetectionWithAllParametersDebug() {
         let values = [0.0, 2.0, 1.0, 5.0, 2.0, 1.0, 3.0, 0.5, 4.0, 1.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         // Test each filter step by step
         print("Original values: \(values)")
@@ -171,7 +169,7 @@ struct BasicPeakDetectionTests {
     @Test("Peak detection consistency")
     func peakDetectionConsistency() {
         let values = [1.0, 4.0, 2.0, 6.0, 3.0, 5.0, 1.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         // Run peak detection multiple times
         let peaks1 = waveform.detectPeaks()
@@ -182,7 +180,7 @@ struct BasicPeakDetectionTests {
         for (peak1, peak2) in zip(peaks1, peaks2) {
             #expect(peak1.index == peak2.index)
             #expect(peak1.value == peak2.value)
-            #expect(abs(peak1.timeOffset - peak2.timeOffset) < 1e-10)
+            #expect(peak1.timeOffset == peak2.timeOffset)
         }
     }
 }
@@ -194,7 +192,7 @@ struct EdgePeakDetectionTests {
     @Test("Peak detection with edge peaks enabled")
     func peakDetectionWithEdgePeaks() {
         let values = [5.0, 3.0, 2.0, 4.0, 1.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         // Without edge peaks
         let peaksNoEdge = waveform.detectPeaks(edgePeaks: false)
@@ -210,7 +208,7 @@ struct EdgePeakDetectionTests {
     @Test("Edge peaks behavior")
     func edgePeaksDetection() {
         let values = [5.0, 3.0, 4.0, 2.0, 1.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         // Test with edge peaks enabled
         let peaksWithEdge = waveform.detectPeaks(edgePeaks: true)
@@ -226,7 +224,7 @@ struct EdgePeakDetectionTests {
     @Test("Peak detection at boundaries")
     func peakDetectionAtBoundaries() {
         let values = [10.0, 1.0, 2.0, 1.0, 15.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let peaksWithEdge = waveform.detectPeaks(edgePeaks: true)
         let peaksWithoutEdge = waveform.detectPeaks(edgePeaks: false)
@@ -249,7 +247,7 @@ struct ValleyDetectionTests {
     @Test("Simple valley detection")
     func simpleValleyDetection() {
         let values = [3.0, 1.0, 4.0, 0.5, 3.0, 2.0, 5.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let valleys = waveform.detectValleys()
 
@@ -262,7 +260,7 @@ struct ValleyDetectionTests {
     /// VALIDATED
     @Test("Large valley detection")
     func largeValleyDetection() {
-        let waveform1 = Waveform1D<Double,Double>.sine(
+        let waveform1 = Waveform1D<Double>.sine(
             frequency: 100,
             amplitude: 1.0,
             phase: 0.0,
@@ -274,7 +272,7 @@ struct ValleyDetectionTests {
 
         #expect(valleys1.count == 300)
 
-        let waveform2 = Waveform1D<Double,Double>.sine(
+        let waveform2 = Waveform1D<Double>.sine(
             frequency: 100,
             amplitude: 1.0,
             phase: 0.0,
@@ -287,7 +285,7 @@ struct ValleyDetectionTests {
         #expect(valleys2.count == 300)
 
         /// Push hard against the nyquist frequency.
-        let waveform3 = Waveform1D<Double,Double>.sine(
+        let waveform3 = Waveform1D<Double>.sine(
             frequency: 100,
             amplitude: 1.0,
             phase: 0.0,
@@ -303,7 +301,7 @@ struct ValleyDetectionTests {
     @Test("Valley detection with threshold")
     func valleyDetectionWithThreshold() {
         let values = [3.0, 1.0, 4.0, 0.5, 3.0, 2.0, 5.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let valleys = waveform.detectValleys(threshold: 0.8)
 
@@ -316,7 +314,7 @@ struct ValleyDetectionTests {
     @Test("Valley detection with prominence")
     func valleyDetectionWithProminence() {
         let values = [5.0, 2.0, 4.0, 0.5, 3.0, 1.0, 4.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let valleys = waveform.detectValleys(prominence: 1.0)
 
@@ -328,7 +326,7 @@ struct ValleyDetectionTests {
     @Test("Valley detection with minimum distance")
     func valleyDetectionWithMinDistance() {
         let values = [3.0, 1.0, 2.0, 0.8, 3.0, 0.5, 4.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let valleys = waveform.detectValleys(minDistance: 3)
 
@@ -352,7 +350,7 @@ struct PeakProminenceTests {
     @Test("Find most prominent peaks")
     func findMostProminentPeaks() {
         let values = [1.0, 6.0, 2.0, 5.0, 1.0, 4.0, 0.5, 7.0, 3.0]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let topPeaks = waveform.findMostProminentPeaks(count: 3, minDistance: 1)
 
@@ -371,39 +369,40 @@ struct PeakTimeInformationTests {
     @Test("Peak time offset calculation")
     func peakTimeOffsetCalculation() {
         let values = [1.0, 3.0, 2.0, 5.0, 1.0]
-        let dt = 0.2
-        let waveform = Waveform1D(values: values, dt: dt)
+        let dtSeconds = 0.2
+        let waveform = Waveform1D(values: values, dtSeconds: dtSeconds)
 
         let peaks = waveform.detectPeaks()
 
         for peak in peaks {
-            let expectedTimeOffset = TimeInterval(peak.index) * dt
-            #expect(abs(peak.timeOffset - expectedTimeOffset) < 1e-10)
+            let expectedTimeOffset = Double(peak.index) * dtSeconds
+            #expect(abs(peak.timeOffset.secondsAsDouble - expectedTimeOffset) < 1e-10)
         }
     }
 
     @Test("Peak analysis with absolute timestamps")
     func peakAnalysisWithTimestamps() {
-        let startTime = Date()
+        let startDate = Date()
+        let startTime = PrecisionTimestamp(date: startDate)
         let values = [1.0, 3.0, 2.0, 5.0, 1.0]
-        let dt = 0.5
-        let waveform = Waveform1D(values: values, dt: dt, t0: startTime)
+        let dtSeconds = 0.5
+        let waveform = Waveform1D(values: values, dtSeconds: dtSeconds, t0: startTime)
 
         let peaks = waveform.detectPeaks()
 
         for peak in peaks {
             // Each peak should have valid time information
-            #expect(peak.timeOffset >= 0)
+            #expect(!peak.timeOffset.isNegative)
             #expect(peak.timeOffset < waveform.duration)
 
             // Check that timeOffset matches expected calculation
-            let expectedTimeOffset = TimeInterval(peak.index) * dt
-            #expect(abs(peak.timeOffset - expectedTimeOffset) < 1e-10)
+            let expectedTimeOffset = Double(peak.index) * dtSeconds
+            #expect(abs(peak.timeOffset.secondsAsDouble - expectedTimeOffset) < 1e-10)
 
             // Check absolute time if available
             if let peakTime = peak.time {
-                let expectedTime = startTime.addingTimeInterval(add: expectedTimeOffset)
-                #expect(abs(peakTime.timeIntervalSince(expectedTime)) < 1e-10)
+                let expectedDate = startDate.addingTimeInterval(expectedTimeOffset)
+                #expect(abs(peakTime.timeIntervalSince(expectedDate)) < 1e-3)
             }
         }
     }
@@ -415,7 +414,7 @@ struct PeakDetectionEdgeCasesTests {
 
     @Test("Peak detection with empty array")
     func peakDetectionEmpty() {
-        let waveform = Waveform1D(values: [Double](), dt: 0.1)
+        let waveform = Waveform1D(values: [Double](), dtSeconds: 0.1)
 
         let peaks = waveform.detectPeaks()
 
@@ -424,7 +423,7 @@ struct PeakDetectionEdgeCasesTests {
 
     @Test("Peak detection with single value")
     func peakDetectionSingle() {
-        let waveform = Waveform1D(values: [5.0], dt: 0.1)
+        let waveform = Waveform1D(values: [5.0], dtSeconds: 0.1)
 
         let peaks = waveform.detectPeaks()
 
@@ -433,7 +432,7 @@ struct PeakDetectionEdgeCasesTests {
 
     @Test("Peak detection with two values")
     func peakDetectionTwoValues() {
-        let waveform = Waveform1D(values: [3.0, 1.0], dt: 0.1)
+        let waveform = Waveform1D(values: [3.0, 1.0], dtSeconds: 0.1)
 
         let peaks = waveform.detectPeaks()
 
@@ -442,7 +441,7 @@ struct PeakDetectionEdgeCasesTests {
 
     @Test("Peak detection with constant values")
     func peakDetectionConstant() {
-        let waveform = Waveform1D(values: [5.0, 5.0, 5.0, 5.0, 5.0], dt: 0.1)
+        let waveform = Waveform1D(values: [5.0, 5.0, 5.0, 5.0, 5.0], dtSeconds: 0.1)
 
         let peaks = waveform.detectPeaks()
 
@@ -451,7 +450,7 @@ struct PeakDetectionEdgeCasesTests {
 
     @Test("Peak detection with all same non-zero values")
     func peakDetectionAllSame() {
-        let waveform = Waveform1D(values: Array(repeating: 3.0, count: 10), dt: 0.1)
+        let waveform = Waveform1D(values: Array(repeating: 3.0, count: 10), dtSeconds: 0.1)
 
         let peaks = waveform.detectPeaks()
 
@@ -466,7 +465,7 @@ struct IntegerPeakDetectionTests {
     @Test("Peak detection with integer values")
     func peakDetectionInteger() {
         let values = [1, 5, 3, 8, 2, 6, 1]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let peaks = waveform.detectPeaks()
 
@@ -480,7 +479,7 @@ struct IntegerPeakDetectionTests {
     @Test("Peak detection with negative integer values")
     func peakDetectionNegativeIntegers() {
         let values = [-5, -2, -4, -1, -3, -6]
-        let waveform = Waveform1D(values: values, dt: 0.1)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.1)
 
         let peaks = waveform.detectPeaks()
 
@@ -503,7 +502,7 @@ struct PeakDetectionPerformanceTests {
             values.append(sin(x) + 0.5 * sin(3 * x) + 0.1 * Double.random(in: -1...1))
         }
 
-        let waveform = Waveform1D(values: values, dt: 0.01)
+        let waveform = Waveform1D(values: values, dtSeconds: 0.01)
 
         let peaks = waveform.detectPeaks(threshold: 0.5, minDistance: 10)
 

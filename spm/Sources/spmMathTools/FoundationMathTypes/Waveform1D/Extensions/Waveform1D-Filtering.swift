@@ -9,22 +9,22 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - filterType: Type of filter to apply
     ///   - order: Filter order (higher order = steeper rolloff)
     /// - Returns: Filtered waveform
-    public func filtered(with filterType: WaveformFilterType<U>, order: Int = 4) -> Waveform1D<T> {
+    public func filtered(with filterType: WaveformFilterType, order: Int = 4) -> Waveform1D<T> {
         guard !values.isEmpty && order > 0 else { return self }
 
         switch filterType {
         case .lowPass(let cutoffFrequency):
-            return applyButterworthFilter(type: .lowPass, cutoffFrequency: cutoffFrequency, order: order)
+            return applyButterworthFilter(type: .lowPass, cutoffFrequency: cutoffFrequency.secondsAsDouble, order: order)
         case .highPass(let cutoffFrequency):
-            return applyButterworthFilter(type: .highPass, cutoffFrequency: cutoffFrequency, order: order)
+            return applyButterworthFilter(type: .highPass, cutoffFrequency: cutoffFrequency.secondsAsDouble, order: order)
         case .bandPass(let lowFrequency, let highFrequency):
-            return applyBandPassFilter(lowFrequency: lowFrequency, highFrequency: highFrequency, order: order)
+            return applyBandPassFilter(lowFrequency: lowFrequency.secondsAsDouble, highFrequency: highFrequency.secondsAsDouble, order: order)
         case .bandStop(let lowFrequency, let highFrequency):
-            return applyBandStopFilter(lowFrequency: lowFrequency, highFrequency: highFrequency, order: order)
+            return applyBandStopFilter(lowFrequency: lowFrequency.secondsAsDouble, highFrequency: highFrequency.secondsAsDouble, order: order)
         case .movingAverage(let windowSize):
             return applyMovingAverage(windowSize: windowSize)
         case .exponential(let alpha):
-            return applyExponentialFilter(alpha: alpha)
+            return applyExponentialFilter(alpha: alpha.secondsAsDouble)
         }
     }
 
@@ -38,8 +38,8 @@ extension Waveform1D where T: BinaryFloatingPoint {
     /// Apply an exponential smoothing filter
     /// - Parameter alpha: Smoothing factor (0 < alpha <= 1, higher = less smoothing)
     /// - Returns: Filtered waveform
-    public func exponentialFilter(alpha: U) -> Waveform1D<T> {
-        return filtered(with: .exponential(alpha: alpha))
+    public func exponentialFilter(alpha: Double) -> Waveform1D<T> {
+        return filtered(with: .exponential(alpha: PrecisionTimeInterval(seconds: alpha)))
     }
 
     /// Apply a Butterworth low-pass filter
@@ -47,8 +47,8 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - cutoffFrequency: Cutoff frequency in Hz
     ///   - order: Filter order
     /// - Returns: Filtered waveform
-    public func lowPassFilter(cutoffFrequency: U, order: Int = 4) -> Waveform1D<T> {
-        return filtered(with: .lowPass(cutoffFrequency: cutoffFrequency), order: order)
+    public func lowPassFilter(cutoffFrequency: Double, order: Int = 4) -> Waveform1D<T> {
+        return filtered(with: .lowPass(cutoffFrequency: PrecisionTimeInterval(seconds: cutoffFrequency)), order: order)
     }
 
     /// Apply a Butterworth high-pass filter
@@ -56,8 +56,8 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - cutoffFrequency: Cutoff frequency in Hz
     ///   - order: Filter order
     /// - Returns: Filtered waveform
-    public func highPassFilter(cutoffFrequency: U, order: Int = 4) -> Waveform1D<T> {
-        return filtered(with: .highPass(cutoffFrequency: cutoffFrequency), order: order)
+    public func highPassFilter(cutoffFrequency: Double, order: Int = 4) -> Waveform1D<T> {
+        return filtered(with: .highPass(cutoffFrequency: PrecisionTimeInterval(seconds: cutoffFrequency)), order: order)
     }
 
     /// Apply a band-pass filter
@@ -66,18 +66,19 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - highFrequency: Upper cutoff frequency in Hz
     ///   - order: Filter order
     /// - Returns: Filtered waveform
-    public func bandPassFilter(lowFrequency: U, highFrequency: U, order: Int = 4) -> Waveform1D<T> {
-        return filtered(with: .bandPass(lowFrequency: lowFrequency, highFrequency: highFrequency), order: order)
+    public func bandPassFilter(lowFrequency: Double, highFrequency: Double, order: Int = 4) -> Waveform1D<T> {
+        return filtered(with: .bandPass(lowFrequency: PrecisionTimeInterval(seconds: lowFrequency), highFrequency: PrecisionTimeInterval(seconds: highFrequency)), order: order)
     }
 
     // MARK: - Private Implementation Methods
 
     private func applyButterworthFilter(
         type: WaveformFilterButterworthType,
-        cutoffFrequency: U,
+        cutoffFrequency: Double,
         order: Int
     ) -> Waveform1D<T> {
-        let nyquist = samplingFrequency / 2.0
+        let sampFreq: Double = samplingFrequencyInHz()
+        let nyquist = sampFreq / 2.0
         let normalizedCutoff = cutoffFrequency / nyquist
 
         // Clamp normalized frequency to valid range
@@ -90,13 +91,13 @@ extension Waveform1D where T: BinaryFloatingPoint {
         return applyIIRFilter(coefficients: coefficients)
     }
 
-    private func applyBandPassFilter(lowFrequency: U, highFrequency: U, order: Int) -> Waveform1D<T> {
+    private func applyBandPassFilter(lowFrequency: Double, highFrequency: Double, order: Int) -> Waveform1D<T> {
         // Apply high-pass first, then low-pass
         let highPassed = highPassFilter(cutoffFrequency: lowFrequency, order: order)
         return highPassed.lowPassFilter(cutoffFrequency: highFrequency, order: order)
     }
 
-    private func applyBandStopFilter(lowFrequency: U, highFrequency: U, order: Int) -> Waveform1D<T> {
+    private func applyBandStopFilter(lowFrequency: Double, highFrequency: Double, order: Int) -> Waveform1D<T> {
         // Create band-pass filter and subtract from original
         let bandPass = bandPassFilter(lowFrequency: lowFrequency, highFrequency: highFrequency, order: order)
 
@@ -125,7 +126,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         return Waveform1D(values: filtered, dt: dt, t0: t0)
     }
 
-    private func applyExponentialFilter(alpha: U) -> Waveform1D<T> {
+    private func applyExponentialFilter(alpha: Double) -> Waveform1D<T> {
         guard !values.isEmpty && alpha > 0 && alpha <= 1 else { return self }
 
         var filtered: [T] = []
@@ -147,13 +148,13 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
     private func calculateButterworthCoefficients(
         type: WaveformFilterButterworthType,
-        normalizedCutoff: U,
+        normalizedCutoff: Double,
         order: Int
     ) -> WaveformFilterCoefficients<T> {
         // Simplified Butterworth coefficient calculation
         // For a more complete implementation, you'd use proper pole-zero placement
 
-        let wc = U(tan(.pi * Double(normalizedCutoff) / 2.0))
+        let wc = tan(.pi * normalizedCutoff / 2.0)
         let wc2 = wc * wc
 
         switch type {
@@ -164,7 +165,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         }
     }
 
-    private func calculateLowPassCoefficients(wc: U, wc2: U, order: Int) -> WaveformFilterCoefficients<T> {
+    private func calculateLowPassCoefficients(wc: Double, wc2: Double, order: Int) -> WaveformFilterCoefficients<T> {
         // Simplified 2nd order Butterworth low-pass
         let k1 = sqrt(2.0) * wc
         let k2 = wc2
@@ -185,7 +186,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         return WaveformFilterCoefficients(b: b, a: a)
     }
 
-    private func calculateHighPassCoefficients(wc: U, wc2: U, order: Int) -> WaveformFilterCoefficients<T> {
+    private func calculateHighPassCoefficients(wc: Double, wc2: Double, order: Int) -> WaveformFilterCoefficients<T> {
         // Simplified 2nd order Butterworth high-pass
         let k1 = sqrt(2.0) * wc
         let k2 = wc2
@@ -261,18 +262,19 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - order: Filter order
     /// - Returns: Tuple containing magnitude and phase response
     public func frequencyResponse(
-        at frequencies: [U],
-        filterType: WaveformFilterType<U>,
+        at frequencies: [Double],
+        filterType: WaveformFilterType,
         order: Int = 4
     ) -> (magnitude: [T], phase: [T]) {
 
-        let nyquist = samplingFrequency / 2.0
+        let sampFreq: Double = samplingFrequencyInHz()
+        let nyquist = sampFreq / 2.0
         var magnitudes: [T] = []
         var phases: [T] = []
 
         for freq in frequencies {
             let normalizedFreq = freq / nyquist
-            let omega = U.pi * normalizedFreq
+            let omega = Double.pi * normalizedFreq
 
             let response = calculateFilterResponse(omega: omega, filterType: filterType, order: order)
             magnitudes.append(T(response.magnitude))
@@ -283,23 +285,27 @@ extension Waveform1D where T: BinaryFloatingPoint {
     }
 
     private func calculateFilterResponse(
-        omega: U,
-        filterType: WaveformFilterType<U>,
+        omega: Double,
+        filterType: WaveformFilterType,
         order: Int
-    ) -> (magnitude: U, phase: U) {
+    ) -> (magnitude: Double, phase: Double) {
         // Simplified frequency response calculation
         // For demonstration purposes - a complete implementation would use proper transfer functions
 
+        let sampFreq: Double = samplingFrequencyInHz()
+
         switch filterType {
         case .lowPass(let cutoffFreq):
-            let wc = 2.0 * U.pi * cutoffFreq / samplingFrequency
+            let cutoffDouble = cutoffFreq.secondsAsDouble
+            let wc = 2.0 * Double.pi * cutoffDouble / sampFreq
             let ratio = omega / wc
-            let magnitude = 1.0 / sqrt(1.0 + pow(Double(ratio), 2.0 * Double(order)))
+            let magnitude = 1.0 / sqrt(1.0 + pow(ratio, 2.0 * Double(order)))
             let phase = -Double(order) * atan(ratio)
             return (magnitude, phase)
 
         case .highPass(let cutoffFreq):
-            let wc = 2.0 * .pi * cutoffFreq / samplingFrequency
+            let cutoffDouble = cutoffFreq.secondsAsDouble
+            let wc = 2.0 * Double.pi * cutoffDouble / sampFreq
             let ratio = wc / omega
             let magnitude = 1.0 / sqrt(1.0 + pow(ratio, 2.0 * Double(order)))
             let phase = Double(order) * atan(ratio)
@@ -358,7 +364,8 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func savitzkyGolayDerivative(windowSize: Int = 5, polynomialOrder: Int = 2) -> Waveform1D<T> {
         let result = savitzkyGolayFilter(windowSize: windowSize, polynomialOrder: polynomialOrder, derivative: 1)
         // Scale by 1/dt to get proper derivative units
-        let scaledValues = result.values.map { $0 / T(dt) }
+        let dtDouble = dt.secondsAsDouble
+        let scaledValues = result.values.map { $0 / T(dtDouble) }
         return Waveform1D(values: scaledValues, dt: dt, t0: t0)
     }
 
@@ -370,8 +377,10 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func savitzkyGolaySecondDerivative(windowSize: Int = 5, polynomialOrder: Int = 3) -> Waveform1D<T> {
         guard polynomialOrder >= 2 else { return self }
         let result = savitzkyGolayFilter(windowSize: windowSize, polynomialOrder: polynomialOrder, derivative: 2)
-        // Scale by 1/dt² to get proper derivative units
-        let scaledValues = result.values.map { $0 / T(dt * dt) }
+        // Scale by 1/dt^2 to get proper derivative units
+        let dtDouble = dt.secondsAsDouble
+        let dt2 = dtDouble * dtDouble
+        let scaledValues = result.values.map { $0 / T(dt2) }
         return Waveform1D(values: scaledValues, dt: dt, t0: t0)
     }
 
@@ -384,7 +393,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func localPolynomialFilter(
         windowSize: Int,
         polynomialOrder: Int,
-        weights: WaveformLocalWeightFunction = .uniform
+        weights: WaveformLocalWeightFunction<T> = .uniform
     ) -> Waveform1D<T> {
         guard windowSize >= polynomialOrder + 1 && windowSize % 2 == 1 else { return self }
 
@@ -428,7 +437,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - lambda: Smoothing parameter (higher = more smoothing)
     ///   - order: Difference order (typically 2)
     /// - Returns: Smoothed waveform
-    public func whittakerHendersonFilter(lambda: U, order: Int = 2) -> Waveform1D<T> {
+    public func whittakerHendersonFilter(lambda: Double, order: Int = 2) -> Waveform1D<T> {
         guard order > 0 && lambda > 0 && values.count > order else { return self }
 
         let smoothed = solveWhittakerSystem(
@@ -535,7 +544,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     private func generateLocalWeights(
         distances: [T],
         maxDistance: T,
-        function: WaveformLocalWeightFunction
+        function: WaveformLocalWeightFunction<T>
     ) -> [T] {
         switch function {
         case .uniform:
@@ -553,9 +562,8 @@ extension Waveform1D where T: BinaryFloatingPoint {
             }
 
         case .gaussian(let sigma):
-            let sigmaT = T(sigma)
             return distances.map { d in
-                let normalized = d / sigmaT
+                let normalized = d / sigma
                 return T(exp(-0.5 * Double(normalized * normalized)))
             }
 
@@ -610,7 +618,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         return T(result)
     }
 
-    private func solveWhittakerSystem(values: [T], lambda: U, order: Int) -> [Double] {
+    private func solveWhittakerSystem(values: [Double], lambda: Double, order: Int) -> [Double] {
         let n = values.count
 
         // Create difference matrix D
@@ -622,11 +630,11 @@ extension Waveform1D where T: BinaryFloatingPoint {
             W[i][i] = 1.0
         }
 
-        // Solve (W + λD^T D) z = W y
+        // Solve (W + lambda D^T D) z = W y
         var system = W
         let DTD = matrixMultiply(transpose(D), D)
 
-        // Add λD^T D to W
+        // Add lambda D^T D to W
         for i in 0..<n {
             for j in 0..<n {
                 system[i][j] += lambda * DTD[i][j]

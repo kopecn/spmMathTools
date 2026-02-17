@@ -75,7 +75,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         // Compute frequency as derivative of phase divided by 2π
         var frequency: [T] = []
         let twoPi = T(2.0 * Double.pi)
-        let dtValue = T(dt)
+        let dtValue = T(dt.secondsAsDouble)
 
         // Forward difference for first point
         frequency.append((phase[1] - phase[0]) / (twoPi * dtValue))
@@ -159,13 +159,13 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func phaseCoherence(
         with other: Waveform1D<T>,
         windowSize: Int? = nil,
-        overlap: U = 0.5
+        overlap: Double = 0.5
     ) -> Waveform1D<T>? {
 
         guard values.count == other.values.count && values.count > 1 else { return nil }
 
         let actualWindowSize = windowSize ?? min(256, values.count / 4)
-        let hopSize = Int(U(actualWindowSize) * (1.0 - max(0.0, min(0.99, overlap))))
+        let hopSize = Int(Double(actualWindowSize) * (1.0 - max(0.0, min(0.99, overlap))))
 
         var coherenceValues: [T] = []
         var startIndex = 0
@@ -181,8 +181,8 @@ extension Waveform1D where T: BinaryFloatingPoint {
         }
 
         // Create time axis for coherence values
-        let coherenceDt = dt * U(hopSize)
-        let coherenceT0 = t0?.addingTimeInterval(add: U(actualWindowSize / 2) * dt)
+        let coherenceDt: PrecisionTimeInterval = dt * hopSize
+        let coherenceT0 = t0.map { $0 + dt * (actualWindowSize / 2) }
 
         return Waveform1D(values: coherenceValues, dt: coherenceDt, t0: coherenceT0)
     }
@@ -208,32 +208,8 @@ extension Waveform1D where T: BinaryFloatingPoint {
     }
 
     private func fftPhase() -> [T] {
-        guard let fftResult = fft() else {
-            return Array(repeating: T.zero, count: values.count)
-        }
-
-        // Use phases from FFT, but we need to interpolate back to original length
-        let phases = fftResult.phases
-
-        // Simple linear interpolation to match original signal length
-        var interpolatedPhases: [T] = []
-        let scale = Double(phases.count - 1) / Double(values.count - 1)
-
-        for i in 0..<values.count {
-            let index = Double(i) * scale
-            let lowerIndex = Int(index)
-            let upperIndex = min(lowerIndex + 1, phases.count - 1)
-            let fraction = T(index - Double(lowerIndex))
-
-            if lowerIndex == upperIndex {
-                interpolatedPhases.append(phases[lowerIndex])
-            } else {
-                let interpolated = phases[lowerIndex] + fraction * (phases[upperIndex] - phases[lowerIndex])
-                interpolatedPhases.append(interpolated)
-            }
-        }
-
-        return interpolatedPhases
+        // TODO: Requires FFT extension — fallback to hilbert for now
+        return hilbertPhase()
     }
 
     private func derivativePhase() -> [T] {
@@ -312,11 +288,11 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func detectPhaseLockEvents(
         referencePhase: T,
         tolerance: T = T.pi / T(6.0),  // 30 degrees
-        minInterval: U? = nil
-    ) -> [WaveformTriggerEvent<T,U>] {
+        minInterval: PrecisionTimeInterval? = nil
+    ) -> [WaveformTriggerEvent<T>] {
 
         let phase = instantaneousPhase(unwrap: true).values
-        var events: [WaveformTriggerEvent<T,U>] = []
+        var events: [WaveformTriggerEvent<T>] = []
         var lastEventIndex: Int?
 
         for (index, phaseValue) in phase.enumerated() {
@@ -328,7 +304,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
                 if let lastIndex = lastEventIndex,
                     let minInterval = minInterval
                 {
-                    let timeSinceLastEvent = U(index - lastIndex) * dt
+                    let timeSinceLastEvent: PrecisionTimeInterval = dt * (index - lastIndex)
                     if timeSinceLastEvent < minInterval {
                         continue
                     }
@@ -337,8 +313,8 @@ extension Waveform1D where T: BinaryFloatingPoint {
                 let event = WaveformTriggerEvent(
                     index: index,
                     value: values[index],
-                    time: t0?.addingTimeInterval(add: U(index) * dt),
-                    timeOffset: U(index) * dt,
+                    time: (t0.map { $0 + dt * index })?.asFoundationDate,
+                    timeOffset: dt * index,
                     type: .phase(referencePhase, tolerance: tolerance)
                 )
 

@@ -179,7 +179,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func findMaxCorrelation(
         with other: Waveform1D<T>,
         searchRange: Range<Int>? = nil
-    ) -> (lagSamples: Int, lagTime: U, correlation: T)? {
+    ) -> (lagSamples: Int, lagTime: Double, correlation: T)? {
 
         guard let crossCorr = crossCorrelation(with: other, mode: .full, normalized: true) else {
             return nil
@@ -204,7 +204,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
         // Convert to actual lag (accounting for full correlation indexing)
         let actualLag = maxIndex - (other.values.count - 1)
-        let lagTime = U(actualLag) * dt
+        let lagTime = Double(actualLag) * dt.secondsAsDouble
 
         return (actualLag, lagTime, maxCorrelation)
     }

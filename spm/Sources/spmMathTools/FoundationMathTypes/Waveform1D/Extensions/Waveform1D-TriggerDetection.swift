@@ -10,12 +10,12 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     ///   - hysteresis: Optional hysteresis to prevent false triggers
     /// - Returns: Array of detected trigger events
     public func detectTriggers(
-        trigger: WaveformTrigger<T,U>,
+        trigger: WaveformTrigger<T>,
         hysteresis: T? = nil
-    ) -> [WaveformTriggerEvent<T,U>] {
+    ) -> [WaveformTriggerEvent<T>] {
         guard !values.isEmpty else { return [] }
 
-        var events: [WaveformTriggerEvent<T,U>] = []
+        var events: [WaveformTriggerEvent<T>] = []
         var triggerState = false
         var lastTriggerIndex: Int?
 
@@ -29,7 +29,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
                 if let lastIndex = lastTriggerIndex,
                     let minInterval = trigger.minimumInterval
                 {
-                    let timeSinceLastTrigger = U(index - lastIndex) * dt
+                    let timeSinceLastTrigger: PrecisionTimeInterval = dt * (index - lastIndex)
                     if timeSinceLastTrigger < minInterval {
                         continue  // Skip due to minimum interval
                     }
@@ -38,8 +38,8 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
                 let event = WaveformTriggerEvent(
                     index: index,
                     value: value,
-                    time: t0?.addingTimeInterval(add: U(index) * dt),
-                    timeOffset: U(index) * dt,
+                    time: (t0.map { $0 + dt * index })?.asFoundationDate,
+                    timeOffset: dt * index,
                     type: trigger.type
                 )
 
@@ -77,10 +77,10 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     public func detectEdgeTriggers(
         edgeType: WaveformEdgeType,
         threshold: T,
-        minInterval: U? = nil
-    ) -> [WaveformTriggerEvent<T,U>] {
+        minInterval: PrecisionTimeInterval? = nil
+    ) -> [WaveformTriggerEvent<T>] {
 
-        let trigger = WaveformTrigger<T,U>(
+        let trigger = WaveformTrigger<T>(
             type: .edge(edgeType, threshold: threshold),
             minimumInterval: minInterval
         )
@@ -98,11 +98,11 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     public func detectLevelTriggers(
         levelType: WaveformLevelType,
         threshold: T,
-        minInterval: U? = nil,
+        minInterval: PrecisionTimeInterval? = nil,
         hysteresis: T? = nil
-    ) -> [WaveformTriggerEvent<T,U>] {
+    ) -> [WaveformTriggerEvent<T>] {
 
-        let trigger = WaveformTrigger<T,U>(
+        let trigger = WaveformTrigger<T>(
             type: .level(levelType, threshold: threshold),
             minimumInterval: minInterval
         )
@@ -121,10 +121,10 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
         windowType: WaveformWindowTriggerType,
         lowerBound: T,
         upperBound: T,
-        minInterval: U? = nil
-    ) -> [WaveformTriggerEvent<T,U>] {
+        minInterval: PrecisionTimeInterval? = nil
+    ) -> [WaveformTriggerEvent<T>] {
 
-        let trigger = WaveformTrigger<T,U>(
+        let trigger = WaveformTrigger<T>(
             type: .window(windowType, lower: lowerBound, upper: upperBound),
             minimumInterval: minInterval
         )
@@ -141,12 +141,12 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     public func detectPatternTriggers(
         pattern: [T],
         threshold: T,
-        minInterval: U? = nil
-    ) -> [WaveformTriggerEvent<T,U>] {
+        minInterval: PrecisionTimeInterval? = nil
+    ) -> [WaveformTriggerEvent<T>] {
 
         guard pattern.count > 0 && pattern.count <= values.count else { return [] }
 
-        var events: [WaveformTriggerEvent<T,U>] = []
+        var events: [WaveformTriggerEvent<T>] = []
         var lastTriggerIndex: Int?
 
         let halfPatternLength = pattern.count / 2
@@ -160,7 +160,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
                 if let lastIndex = lastTriggerIndex,
                     let minInterval = minInterval
                 {
-                    let timeSinceLastTrigger = U(i - lastIndex) * dt
+                    let timeSinceLastTrigger: PrecisionTimeInterval = dt * (i - lastIndex)
                     if timeSinceLastTrigger < minInterval {
                         continue
                     }
@@ -170,8 +170,8 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
                 let event = WaveformTriggerEvent(
                     index: triggerIndex,
                     value: values[triggerIndex],
-                    time: t0?.addingTimeInterval(add: U(triggerIndex) * dt),
-                    timeOffset: U(triggerIndex) * dt,
+                    time: (t0.map { $0 + dt * triggerIndex })?.asFoundationDate,
+                    timeOffset: dt * triggerIndex,
                     type: .pattern(pattern, threshold: threshold)
                 )
 
@@ -189,9 +189,9 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
     ///   - annotation: Annotation type for the events
     /// - Returns: Waveform with event markers
     public func withEventMarkers(
-        events: [WaveformTriggerEvent<T,U>],
+        events: [WaveformTriggerEvent<T>],
         annotation: WaveformEventAnnotation = .marker
-    ) -> WaveformWithEvents<T,U> {
+    ) -> WaveformWithEvents<T> {
 
         let eventMarkers = events.map { event in
             WaveformEventMarker(
@@ -203,7 +203,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
             )
         }
 
-        return WaveformWithEvents<T,U>(
+        return WaveformWithEvents<T>(
             waveform: self,
             events: eventMarkers
         )
@@ -211,7 +211,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
 
     // MARK: - Private Helper Methods
 
-    private func evaluateTrigger(value: T, trigger: WaveformTrigger<T,U>) -> Bool {
+    private func evaluateTrigger(value: T, trigger: WaveformTrigger<T>) -> Bool {
         switch trigger.type {
         case .edge(let edgeType, let threshold):
             return evaluateEdgeTrigger(value: value, edgeType: edgeType, threshold: threshold)
@@ -262,7 +262,7 @@ extension Waveform1D where T: BinaryFloatingPoint & Comparable {
         }
     }
 
-    private func evaluateHysteresisReset(value: T, trigger: WaveformTrigger<T,U>, hysteresis: T) -> Bool {
+    private func evaluateHysteresisReset(value: T, trigger: WaveformTrigger<T>, hysteresis: T) -> Bool {
         switch trigger.type {
         case .level(.above, let threshold):
             return value < (threshold - hysteresis)
@@ -312,10 +312,10 @@ extension Waveform1D where T: BinaryInteger & Comparable {
     public func detectThresholdTriggers(
         threshold: T,
         direction: WaveformLevelType,
-        minInterval: U? = nil
-    ) -> [WaveformTriggerEvent<T,U>] {
+        minInterval: PrecisionTimeInterval? = nil
+    ) -> [WaveformTriggerEvent<T>] {
 
-        var events: [WaveformTriggerEvent<T,U>] = []
+        var events: [WaveformTriggerEvent<T>] = []
         var lastTriggerIndex: Int?
 
         for (index, value) in values.enumerated() {
@@ -335,7 +335,7 @@ extension Waveform1D where T: BinaryInteger & Comparable {
                 if let lastIndex = lastTriggerIndex,
                     let minInterval = minInterval
                 {
-                    let timeSinceLastTrigger = U(index - lastIndex) * dt
+                    let timeSinceLastTrigger: PrecisionTimeInterval = dt * (index - lastIndex)
                     if timeSinceLastTrigger < minInterval {
                         continue
                     }
@@ -344,8 +344,8 @@ extension Waveform1D where T: BinaryInteger & Comparable {
                 let event = WaveformTriggerEvent(
                     index: index,
                     value: value,
-                    time: t0?.addingTimeInterval(add: TimeInterval(index) * TimeInterval(dt)),
-                    timeOffset: U(index) * dt,
+                    time: (t0.map { $0 + dt * index })?.asFoundationDate,
+                    timeOffset: dt * index,
                     type: .level(direction, threshold: threshold)
                 )
 

@@ -19,11 +19,11 @@ extension Waveform1D where T: BinaryFloatingPoint {
         guard factor > 1 else { return self }  // No decimation needed
 
         var processedWaveform = self
-        let factorU = U(factor)
 
         // Apply anti-aliasing filter if requested
         if antiAliasFilter {
-            let cutoffFrequency = samplingFrequency / (2.0 * factorU)
+            let sampFreq: Double = samplingFrequencyInHz()
+            let cutoffFrequency = sampFreq / (2.0 * Double(factor))
             processedWaveform = lowPassFilter(cutoffFrequency: cutoffFrequency, order: filterOrder)
         }
 
@@ -31,7 +31,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         let decimatedValues = stride(from: 0, to: processedWaveform.values.count, by: factor)
             .map { processedWaveform.values[$0] }
 
-        let newDt = dt * factorU
+        let newDt: PrecisionTimeInterval = dt * factor
 
         return Waveform1D(values: decimatedValues, dt: newDt, t0: t0)
     }
@@ -53,13 +53,14 @@ extension Waveform1D where T: BinaryFloatingPoint {
         guard factor > 1 else { return self }  // No interpolation needed
 
         let interpolatedValues = performInterpolation(factor: factor, method: method)
-        let newDt = dt / Double(factor)
+        let newDt: PrecisionTimeInterval = dt / factor
 
         var interpolatedWaveform = Waveform1D(values: interpolatedValues, dt: newDt, t0: t0)
 
         // Apply anti-aliasing filter if requested
         if antiAliasFilter {
-            let cutoffFrequency = samplingFrequency / 2.0  // Original Nyquist frequency
+            let sampFreq: Double = samplingFrequencyInHz()
+            let cutoffFrequency = sampFreq / 2.0  // Original Nyquist frequency
             interpolatedWaveform = interpolatedWaveform.lowPassFilter(
                 cutoffFrequency: cutoffFrequency,
                 order: filterOrder
@@ -76,13 +77,13 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - antiAliasFilter: Apply anti-aliasing filters
     /// - Returns: Resampled waveform
     public func resampled(
-        to newSamplingRate: U,
+        to newSamplingRate: Double,
         method: WaveformInterpolationMethod = .linear,
         antiAliasFilter: Bool = true
     ) -> Waveform1D<T> {
         guard newSamplingRate > 0 && !values.isEmpty else { return self }
 
-        let currentRate = samplingFrequency
+        let currentRate: Double = samplingFrequencyInHz()
         guard abs(newSamplingRate - currentRate) > 1e-10 else { return self }  // Already at target rate
 
         if newSamplingRate < currentRate {
@@ -113,11 +114,12 @@ extension Waveform1D where T: BinaryFloatingPoint {
     ///   - other: Reference waveform to match
     ///   - method: Interpolation method
     /// - Returns: Resampled waveform with matching sampling rate
-    public func resampledToMatch<U>(
-        _ other: Waveform1D<U>,
+    public func resampledToMatch<V: Numeric & Sendable>(
+        _ other: Waveform1D<V>,
         method: WaveformInterpolationMethod = .linear
     ) -> Waveform1D<T> {
-        return resampled(to: other.samplingFrequency, method: method)
+        let otherRate: Double = other.samplingFrequencyInHz()
+        return resampled(to: otherRate, method: method)
     }
 
     // MARK: - Private Implementation Methods
@@ -165,19 +167,19 @@ extension Waveform1D where T: BinaryFloatingPoint {
     }
 
     private func fractionalResample(
-        targetRate: U,
+        targetRate: Double,
         method: WaveformInterpolationMethod,
         antiAliasFilter: Bool
     ) -> Waveform1D<T> {
-        let currentRate = samplingFrequency
+        let currentRate: Double = samplingFrequencyInHz()
         let ratio = targetRate / currentRate
-        let newLength = Int(U(values.count) * ratio)
+        let newLength = Int(Double(values.count) * ratio)
 
         var resampledValues: [T] = []
         resampledValues.reserveCapacity(newLength)
 
         for i in 0..<newLength {
-            let sourceIndex = U(i) / ratio
+            let sourceIndex = Double(i) / ratio
             let floorIndex = Int(sourceIndex)
             let fractionalPart = sourceIndex - Double(floorIndex)
 
@@ -194,7 +196,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
             }
         }
 
-        let newDt = 1.0 / targetRate
+        let newDt = PrecisionTimeInterval(seconds: 1.0 / targetRate)
         var resampledWaveform = Waveform1D(values: resampledValues, dt: newDt, t0: t0)
 
         // Apply anti-aliasing filter if requested
@@ -218,15 +220,13 @@ extension Waveform1D where T: BinaryFloatingPoint {
     public func polyphaseDecimated(by factor: Int, filterTaps: Int = 64) -> Waveform1D<T> {
         guard factor > 1 && !values.isEmpty else { return self }
 
-        let factorU = U(factor)
-
         // Design a simple low-pass FIR filter
-        let cutoffFrequency = 0.5 / factorU  // Normalized cutoff frequency
+        let cutoffFrequency = 0.5 / Double(factor)  // Normalized cutoff frequency
         let filterCoeffs = designLowPassFIR(taps: filterTaps, cutoff: cutoffFrequency)
 
         // Apply polyphase decimation
         let decimatedValues = polyphaseFilter(coefficients: filterCoeffs, decimationFactor: factor)
-        let newDt = dt * factorU
+        let newDt: PrecisionTimeInterval = dt * factor
 
         return Waveform1D(values: decimatedValues, dt: newDt, t0: t0)
     }
@@ -254,7 +254,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
         // Apply low-pass filter
         let filteredValues = firFilter(interpolatedValues, coefficients: filterCoeffs)
-        let newDt = dt / Double(factor)
+        let newDt: PrecisionTimeInterval = dt / factor
 
         return Waveform1D(values: filteredValues, dt: newDt, t0: t0)
     }
@@ -335,7 +335,7 @@ extension Waveform1D where T: BinaryInteger {
         let decimatedValues = stride(from: 0, to: values.count, by: factor)
             .map { values[$0] }
 
-        let newDt = dt * U(factor)
+        let newDt: PrecisionTimeInterval = dt * factor
 
         return Waveform1D(values: decimatedValues, dt: newDt, t0: t0)
     }
@@ -370,7 +370,7 @@ extension Waveform1D where T: BinaryInteger {
         }
 
         interpolatedValues.append(values.last!)
-        let newDt = dt / U(factor)
+        let newDt: PrecisionTimeInterval = dt / factor
 
         return Waveform1D(values: interpolatedValues, dt: newDt, t0: t0)
     }

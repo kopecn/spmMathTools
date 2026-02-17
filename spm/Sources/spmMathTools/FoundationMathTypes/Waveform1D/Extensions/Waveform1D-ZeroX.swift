@@ -2,7 +2,7 @@ import Foundation
 import FoundationTypes
 
 // MARK: - Zero-Crossing Detection
-extension Waveform1D where T: SignedNumeric & Comparable {
+extension Waveform1D where T: BinaryFloatingPoint & Comparable {
 
     /// Detect zero crossings in the waveform
     /// - Parameters:
@@ -44,7 +44,7 @@ extension Waveform1D where T: SignedNumeric & Comparable {
                 // Check if this crossing type is requested
                 guard direction.includes(crossingType) else { continue }
 
-                // Calculate interpolated crossing point
+                // Calculate interpolated crossing point (fractional index)
                 let interpolatedIndex = interpolateZeroCrossing(
                     value1: currentValue,
                     value2: nextValue,
@@ -52,12 +52,12 @@ extension Waveform1D where T: SignedNumeric & Comparable {
                     threshold: threshold
                 )
 
-                let crossingTime = t0?.addingTimeInterval(add: interpolatedIndex * dt)
+                let timeOffset = PrecisionTimeInterval(seconds: interpolatedIndex * dt.secondsAsDouble)
 
                 let crossing = WaveformZeroCrossing(
-                    sampleIndex: interpolatedIndex,
-                    time: crossingTime,
-                    timeOffset: interpolatedIndex * dt,
+                    sampleIndex: i,
+                    time: t0.map { $0 + timeOffset },
+                    timeOffset: timeOffset,
                     type: crossingType,
                     magnitude: abs(nextValue - currentValue)
                 )
@@ -120,7 +120,7 @@ extension Waveform1D where T: SignedNumeric & Comparable {
         }
 
         // Add crossing indices
-        segmentIndices.append(contentsOf: crossings.map { Int(round($0.sampleIndex)) })
+        segmentIndices.append(contentsOf: crossings.map { $0.sampleIndex })
 
         // Add end index if including partial segments
         if includePartial {
@@ -135,7 +135,7 @@ extension Waveform1D where T: SignedNumeric & Comparable {
             guard startIdx < endIdx && endIdx < values.count else { continue }
 
             let segmentValues = Array(values[startIdx...endIdx])
-            let segmentT0 = t0?.addingTimeInterval(add: U(startIdx) * dt)
+            let segmentT0 = t0.map { $0 + dt * startIdx }
 
             let segment = Waveform1D(values: segmentValues, dt: dt, t0: segmentT0)
             segments.append(segment)
@@ -156,16 +156,16 @@ extension Waveform1D where T: SignedNumeric & Comparable {
         }
     }
 
-    private func interpolateZeroCrossing(value1: T, value2: T, index1: Int, threshold: T) -> U {
+    private func interpolateZeroCrossing(value1: T, value2: T, index1: Int, threshold: T) -> Double {
         // Linear interpolation to find exact crossing point
         let denominator = value2 - value1
 
         guard abs(denominator) > threshold else {
-            return U(index1) + 0.5  // Midpoint if values are too close
+            return Double(index1) + 0.5  // Midpoint if values are too close
         }
 
-        let fraction = -U(value1) / U(denominator)
-        return U(index1) + U(max(0.0, min(1.0, fraction)))
+        let fraction = -Double(value1) / Double(denominator)
+        return Double(index1) + Double(max(0.0, min(1.0, fraction)))
     }
 }
 
@@ -205,13 +205,12 @@ extension Waveform1D where T: BinaryInteger & Comparable {
             guard let type = crossingType, direction.includes(type) else { continue }
 
             // For integers, crossing occurs at midpoint
-            let interpolatedIndex = Double(i) + 0.5
-            let crossingTime = t0 + interpolatedIndex * dt
+            let timeOffset = PrecisionTimeInterval(seconds: (Double(i) + 0.5) * dt.secondsAsDouble)
 
             let crossing = WaveformZeroCrossing(
-                sampleIndex: interpolatedIndex,
-                time: crossingTime,
-                timeOffset: interpolatedIndex * dt,
+                sampleIndex: i,
+                time: t0.map { $0 + timeOffset },
+                timeOffset: timeOffset,
                 type: type,
                 magnitude: T(abs(Int(nextValue) - Int(currentValue)))
             )
@@ -228,11 +227,11 @@ extension Waveform1D where T: BinaryInteger & Comparable {
     }
 
     /// Calculate zero crossing rate for integer waveforms
-    public func zeroCrossingRate(direction: WaveformZeroCrossingDirection = .all) -> U {
+    public func zeroCrossingRate(direction: WaveformZeroCrossingDirection = .all) -> Double {
         let crossingCount = zeroCrossingCount(direction: direction)
-        let totalDuration = duration
+        let totalDuration = duration.secondsAsDouble
 
         guard totalDuration > 0 else { return 0.0 }
-        return U(crossingCount) / totalDuration
+        return Double(crossingCount) / totalDuration
     }
 }
