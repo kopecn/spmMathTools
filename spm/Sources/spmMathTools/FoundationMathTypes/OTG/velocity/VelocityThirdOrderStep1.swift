@@ -34,7 +34,7 @@ class VelocityThirdOrderStep1 {
     private func addProfile() {
         profileCount += 1
         if profileCount < validProfiles.count {
-            validProfiles[profileCount].setBoundary(&validProfiles[profileCount - 1])
+            validProfiles[profileCount].setBoundary(validProfiles[profileCount - 1])
         }
     }
 
@@ -47,7 +47,7 @@ class VelocityThirdOrderStep1 {
     }
 
     private func timeAcc0(_ aMax: Double, _ aMin: Double, _ jMax: Double, _ returnAfterFound: Bool) {
-        let profile = validProfiles[profileCount]
+        var profile = validProfiles[profileCount]
 
         profile.t[0] = (-a0 + aMax) / jMax
         profile.t[1] = (a0 * a0 + af * af) / (2 * aMax * jMax) - aMax / jMax + vd / aMax
@@ -65,7 +65,7 @@ class VelocityThirdOrderStep1 {
     }
 
     private func timeNone(_ aMax: Double, _ aMin: Double, _ jMax: Double, _ returnAfterFound: Bool) {
-        let profile = validProfiles[profileCount]
+        var profile = validProfiles[profileCount]
 
         var h1 = (a0 * a0 + af * af) / 2 + jMax * vd
         if h1 < 0.0 {
@@ -136,9 +136,10 @@ class VelocityThirdOrderStep1 {
         // Zero-limits special case
         if _jMax == 0.0 {
             var p = block.pMin
-            p.setBoundary(&input)
+            p.setBoundary(input)
 
             if timeAllSingleStep(&p, _aMax, _aMin, _jMax) {
+                block.pMin = p
                 block.tMin = p.tSum.last! + p.brake.duration + p.accel.duration
                 if abs(a0) > Double.leastNormalMagnitude {
                     block.a = Interval(block.tMin, .infinity)
@@ -149,7 +150,7 @@ class VelocityThirdOrderStep1 {
         }
 
         resetProfiles()
-        validProfiles[profileCount].setBoundary(&input)
+        validProfiles[profileCount].setBoundary(input)
 
         if abs(af) < Double.leastNormalMagnitude {
             // There is no blocked interval when af==0, so return after first found profile

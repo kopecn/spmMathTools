@@ -48,7 +48,7 @@ class PositionSecondOrderStep1 {
     private func addProfile() {
         profileCount += 1
         if profileCount < validProfiles.count {
-            validProfiles[profileCount].setBoundary(&validProfiles[profileCount - 1])
+            validProfiles[profileCount].setBoundary(validProfiles[profileCount - 1])
         }
     }
 
@@ -72,9 +72,10 @@ class PositionSecondOrderStep1 {
         /// Zero-limits special case
         if _vMax == 0.0 && _vMin == 0.0 {
             var p = block.pMin
-            p.setBoundary(&input)
+            p.setBoundary(input)
 
             if timeAllSingleStep(&p, _vMax, _vMin, _aMax, _aMin) {
+                block.pMin = p
                 block.tMin = p.tSum.last! + p.brake.duration + p.accel.duration
                 if abs(v0) > Double.leastNormalMagnitude {
                     block.a = Interval(block.tMin, Double.infinity)
@@ -85,7 +86,7 @@ class PositionSecondOrderStep1 {
         }
 
         resetProfiles()
-        validProfiles[profileCount].setBoundary(&input)
+        validProfiles[profileCount].setBoundary(input)
 
         if abs(vf) < Double.leastNormalMagnitude {
             // There is no blocked interval when vf==0, so return after first found profile

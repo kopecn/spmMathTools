@@ -241,7 +241,7 @@ public class TargetCalculator {
 
             for dof in 0..<degreesOfFreedom {
                 // Initialize all profile arrays to represent the current state with zero duration
-                let p = trajectory.profiles[0][dof]
+                var p = trajectory.profiles[0][dof]
 
                 // Clear existing profile data
                 p.t = Array(repeating: 0.0, count: 7)
@@ -329,10 +329,15 @@ public class TargetCalculator {
             }
 
             // Finalize pre & post-trajectories
+            // Extract to temp vars to avoid simultaneous access to p
             if !input.maxJerk[dof].isInfinite {
-                p.brake.finalize(&p.p[0], &p.v[0], &p.a[0])
+                var p0 = p.p[0]; var v0 = p.v[0]; var a0 = p.a[0]
+                p.brake.finalize(&p0, &v0, &a0)
+                p.p[0] = p0; p.v[0] = v0; p.a[0] = a0
             } else if !input.maxAcceleration[dof].isInfinite {
-                p.brake.finalizeSecondOrder(&p.p[0], &p.v[0], &p.a[0])
+                var p0 = p.p[0]; var v0 = p.v[0]; var a0 = p.a[0]
+                p.brake.finalizeSecondOrder(&p0, &v0, &a0)
+                p.p[0] = p0; p.v[0] = v0; p.a[0] = a0
             }
 
             var foundProfile = false
@@ -420,8 +425,7 @@ public class TargetCalculator {
         let discreteDuration = (input.durationDiscretization == .Discrete)
         if degreesOfFreedom == 1 && input.minimumDuration == nil && !discreteDuration {
             trajectory.duration = blocks[0].tMin
-            // CRITICAL: Make a copy to avoid shared reference issues with Profile class
-            trajectory.profiles[0][0] = blocks[0].pMin.copy()
+            trajectory.profiles[0][0] = blocks[0].pMin
             trajectory.cumulativeTimes[0] = trajectory.duration
             return .Working
         }
@@ -493,7 +497,7 @@ public class TargetCalculator {
                         continue
                     }
 
-                    let p = trajectory.profiles[0][dof]
+                    var p = trajectory.profiles[0][dof]
                     let tProfile = trajectory.duration - p.brake.duration - p.accel.duration
 
                     p.t = pLimiting.t  // Copy timing information from limiting DoF

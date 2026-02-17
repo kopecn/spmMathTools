@@ -19,7 +19,7 @@ private let tMax: Double = 1e12
 //! @brief A single-dof kinematic profile with position, velocity, acceleration and jerk
 //!
 //! The class members are only available in the Ruckig Community Version.
-public class Profile {
+public struct Profile {
 
     public var t: [Double] = Array(repeating: 0.0, count: 7)
     var tSum: [Double] = Array(repeating: 0.0, count: 7)
@@ -45,28 +45,8 @@ public class Profile {
         // Default initialization - arrays are already initialized above
     }
 
-    // Create a deep copy of this profile
-    func copy() -> Profile {
-        let newProfile = Profile()
-        newProfile.t = self.t
-        newProfile.tSum = self.tSum
-        newProfile.j = self.j
-        newProfile.a = self.a
-        newProfile.v = self.v
-        newProfile.p = self.p
-        newProfile.brake = self.brake
-        newProfile.accel = self.accel
-        newProfile.pf = self.pf
-        newProfile.vf = self.vf
-        newProfile.af = self.af
-        newProfile.limits = self.limits
-        newProfile.direction = self.direction
-        newProfile.controlSigns = self.controlSigns
-        return newProfile
-    }
-
     // For third-order velocity interface
-    func checkForVelocity(
+    mutating func checkForVelocity(
         _ jf: Double,
         _ aMax: Double,
         _ aMin: Double,
@@ -131,7 +111,7 @@ public class Profile {
             && a[1] <= aUppLim && a[3] <= aUppLim && a[5] <= aUppLim
     }
 
-    func checkForVelocityWithTiming(
+    mutating func checkForVelocityWithTiming(
         _ tf: Double,
         _ jf: Double,
         _ aMax: Double,
@@ -142,7 +122,7 @@ public class Profile {
         checkForVelocity(jf, aMax, aMin, controlSigns, limits)
     }
 
-    func checkForVelocityWithTiming(
+    mutating func checkForVelocityWithTiming(
         _ tf: Double,
         _ jf: Double,
         _ aMax: Double,
@@ -155,7 +135,7 @@ public class Profile {
             && checkForVelocityWithTiming(tf, jf, aMax, aMin, controlSigns, limits)
     }
 
-    func setBoundaryForVelocity(
+    mutating func setBoundaryForVelocity(
         _ p0New: Double,
         _ v0New: Double,
         _ a0New: Double,
@@ -170,7 +150,7 @@ public class Profile {
     }
 
     // For second-order velocity interface
-    func checkForSecondOrderVelocity(
+    mutating func checkForSecondOrderVelocity(
         _ aUp: Double,
         _ controlSigns: ControlSigns,
         _ limits: ReachedLimits
@@ -198,7 +178,7 @@ public class Profile {
         return abs(v.last! - vf) < vPrecision
     }
 
-    func checkForSecondOrderVelocityWithTiming(
+    mutating func checkForSecondOrderVelocityWithTiming(
         _ tf: Double,
         _ aUp: Double,
         _ controlSigns: ControlSigns,
@@ -207,7 +187,7 @@ public class Profile {
         checkForSecondOrderVelocity(aUp, controlSigns, limits)
     }
 
-    func checkForSecondOrderVelocityWithTiming(
+    mutating func checkForSecondOrderVelocityWithTiming(
         _ tf: Double,
         _ aUp: Double,
         _ aMax: Double,
@@ -220,7 +200,7 @@ public class Profile {
     }
 
     // For third-order position interface
-    func check(
+    mutating func check(
         _ jf: Double,
         _ vMax: Double,
         _ vMin: Double,
@@ -354,7 +334,7 @@ public class Profile {
         return pCheck && vCheck && aCheck && aLimCheck && vLimCheck
     }
 
-    func checkWithTiming(
+    mutating func checkWithTiming(
         _ tf: Double,
         _ jf: Double,
         _ vMax: Double,
@@ -367,7 +347,7 @@ public class Profile {
         check(jf, vMax, vMin, aMax, aMin, controlSigns, limits)
     }
 
-    func checkWithTiming(
+    mutating func checkWithTiming(
         _ tf: Double,
         _ jf: Double,
         _ vMax: Double,
@@ -386,8 +366,8 @@ public class Profile {
         return checkWithTiming(tf, jf, vMax, vMin, aMax, aMin, controlSigns, limits)
     }
 
-    func setBoundary(
-        _ profile: inout Profile
+    mutating func setBoundary(
+        _ profile: Profile
     ) {
         a[0] = profile.a[0]
         v[0] = profile.v[0]
@@ -399,7 +379,7 @@ public class Profile {
         accel = profile.accel
     }
 
-    func setBoundary(
+    mutating func setBoundary(
         _ p0New: Double,
         _ v0New: Double,
         _ a0New: Double,
@@ -416,7 +396,7 @@ public class Profile {
     }
 
     // For second-order position interface
-    func checkForSecondOrder(
+    mutating func checkForSecondOrder(
         _ aUp: Double,
         _ aDown: Double,
         _ vMax: Double,
@@ -467,7 +447,7 @@ public class Profile {
             && v[2] >= vLowLim && v[3] >= vLowLim && v[4] >= vLowLim && v[5] >= vLowLim && v[6] >= vLowLim
     }
 
-    func checkForSecondOrderWithTiming(
+    mutating func checkForSecondOrderWithTiming(
         _ tf: Double,
         _ aUp: Double,
         _ aDown: Double,
@@ -479,7 +459,7 @@ public class Profile {
         checkForSecondOrder(aUp, aDown, vMax, vMin, controlSigns, limits)
     }
 
-    func checkForSecondOrderWithTiming(
+    mutating func checkForSecondOrderWithTiming(
         _ tf: Double,
         _ aUp: Double,
         _ aDown: Double,
@@ -496,7 +476,7 @@ public class Profile {
     }
 
     // For first-order position interface
-    func checkForFirstOrder(
+    mutating func checkForFirstOrder(
         _ vUp: Double,
         _ controlSigns: ControlSigns,
         _ limits: ReachedLimits
@@ -524,7 +504,7 @@ public class Profile {
         return abs(p.last! - pf) < pPrecision
     }
 
-    func checkForFirstOrderWithTiming(
+    mutating func checkForFirstOrderWithTiming(
         _ tf: Double,
         _ vUp: Double,
         _ controlSigns: ControlSigns,
@@ -534,7 +514,7 @@ public class Profile {
         checkForFirstOrder(vUp, controlSigns, limits)
     }
 
-    func checkForFirstOrderWithTiming(
+    mutating func checkForFirstOrderWithTiming(
         _ tf: Double,
         _ vUp: Double,
         _ vMax: Double,

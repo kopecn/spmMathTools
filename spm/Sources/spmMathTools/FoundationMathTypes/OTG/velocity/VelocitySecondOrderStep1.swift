@@ -22,8 +22,8 @@ class VelocitySecondOrderStep1 {
     }
 
     func getProfile(_ input: inout Profile, _ block: inout Block) -> Bool {
-        let p = block.pMin
-        p.setBoundary(&input)
+        var p = block.pMin
+        p.setBoundary(input)
 
         let af = (vd > 0) ? _aMax : _aMin
         p.t[0] = 0

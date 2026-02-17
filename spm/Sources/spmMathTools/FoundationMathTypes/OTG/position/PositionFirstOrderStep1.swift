@@ -38,8 +38,8 @@ class PositionFirstOrderStep1 {
         block: inout Block
     ) -> Bool {
 
-        let p = block.pMin
-        p.setBoundary(&input)
+        var p = block.pMin
+        p.setBoundary(input)
 
         let vf = (pd > 0) ? _vMax : _vMin
         p.t[0] = 0
@@ -52,6 +52,7 @@ class PositionFirstOrderStep1 {
 
         if p.checkForFirstOrder(vf, ControlSigns.UDDU, ReachedLimits.VEL) {
             assert(!p.tSum.isEmpty, "tSum should not be empty when checkForFirstOrder returns true")
+            block.pMin = p
             block.tMin = p.tSum.last! + p.brake.duration + p.accel.duration
             return true
         }

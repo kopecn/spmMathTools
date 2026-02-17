@@ -13,7 +13,7 @@ private let eps: Double = 2.2e-14
 /// - Avoiding kinematic constraint violations at trajectory start
 /// - Stabilizing initial overshoots in trajectory blending
 /// - Ensuring valid input to a trajectory generator
-class BrakeProfile {
+struct BrakeProfile {
     private(set) var duration: Double = 0.0
     public var t: [Double] = [0, 0]  // Durations of braking segments
     var j: [Double] = [0, 0]  // Jerk values for braking segments
@@ -30,7 +30,7 @@ class BrakeProfile {
     ///   - pS: Initial position (in-out)
     ///   - vS: Initial velocity (in-out)
     ///   - aS: Initial acceleration (in-out)
-    func finalize(
+    mutating func finalize(
         _ pS: inout Double,
         _ vS: inout Double,
         _ aS: inout Double
@@ -63,7 +63,7 @@ class BrakeProfile {
     ///   - pS: Initial position (in-out)
     ///   - vS: Initial velocity (in-out)
     ///   - aS: Initial acceleration (in-out)
-    func finalizeSecondOrder(
+    mutating func finalizeSecondOrder(
         _ pS: inout Double,
         _ vS: inout Double,
         _ aS: inout Double
@@ -99,7 +99,7 @@ class BrakeProfile {
     ///   - vMax/vMin: Velocity bounds
     ///   - aMax/aMin: Acceleration bounds
     ///   - jMax: Maximum jerk (always positive; direction handled internally)
-    func accelerationBrake(
+    mutating func accelerationBrake(
         _ v0: Double,
         _ a0: Double,
         _ vMax: Double,
@@ -141,7 +141,7 @@ class BrakeProfile {
     ///   - vMax/vMin: Velocity bounds
     ///   - aMax/aMin: Acceleration bounds
     ///   - jMax: Maximum jerk (always positive)
-    func velocityBrake(
+    mutating func velocityBrake(
         _ v0: Double,
         _ a0: Double,
         _ vMax: Double,
@@ -180,7 +180,7 @@ class BrakeProfile {
     ///   - vMax/vMin: Velocity limits
     ///   - aMax/aMin: Acceleration limits
     ///   - jMax: Maximum jerk
-    func getPositionBrakeTrajectory(
+    mutating func getPositionBrakeTrajectory(
         _ v0: Double,
         _ a0: Double,
         _ vMax: Double,
@@ -213,7 +213,7 @@ class BrakeProfile {
     ///
     /// - Brakes to `vMax` if initial velocity exceeds it.
     /// - Brakes to `vMin` if initial velocity is below it.
-    func getSecondOrderPositionBrakeTrajectory(
+    mutating func getSecondOrderPositionBrakeTrajectory(
         _ v0: Double,
         _ vMax: Double,
         _ vMin: Double,
@@ -238,7 +238,7 @@ class BrakeProfile {
     /// Computes braking trajectory for second-order velocity interface.
     ///
     /// Brings acceleration into valid range using jerk-limited braking.
-    func getVelocityBrakeTrajectory(
+    mutating func getVelocityBrakeTrajectory(
         _ a0: Double,
         _ aMax: Double,
         _ aMin: Double,
@@ -261,7 +261,7 @@ class BrakeProfile {
     /// Resets the braking profile for second-order velocity interface.
     ///
     /// This is a no-op placeholder for future implementation or interface consistency.
-    func getSecondOrderVelocityBrakeTrajectory() {
+    mutating func getSecondOrderVelocityBrakeTrajectory() {
         t = [0.0, 0.0]
         j = [0.0, 0.0]
     }

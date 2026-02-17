@@ -97,7 +97,7 @@ class PositionThirdOrderStep1 {
     private func addProfile() {
         profileCount += 1
         if profileCount < validProfiles.count {
-            validProfiles[profileCount].setBoundary(&validProfiles[profileCount - 1])
+            validProfiles[profileCount].setBoundary(validProfiles[profileCount - 1])
         }
     }
 
@@ -117,7 +117,7 @@ class PositionThirdOrderStep1 {
         _ jMax: Double,
         _ returnAfterFound: Bool
     ) {
-        let profile = validProfiles[profileCount]
+        var profile = validProfiles[profileCount]
         // ACC0_ACC1_VEL
         // NOTE: This profile type explicitly uses aMax/aMin in formulas (lines 110-125),
         // so it inherently respects acceleration limits. No additional checking needed.
@@ -256,7 +256,7 @@ class PositionThirdOrderStep1 {
         _ jMax: Double,
         _ returnAfterFound: Bool
     ) {
-        let profile = validProfiles[profileCount]
+        var profile = validProfiles[profileCount]
 
         var h1 =
             (3 * (afP4 * aMax - a0P4 * aMin)
@@ -511,7 +511,7 @@ class PositionThirdOrderStep1 {
     // Only for numerical issues
     private func timeAcc1VelTwoStep(_ vMax: Double, _ vMin: Double, _ aMax: Double, _ aMin: Double, _ jMax: Double)
     {
-        let profile: Profile = validProfiles[profileCount]
+        var profile: Profile = validProfiles[profileCount]
 
         profile.t[0] = 0
         profile.t[1] = 0
@@ -533,7 +533,7 @@ class PositionThirdOrderStep1 {
     }
 
     private func timeAcc0TwoStep(_ vMax: Double, _ vMin: Double, _ aMax: Double, _ aMin: Double, _ jMax: Double) {
-        let profile: Profile = validProfiles[profileCount]
+        var profile: Profile = validProfiles[profileCount]
 
         // Two-step profile
         do {
@@ -626,7 +626,7 @@ class PositionThirdOrderStep1 {
     }
 
     private func timeVelTwoStep(_ vMax: Double, _ vMin: Double, _ aMax: Double, _ aMin: Double, _ jMax: Double) {
-        let profile = validProfiles[profileCount]
+        var profile = validProfiles[profileCount]
 
         let h1 = sqrt(afP2 / (2 * jMaxP2) + (vMax - vf) / jMax)
 
@@ -670,7 +670,7 @@ class PositionThirdOrderStep1 {
     }
 
     private func timeNoneTwoStep(_ vMax: Double, _ vMin: Double, _ aMax: Double, _ aMin: Double, _ jMax: Double) {
-        let profile = validProfiles[profileCount]
+        var profile = validProfiles[profileCount]
 
         // Two step
         do {
@@ -759,9 +759,10 @@ class PositionThirdOrderStep1 {
         // Zero-limits special case
         if _jMax == 0.0 || _aMax == 0.0 || _aMin == 0.0 {
             var p = block.pMin
-            p.setBoundary(&input)
+            p.setBoundary(input)
 
             if timeAllSingleStep(&p, _vMax, _vMin, _aMax, _aMin, _jMax) {
+                block.pMin = p
                 block.tMin = p.tSum.last! + p.brake.duration + p.accel.duration
                 if abs(v0) > Double.leastNormalMagnitude || abs(a0) > Double.leastNormalMagnitude {
                     block.a = Interval(block.tMin, .infinity)
@@ -772,7 +773,7 @@ class PositionThirdOrderStep1 {
         }
 
         resetProfiles()
-        validProfiles[profileCount].setBoundary(&input)
+        validProfiles[profileCount].setBoundary(input)
 
         if abs(vf) < Double.ulpOfOne && abs(af) < Double.ulpOfOne {
             let vMax = (pd >= 0) ? _vMax : _vMin

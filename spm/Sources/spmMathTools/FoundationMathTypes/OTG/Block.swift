@@ -6,7 +6,7 @@ import Foundation
 ///
 /// This class supports constructing blocked intervals from a set of valid profiles and determining
 /// whether a given time `t` is blocked or what motion profile should be selected at that time.
-class Block {
+struct Block {
 
     // MARK: - Properties
 
@@ -68,12 +68,9 @@ class Block {
     /// Also clears any previously defined blocked intervals.
     ///
     /// - Parameter profile: The profile to set as the new minimal profile.
-    func setMinProfile(profile: Profile) {
+    mutating func setMinProfile(profile: Profile) {
 
-        // CRITICAL: Copy the profile to prevent shared reference corruption
-        // Profile is a class, so without copy(), pMin would share the same object
-        // that could be modified later, causing discontinuities
-        pMin = profile.copy()
+        pMin = profile
         tMin = pMin.tSum.last! + pMin.brake.duration + pMin.accel.duration
         a = nil
         b = nil
