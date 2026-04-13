@@ -2,7 +2,7 @@
 
 from copy import copy
 
-from ruckig import InputParameter, OutputParameter, Result, Ruckig
+from ruckig import InputParameter, OutputParameter, Result, Ruckig  # type: ignore[import-not-found]
 
 
 if __name__ == "__main__":
@@ -39,6 +39,7 @@ if __name__ == "__main__":
         if not first_output:
             first_output = copy(out)
 
+    assert first_output is not None
     print(f"\nCalculation duration: {first_output.calculation_duration:0.1f} [µs]")
     print(f"Trajectory duration: {first_output.trajectory.duration:0.4f} [s]")
 

@@ -8,7 +8,7 @@ calculates trajectories that violate velocity or acceleration constraints.
 import json
 import random
 from typing import List, Dict, Any
-from ruckig import InputParameter, OutputParameter, Result, Ruckig
+from ruckig import InputParameter, OutputParameter, Result, Ruckig  # type: ignore[import-not-found]
 
 
 def generate_random_input(dof: int = 1) -> InputParameter:
@@ -40,7 +40,7 @@ def find_violations(num_samples: int = 10000) -> List[Dict[str, Any]]:
     print()
 
     otg = Ruckig(1, 0.01)
-    violations = []
+    violations: list[Dict[str, Any]] = []
     tested = 0
 
     while len(violations) < 20 and tested < num_samples:

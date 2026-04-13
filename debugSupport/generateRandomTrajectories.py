@@ -26,7 +26,7 @@ import json
 import random
 from typing import Dict, List, Any
 
-from ruckig import InputParameter, OutputParameter, Result, Ruckig
+from ruckig import InputParameter, OutputParameter, Result, Ruckig  # type: ignore[import-not-found]
 
 
 def generate_random_input(dof: int = 1) -> InputParameter:
