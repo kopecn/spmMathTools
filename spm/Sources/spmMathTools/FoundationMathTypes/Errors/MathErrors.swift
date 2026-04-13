@@ -7,13 +7,14 @@
 
 import Foundation
 
-public struct MathError: Error, CustomStringConvertible {
+public struct MathError: Error, CustomStringConvertible, LocalizedError {
     public let message: String
     public var description: String { message }
+    public var errorDescription: String? { message }
     public init(_ message: String) { self.message = message }
 }
 
-public enum MathErrors: Error {
+public enum MathErrors: Error, LocalizedError {
     /// General Runtime Errors
     case runtimeError(_ msg: String)
 
@@ -33,7 +34,9 @@ extension MathErrors: CustomStringConvertible {
             return "Polynomial \(poly) has unsolvable roots for coeffs: \(coeffs)."
 
         case .runtimeError(let msg):
-            return "OTG Runtime Error, \(msg)"
+            return "Math Runtime Error, \(msg)"
         }
     }
+
+    public var errorDescription: String? { description }
 }

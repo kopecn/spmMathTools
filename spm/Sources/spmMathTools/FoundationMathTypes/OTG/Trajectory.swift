@@ -51,21 +51,23 @@ public struct Trajectory {
         if time >= duration {
             // Keep constant acceleration
             newSection = profiles.count
-            let profiles_dof = profiles.last!
+            guard let profiles_dof = profiles.last else {
+                preconditionFailure("Trajectory.stateToIntegrateFrom: profiles array is empty — Trajectory was not computed before use")
+            }
             for dof in 0..<degreesOfFreedom {
                 let t_pre =
                     (profiles.count > 1)
                     ? cumulativeTimes[cumulativeTimes.count - 2]
                     : profiles_dof[dof].brake.duration
-                let t_diff = time - (t_pre + profiles_dof[dof].tSum.last!)
-                set_integrate(
-                    dof,
-                    t_diff,
-                    profiles_dof[dof].p.last!,
-                    profiles_dof[dof].v.last!,
-                    profiles_dof[dof].a.last!,
-                    0.0
-                )
+                guard let tSumLast = profiles_dof[dof].tSum.last,
+                      let pLast = profiles_dof[dof].p.last,
+                      let vLast = profiles_dof[dof].v.last,
+                      let aLast = profiles_dof[dof].a.last
+                else {
+                    preconditionFailure("Trajectory.stateToIntegrateFrom: tSum/p/v/a arrays are empty for dof \(dof) — Trajectory was not computed before use")
+                }
+                let t_diff = time - (t_pre + tSumLast)
+                set_integrate(dof, t_diff, pLast, vLast, aLast, 0.0)
             }
             return
         }
@@ -112,16 +114,16 @@ public struct Trajectory {
             }
 
             // Non-time synchronization
-            if t_diff_dof >= p.tSum.last! {
+            guard let tSumLast = p.tSum.last,
+                  let pLast = p.p.last,
+                  let vLast = p.v.last,
+                  let aLast = p.a.last
+            else {
+                preconditionFailure("Trajectory.stateToIntegrateFrom: tSum/p/v/a arrays are empty for dof \(dof) — Trajectory was not computed before use")
+            }
+            if t_diff_dof >= tSumLast {
                 // Keep constant acceleration
-                set_integrate(
-                    dof,
-                    t_diff_dof - p.tSum.last!,
-                    p.p.last!,
-                    p.v.last!,
-                    p.a.last!,
-                    0.0
-                )
+                set_integrate(dof, t_diff_dof - tSumLast, pLast, vLast, aLast, 0.0)
                 continue
             }
 
@@ -228,7 +230,7 @@ public struct Trajectory {
                 newAcceleration: &newAcceleration
             )
         } catch {
-            // Return zero arrays on error
+            assertionFailure("Trajectory.atTime: \(error) — DOF mismatch between Trajectory and output arrays")
         }
 
         return (newPosition, newVelocity, newAcceleration)

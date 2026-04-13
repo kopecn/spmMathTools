@@ -7,6 +7,16 @@
 
 import Foundation
 
+/// Real-time Optimal Trajectory Generator (Ruckig port).
+///
+/// **Threading contract:** `OTG` is not thread-safe. It is designed to be owned
+/// exclusively by a single real-time control-loop thread (typically a LinuxRT thread
+/// running at <1 ms cycle time). Do not share an instance across threads.
+///
+/// If you need concurrent access from Swift structured concurrency, wrap this in a
+/// parent `actor` that uses a custom RT executor — do **not** put actor isolation
+/// directly on `OTG`, as actor hops introduce non-deterministic scheduling latency
+/// that violates hard RT constraints.
 public class OTG {
     var currentInput: InputParameter
     var currentInputInitialized: Bool = false
@@ -136,8 +146,12 @@ public class OTG {
         )
     }
 
+    /// Advance the trajectory by one control cycle (`deltaTime`).
+    ///
+    /// Must be called from the **same thread that owns this `OTG` instance**.
+    /// Isolation from concurrent callers is the responsibility of the parent actor or RT scheduler.
     func update(
-        input: InputParameter, 
+        input: InputParameter,
         output: inout OutputParameter
     ) -> Result {
         let start = DispatchTime.now()
@@ -162,14 +176,18 @@ public class OTG {
 
         let oldSection = output.newSection
         output.time += deltaTime
-        try! output.trajectory.atTime(
-            output.time,
-            newPosition: &output.newPosition,
-            newVelocity: &output.newVelocity,
-            newAcceleration: &output.newAcceleration,
-            newJerk: &output.newJerk,
-            newSection: &output.newSection
-        )
+        do {
+            try output.trajectory.atTime(
+                output.time,
+                newPosition: &output.newPosition,
+                newVelocity: &output.newVelocity,
+                newAcceleration: &output.newAcceleration,
+                newJerk: &output.newJerk,
+                newSection: &output.newSection
+            )
+        } catch {
+            return .ErrorInvalidInput
+        }
         output.didSectionChange = (output.newSection > oldSection)
 
         let stop = DispatchTime.now()
