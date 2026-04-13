@@ -7,13 +7,15 @@ import simd
 extension Position where T == Double {
 
     /// Negate a position (flip direction)
+    @inlinable
     public static prefix func - (position: Position<Double>) -> Position<Double> {
-        return Position(vector: -position.vector)
+        Position(vector: -position.vector)
     }
 
     /// Unary plus (returns copy)
+    @inlinable
     public static prefix func + (position: Position<Double>) -> Position<Double> {
-        return position
+        position
     }
 }
 
@@ -22,12 +24,14 @@ extension Position where T == Double {
 extension Position where T == Float {
 
     /// Negate a position (flip direction)
+    @inlinable
     public static prefix func - (position: Position<Float>) -> Position<Float> {
-        return Position(vector: -position.vector)
+        Position(vector: -position.vector)
     }
 
     /// Unary plus (returns copy)
+    @inlinable
     public static prefix func + (position: Position<Float>) -> Position<Float> {
-        return position
+        position
     }
 }

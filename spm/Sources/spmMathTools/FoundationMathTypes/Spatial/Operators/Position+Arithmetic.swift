@@ -9,54 +9,63 @@ extension Position where T == Double {
     // MARK: Addition
 
     /// Add two positions (vector addition)
+    @inlinable
     public static func + (lhs: Position<Double>, rhs: Position<Double>) -> Position<Double> {
-        return Position(vector: lhs.vector + rhs.vector)
+        Position(vector: lhs.vector + rhs.vector)
     }
 
     /// Add a scalar to all components
+    @inlinable
     public static func + (lhs: Position<Double>, rhs: Double) -> Position<Double> {
-        return Position(vector: lhs.vector + SIMD3<Double>(repeating: rhs))
+        Position(vector: lhs.vector + SIMD3<Double>(repeating: rhs))
     }
 
     /// Add a position to a scalar
+    @inlinable
     public static func + (lhs: Double, rhs: Position<Double>) -> Position<Double> {
-        return rhs + lhs
+        rhs + lhs
     }
 
     // MARK: Subtraction
 
     /// Subtract two positions (vector subtraction)
+    @inlinable
     public static func - (lhs: Position<Double>, rhs: Position<Double>) -> Position<Double> {
-        return Position(vector: lhs.vector - rhs.vector)
+        Position(vector: lhs.vector - rhs.vector)
     }
 
     /// Subtract a scalar from all components
+    @inlinable
     public static func - (lhs: Position<Double>, rhs: Double) -> Position<Double> {
-        return Position(vector: lhs.vector - SIMD3<Double>(repeating: rhs))
+        Position(vector: lhs.vector - SIMD3<Double>(repeating: rhs))
     }
 
     /// Subtract a position from a scalar
+    @inlinable
     public static func - (lhs: Double, rhs: Position<Double>) -> Position<Double> {
-        return Position(vector: SIMD3<Double>(repeating: lhs) - rhs.vector)
+        Position(vector: SIMD3<Double>(repeating: lhs) - rhs.vector)
     }
 
     // MARK: Multiplication (Scaling)
 
     /// Multiply position by a scalar (scaling)
+    @inlinable
     public static func * (lhs: Position<Double>, rhs: Double) -> Position<Double> {
-        return Position(vector: lhs.vector * rhs)
+        Position(vector: lhs.vector * rhs)
     }
 
     /// Multiply scalar by a position (scaling)
+    @inlinable
     public static func * (lhs: Double, rhs: Position<Double>) -> Position<Double> {
-        return Position(vector: lhs * rhs.vector)
+        Position(vector: lhs * rhs.vector)
     }
 
     // MARK: Division (Scaling)
 
     /// Divide position by a scalar
+    @inlinable
     public static func / (lhs: Position<Double>, rhs: Double) -> Position<Double> {
-        return Position(vector: lhs.vector / rhs)
+        Position(vector: lhs.vector / rhs)
     }
 }
 
@@ -67,53 +76,62 @@ extension Position where T == Float {
     // MARK: Addition
 
     /// Add two positions (vector addition)
+    @inlinable
     public static func + (lhs: Position<Float>, rhs: Position<Float>) -> Position<Float> {
-        return Position(vector: lhs.vector + rhs.vector)
+        Position(vector: lhs.vector + rhs.vector)
     }
 
     /// Add a scalar to all components
+    @inlinable
     public static func + (lhs: Position<Float>, rhs: Float) -> Position<Float> {
-        return Position(vector: lhs.vector + SIMD3<Float>(repeating: rhs))
+        Position(vector: lhs.vector + SIMD3<Float>(repeating: rhs))
     }
 
     /// Add a position to a scalar
+    @inlinable
     public static func + (lhs: Float, rhs: Position<Float>) -> Position<Float> {
-        return rhs + lhs
+        rhs + lhs
     }
 
     // MARK: Subtraction
 
     /// Subtract two positions (vector subtraction)
+    @inlinable
     public static func - (lhs: Position<Float>, rhs: Position<Float>) -> Position<Float> {
-        return Position(vector: lhs.vector - rhs.vector)
+        Position(vector: lhs.vector - rhs.vector)
     }
 
     /// Subtract a scalar from all components
+    @inlinable
     public static func - (lhs: Position<Float>, rhs: Float) -> Position<Float> {
-        return Position(vector: lhs.vector - SIMD3<Float>(repeating: rhs))
+        Position(vector: lhs.vector - SIMD3<Float>(repeating: rhs))
     }
 
     /// Subtract a position from a scalar
+    @inlinable
     public static func - (lhs: Float, rhs: Position<Float>) -> Position<Float> {
-        return Position(vector: SIMD3<Float>(repeating: lhs) - rhs.vector)
+        Position(vector: SIMD3<Float>(repeating: lhs) - rhs.vector)
     }
 
     // MARK: Multiplication (Scaling)
 
     /// Multiply position by a scalar (scaling)
+    @inlinable
     public static func * (lhs: Position<Float>, rhs: Float) -> Position<Float> {
-        return Position(vector: lhs.vector * rhs)
+        Position(vector: lhs.vector * rhs)
     }
 
     /// Multiply scalar by a position (scaling)
+    @inlinable
     public static func * (lhs: Float, rhs: Position<Float>) -> Position<Float> {
-        return Position(vector: lhs * rhs.vector)
+        Position(vector: lhs * rhs.vector)
     }
 
     // MARK: Division (Scaling)
 
     /// Divide position by a scalar
+    @inlinable
     public static func / (lhs: Position<Float>, rhs: Float) -> Position<Float> {
-        return Position(vector: lhs.vector / rhs)
+        Position(vector: lhs.vector / rhs)
     }
 }

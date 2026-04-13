@@ -7,8 +7,9 @@ import simd
 extension Position where T == Double {
 
     /// Convert to cylindrical coordinates (radius, angle, height)
+    @inlinable
     public var cylindrical: (radius: T, angle: T, height: T) {
-        let radius = sqrt(x * x + y * y)
+        let radius = simd_length(SIMD2<Double>(vector.x, vector.y))
         let angle = simd.atan2(y, x)
         return (radius: radius, angle: angle, height: z)
     }
@@ -18,6 +19,7 @@ extension Position where T == Double {
     ///   - radius: The radial distance from the origin
     ///   - azimuth: The azimuthal angle in radians (longitude)
     ///   - elevation: The elevation angle in radians (latitude), measured from the equator
+    @inlinable
     public var spherical: (radius: T, azimuth: T, elevation: T) {
         let radius = magnitude
         let azimuth = simd.atan2(y, x)
@@ -30,6 +32,7 @@ extension Position where T == Double {
     ///   - radius: The radial distance from the origin
     ///   - azimuth: Azimuthal angle in radians (0 to 2π), measured from the positive x-axis
     ///   - polar: Polar angle (colatitude/zenith angle) in radians (0 to π), measured from +z axis
+    @inlinable
     public var sphericalISO: (radius: T, azimuth: T, polar: T) {
         let radius = magnitude
         let azimuth = simd.atan2(y, x)
@@ -43,8 +46,9 @@ extension Position where T == Double {
 extension Position where T == Float {
 
     /// Convert to cylindrical coordinates (radius, angle, height)
+    @inlinable
     public var cylindrical: (radius: T, angle: T, height: T) {
-        let radius = sqrt(x * x + y * y)
+        let radius = simd_length(SIMD2<Float>(vector.x, vector.y))
         let angle = simd.atan2(y, x)
         return (radius: radius, angle: angle, height: z)
     }
@@ -54,6 +58,7 @@ extension Position where T == Float {
     ///   - radius: The radial distance from the origin
     ///   - azimuth: The azimuthal angle in radians (longitude)
     ///   - elevation: The elevation angle in radians (latitude), measured from the equator
+    @inlinable
     public var spherical: (radius: T, azimuth: T, elevation: T) {
         let radius = magnitude
         let azimuth = simd.atan2(y, x)
@@ -66,6 +71,7 @@ extension Position where T == Float {
     ///   - radius: The radial distance from the origin
     ///   - azimuth: Azimuthal angle in radians (0 to 2π), measured from the positive x-axis
     ///   - polar: Polar angle (colatitude/zenith angle) in radians (0 to π), measured from +z axis
+    @inlinable
     public var sphericalISO: (radius: T, azimuth: T, polar: T) {
         let radius = magnitude
         let azimuth = simd.atan2(y, x)

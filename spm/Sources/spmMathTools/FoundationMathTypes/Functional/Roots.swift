@@ -294,7 +294,7 @@ public func solveQuarticMonic(
     solveQuarticMonic(polynom[0], polynom[1], polynom[2], polynom[3])
 }
 
-/// Evaluates a polynomial with coefficients in p at the point x.
+/// Evaluates a polynomial with coefficients in p at the point x using Horner's method.
 ///
 /// - Parameters:
 ///   - p: Array of polynomial coefficients from highest to lowest degree.
@@ -304,29 +304,12 @@ public func evaluatePolynomial(
     _ p: [Double],
     _ x: Double
 ) -> Double {
-
-    var retVal: Double = 0.0
-
-    if p.count == 0 {
-        return retVal
+    guard !p.isEmpty else { return 0.0 }
+    var result = p[0]
+    for i in 1..<p.count {
+        result = result * x + p[i]
     }
-
-    if abs(x) < .ulpOfOne {
-        retVal = p[p.count - 1]
-    } else if x == 1.0 {
-        for val in p.reversed() {
-            retVal += val
-        }
-    } else {
-        var xn: Double = 1.0
-
-        for val in p.reversed() {
-            retVal += val * xn
-            xn *= x
-        }
-    }
-
-    return retVal
+    return result
 }
 
 /// Returns the derivative of a polynomial with the given coefficients.
@@ -423,14 +406,6 @@ public func shrinkInterval(
     return rts
 }
 
-/// Custom cube root function that handles negative values correctly
-private func cbrt(_ x: Double) -> Double {
-    if x >= 0 {
-        return pow(x, 1.0 / 3.0)
-    } else {
-        return -pow(-x, 1.0 / 3.0)
-    }
-}
 
 private func solveWithTrigonometric(p: Double, q: Double, a: Double, b: Double) -> [Double] {
     // For three real roots case: discriminant > 0

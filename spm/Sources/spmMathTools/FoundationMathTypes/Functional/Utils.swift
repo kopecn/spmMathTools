@@ -60,6 +60,7 @@ extension Array where Element == Double {
 ///        - a0: Double, current acceleration
 ///        - j: Double, applied jerk for region
 ///- Returns: Tuple(postion, velocity and accleration)
+@inline(__always)
 func integrate(
     _ t: Double,
     _ p0: Double,

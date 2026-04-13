@@ -3,7 +3,6 @@
 
 # Xcode/Swift Package Manager build artifacts
 .build/
-.claude/
 .swiftpm/
 DerivedData/
 

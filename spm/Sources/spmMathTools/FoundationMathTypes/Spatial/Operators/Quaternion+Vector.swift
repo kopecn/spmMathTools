@@ -9,14 +9,15 @@ extension Quaternion where T == Double {
     /// Compute the conjugate of this quaternion
     @inlinable
     public var conjugate: Quaternion<Double> {
-        Quaternion(vector: SIMD4<Double>(-vector.x, -vector.y, -vector.z, vector.w))
+        Quaternion(vector: vector * SIMD4<Double>(-1, -1, -1, 1))
     }
 
     /// Compute the inverse of this quaternion
     @inlinable
     public var inverse: Quaternion<Double> {
-        if simd_length_squared(vector) > Double.ulpOfOne {
-            return Quaternion(vector: SIMD4<Double>(-vector.x, -vector.y, -vector.z, vector.w) / simd_length_squared(vector))
+        let lenSq = simd_length_squared(vector)
+        if lenSq > Double.ulpOfOne {
+            return Quaternion(vector: vector * SIMD4<Double>(-1, -1, -1, 1) / lenSq)
         }
         return .identity
     }
@@ -53,14 +54,15 @@ extension Quaternion where T == Float {
     /// Compute the conjugate of this quaternion
     @inlinable
     public var conjugate: Quaternion<Float> {
-        Quaternion(vector: SIMD4<Float>(-vector.x, -vector.y, -vector.z, vector.w))
+        Quaternion(vector: vector * SIMD4<Float>(-1, -1, -1, 1))
     }
 
     /// Compute the inverse of this quaternion
     @inlinable
     public var inverse: Quaternion<Float> {
-        if simd_length_squared(vector) > Float.ulpOfOne {
-            return Quaternion(vector: SIMD4<Float>(-vector.x, -vector.y, -vector.z, vector.w) / simd_length_squared(vector))
+        let lenSq = simd_length_squared(vector)
+        if lenSq > Float.ulpOfOne {
+            return Quaternion(vector: vector * SIMD4<Float>(-1, -1, -1, 1) / lenSq)
         }
         return .identity
     }
