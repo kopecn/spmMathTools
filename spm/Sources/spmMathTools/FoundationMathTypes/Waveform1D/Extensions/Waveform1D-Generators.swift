@@ -1,6 +1,21 @@
 import Foundation
 import FoundationTypes
 
+// MARK: - Seeded RNG for whiteNoise
+
+/// xorshift64 — minimal seeded PRNG for reproducible noise generation.
+/// Not cryptographically secure; intended only for deterministic signal synthesis.
+private struct Xorshift64: RandomNumberGenerator {
+    private var state: UInt64
+    init(seed: UInt64) { state = seed == 0 ? 1 : seed }
+    mutating func next() -> UInt64 {
+        state ^= state << 13
+        state ^= state >> 7
+        state ^= state << 17
+        return state
+    }
+}
+
 // MARK: - Waveform Generators
 extension Waveform1D where T: BinaryFloatingPoint {
 
@@ -266,11 +281,12 @@ extension Waveform1D where T: BinaryFloatingPoint {
 
         let values = (0..<sampleCount).map { i in
             let t = T(i) * dt
+            // Horner's method: coefficients are [a₀, a₁, a₂, ...] for a₀ + a₁t + a₂t² + ...
             var result: T = 0.0
-            for (power, coeff) in coefficients.enumerated() {
-                result += T(coeff) * T(pow(Double(t), Double(power)))
+            for coeff in coefficients.reversed() {
+                result = result * t + T(coeff)
             }
-            return T(result)
+            return result
         }
 
         return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)
@@ -295,7 +311,7 @@ extension Waveform1D where T: BinaryFloatingPoint {
         let sampleCount = Int(duration * samplingRate)
 
         let values = (0..<sampleCount).map { i in
-            let progress = T(T(i) / T(sampleCount - 1))
+            let progress = sampleCount > 1 ? T(T(i) / T(sampleCount - 1)) : T.zero
             return startValue + (endValue - startValue) * progress
         }
 
@@ -489,12 +505,24 @@ extension Waveform1D where T: BinaryFloatingPoint {
         let dt = 1.0 / samplingRate
         let sampleCount = Int(duration * samplingRate)
 
-        let values = (0..<sampleCount).map { _ in
-            let u1 = Double.random(in: 0...1)
-            let u2 = Double.random(in: 0...1)
-            // Box-Muller transform for Gaussian noise
-            let gaussian = sqrt(-2.0 * log(u1)) * cos(2.0 * Double.pi * u2)
-            return amplitude * T(gaussian)
+        // Box-Muller transform. u1 is clamped away from zero to avoid log(0) = -∞.
+        var values = [T]()
+        values.reserveCapacity(sampleCount)
+        if let s = seed {
+            var rng = Xorshift64(seed: s)
+            for _ in 0..<sampleCount {
+                let u1 = max(Double.leastNormalMagnitude, Double.random(in: 0...1, using: &rng))
+                let u2 = Double.random(in: 0...1, using: &rng)
+                let gaussian = sqrt(-2.0 * log(u1)) * cos(2.0 * Double.pi * u2)
+                values.append(amplitude * T(gaussian))
+            }
+        } else {
+            for _ in 0..<sampleCount {
+                let u1 = max(Double.leastNormalMagnitude, Double.random(in: 0...1))
+                let u2 = Double.random(in: 0...1)
+                let gaussian = sqrt(-2.0 * log(u1)) * cos(2.0 * Double.pi * u2)
+                values.append(amplitude * T(gaussian))
+            }
         }
 
         return Waveform1D(values: values, dtSeconds: Double(dt), t0: t0)

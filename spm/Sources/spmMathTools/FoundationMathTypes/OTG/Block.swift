@@ -158,11 +158,15 @@ struct Block {
             return false
         }
 
-        // Find the profile with the shortest total time
-        let idxMinIt = validProfiles.prefix(validProfileCounter).enumerated().min {
-            $0.element.tSum.last! < $1.element.tSum.last!
+        // Find the profile with the shortest total time.
+        // validProfileCounter is 3 or 5 here — all other counts returned early above —
+        // so prefix is non-empty and min is well-defined.
+        guard let idxMinIt = validProfiles.prefix(validProfileCounter).enumerated().min(
+            by: { $0.element.tSum.last! < $1.element.tSum.last! }
+        ) else {
+            return false  // unreachable: validProfileCounter > 0 at this point
         }
-        let idxMin = idxMinIt!.offset
+        let idxMin = idxMinIt.offset
 
         block.setMinProfile(profile: validProfiles[idxMin])
 
@@ -225,10 +229,10 @@ struct Block {
     /// - Returns: The profile valid at that time, according to the block's intervals.
     func getProfile(t: Double) -> Profile {
         if let b = b, t >= b.right {
-            return b.profile!
+            return b.profile ?? pMin
         }
         if let a = a, t >= a.right {
-            return a.profile!
+            return a.profile ?? pMin
         }
         return pMin
     }

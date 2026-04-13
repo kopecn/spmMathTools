@@ -8,6 +8,15 @@
 import Foundation
 
 /// Calculation class for a state-to-state trajectory.
+///
+/// This is intentionally a reference type (`class`). `TargetCalculator` owns large,
+/// pre-allocated mutable buffers (`blocks`, `possibleTSyncs`, `idx`, etc.) that are
+/// updated in-place on every call to `calculate`. Copying that state on every update
+/// would be prohibitively expensive in a real-time control loop.
+///
+/// **Thread safety:** Not thread-safe. Confine each instance to a single thread or
+/// wrap it in an actor with a custom real-time executor. See `spmOTG.swift` for the
+/// full threading contract.
 public class TargetCalculator {
     let degreesOfFreedom: Int
 
